@@ -1,0 +1,14 @@
+.Container {
+    display: flex;
+}
+
+.Input {
+    display: inline;
+    margin: 0px;
+    flex: 1;
+    width: 100%;
+}
+
+.Label {
+    margin: 5px 5px 0px 0px;
+}

@@ -1,0 +1,88 @@
+.Content {
+    width: 100%;
+    height: 100%;
+    background: white;
+    display: flex;
+    font-size: 13px;
+}
+
+.Container {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.LastContainer {
+    overflow: auto;
+    flex: 1;
+}
+
+.reactTabs {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.reactTabsTabPanelSelected {
+    flex: 1;
+    overflow: auto;
+}
+
+.reactTabsTab {
+    padding: 3px 12px !important;
+    outline: none;
+}
+
+.reactTabsTab:hover {
+    background: #ddd;
+}
+
+.TabSelected:hover {
+    background: #fff;
+}
+
+.mainContainer {
+    /* overflow: hidden; */
+    width: 100%;
+    position: relative;
+    outline: none;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none;
+}
+
+.heightControll {
+    position: absolute;
+    height: 20px;
+    width: 100%;
+    top: -2px;
+    left: 0px;
+    cursor: ns-resize;
+}
+
+.widthControll {
+    position: absolute;
+    width: 1px;
+    height: 100%;
+    top: 0px;
+    right: 1px;
+    cursor: ew-resize;
+    background: #ccc;
+}
+
+.TabList {
+    background: #eee;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    font-size: 13px;
+    margin: 0px;
+    margin-bottom: 10px;
+    padding-left: 10px;
+}

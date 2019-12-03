@@ -1,0 +1,32 @@
+.Div {
+    background: none;
+    outline: none;
+    border: none;
+    display: block;
+    height: initial;
+}
+
+.Input {
+    width: 150px;
+    height: 15px;
+    margin-left: 10px;
+    font-size: 15px;
+    padding: 0px;
+}
+
+.StyleControls {
+    display: inline-block;
+}
+
+.Wrong {
+    border: red 1px solid;
+}
+
+.Inline {
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+.Right {
+    text-align: right;
+}

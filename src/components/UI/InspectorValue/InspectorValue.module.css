@@ -1,0 +1,34 @@
+.InspectorDiv {
+    display: inline-block;
+    position: relative;
+}
+
+.Input {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0px;
+    padding: 0px;
+    margin: 0px;
+    border: none;
+}
+
+.InputHidden {
+    opacity: 0;
+}
+
+.Input,
+.Span {
+    padding: 0px 4px;
+}
+
+.ItemHighlighted {
+    background: lightskyblue;
+}
+
+.DropDown {
+    z-index: 1000;
+    position: fixed;
+    background: white;
+    border: 1px solid #ccc;
+}

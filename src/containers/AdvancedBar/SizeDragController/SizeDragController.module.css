@@ -1,0 +1,10 @@
+.SectionHeight {
+    user-select: none;
+}
+
+.InnerDiv {
+    position: relative;
+    width: 8px;
+    left: -6px;
+    height: 100%;
+}

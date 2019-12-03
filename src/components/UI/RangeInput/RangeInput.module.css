@@ -1,0 +1,15 @@
+.Div {
+    background: none;
+    outline: none;
+    border: none;
+    font-size: 12px;
+    display: block;
+    height: initial;
+    padding: 4px 5px;
+}
+
+.Input {
+    width: 100px;
+    height: 15px;
+    margin-left: 10px; 
+}

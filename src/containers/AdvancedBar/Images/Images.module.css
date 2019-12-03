@@ -1,0 +1,38 @@
+.ImageContainer {
+    display: inline-block;
+    margin: 20px;
+    cursor: pointer;
+    height: 220px;
+    overflow: hidden;
+}
+
+.ImageContainer:hover,
+.ImageContainerChosen {
+    outline: 1px solid blue;
+}
+
+.ImageContainerCurrent {
+    outline: 1px solid green;
+}
+
+.ImageName {
+    width: 150px;
+    overflow: hidden;
+    text-align: center;
+}
+
+.ImageInput {
+    display: none;
+}
+
+.Buttons {
+    height: 30px;
+    display: block;
+    width: 100%;
+}
+
+.Images {
+    height: calc(100% - 30px);
+    display: block;
+    overflow: auto;
+}

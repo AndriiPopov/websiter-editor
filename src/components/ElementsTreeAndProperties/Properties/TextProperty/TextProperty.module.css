@@ -1,0 +1,13 @@
+.Textarea {
+    width: 100%;
+    height: calc(100% - 28px);
+    box-sizing: border-box;
+    margin: 0px;
+    border: none;
+    padding: 10px;
+    resize: none;
+}
+
+.Textarea:focus {
+    outline: 1px blue solid;
+}

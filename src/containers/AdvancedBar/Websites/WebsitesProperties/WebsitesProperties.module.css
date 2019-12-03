@@ -1,0 +1,16 @@
+.Span {
+    margin-left: 5px;
+}
+
+.Input {
+    display: inline-block;
+}
+
+.Button {
+    display: inline-block;
+}
+
+.DomainSettings {
+    display: flex;
+    justify-content: space-between;
+}
