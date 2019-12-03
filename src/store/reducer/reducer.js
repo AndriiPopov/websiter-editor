@@ -17,6 +17,7 @@ export const initialState = {
     currentFile: '',
     currentPlugin: '',
     domainNotOk: false,
+    customDomainNotOk: false,
     storage: 0,
     images: [],
     uploadingImage: false,
@@ -46,6 +47,7 @@ const saveAllWebsitesDataFromServer = (state, action) => {
         ...state,
         ...action.data,
         domainNotOk: false,
+        customDomainNotOk: false,
         currentPage:
             action.data.currentPage ||
             (state.resourcesObjects[state.currentPage]
