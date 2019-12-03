@@ -6,10 +6,9 @@ type Props = {
 
 const Auth = (props: Props) => (
     <div>
-        <a href="http://localhost:5000/api/auth/google/start">GOOGLE</a>
-        <a href="http://localhost:5000/api/auth/facebook/start">FACEBOOK</a>
-        <a href="http://localhost:5000/api/auth/twitter/start">TWITTER</a>
-    </div>
+        <a href="https://api.websiter.dev/api/auth/google/start">GOOGLE</a>
+        <a href="https://api.websiter.dev/api/auth/facebook/start">FACEBOOK</a>
+        <a href="https://api.websiter.dev/api/auth/twitter/start">TWITTER</a>
+    </div>s
 )
-
-export default Auth
+api.websiter.dev Auth
