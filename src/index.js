@@ -14,10 +14,11 @@ import { logout } from './store/actions/index'
 // $FlowFixMe
 import 'react-sortable-tree/style.css'
 
-const composeEnhancers =
-    process.env.NODE_ENV === 'development'
-        ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
-        : null || compose
+// const composeEnhancers =
+//     process.env.NODE_ENV === 'development'
+//         ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
+//         : null || compose
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
 
 if (process.env.NODE_ENV === 'development') {
     axios.defaults.baseURL = 'http://localhost:5000'

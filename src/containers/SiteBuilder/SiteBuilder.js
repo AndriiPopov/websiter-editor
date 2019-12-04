@@ -147,6 +147,7 @@ class SiteBuilder extends Component<Props, State> {
     }
 
     render() {
+        console.log(this.props.resourcesObjects)
         const resourceDraft = this.props.currentPage
             ? this.props.resourcesObjects[this.props.currentPage]
                 ? isEmpty(
@@ -170,7 +171,7 @@ class SiteBuilder extends Component<Props, State> {
         const bodyStyle = bodyElement.style
         if (bodyStyle) bodyProps.style = bodyStyle
 
-        const htmlElement = structure.filter(item => item.path.length === 0)[1]
+        const htmlElement = structure.filter(item => item.path.length === 0)[0]
         const htmlProps = cloneDeep(htmlElement.properties)
         const htmlStyle = htmlElement.style
         if (htmlStyle) htmlProps.style = htmlStyle

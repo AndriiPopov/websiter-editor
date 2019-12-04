@@ -108,11 +108,14 @@ export const authCheckState = () => (dispatch: Object) => {
     axios.defaults.headers.put['Content-Type'] = 'application/json'
     axios.defaults.headers.delete['Content-Type'] = 'application/json'
     axios.defaults.headers.common.Accept = 'application/json'
+    console.log(userId)
+    console.log(token)
 
     if (!token || !userId) {
         dispatch(logout())
     } else {
         axios.defaults.headers.common['x-auth-token'] = token
+        console.log('try to login')
         dispatch(authStart())
         return axios
             .get('/api/users')
@@ -121,6 +124,8 @@ export const authCheckState = () => (dispatch: Object) => {
                     'currentAction',
                     response.data.currentAction
                 )
+                console.log('success')
+
                 dispatch(
                     authSuccess({
                         ...response.data,
@@ -130,6 +135,7 @@ export const authCheckState = () => (dispatch: Object) => {
                 dispatch(actions.saveAllWebsitesDataFromServer(response.data))
             })
             .catch(err => {
+                console.log('fail')
                 dispatch(authFail(err.message))
             })
     }
