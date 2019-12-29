@@ -1,7 +1,6 @@
 import { structure, current } from '../../utils/resourceTypeIndex'
 import { isEqual } from 'lodash'
 import { checkIfCapital } from '../../utils/basic'
-import { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } from 'constants'
 
 // $FlowFixMe
 const diffpatcher = require('jsondiffpatch/dist/jsondiffpatch.umd.js').create({
@@ -28,6 +27,7 @@ export const deleteResourceSuccess = (state: Object, action: Object) => {
 
 export const setCurrentResource = (state: Object, action: Object) => {
     state[current[action.resourceType]] = action._id
+    if (action.resourceType === 'page') state.hoveredElementSize = {}
 }
 
 export const saveResourcesStructureSuccess = (
@@ -77,9 +77,10 @@ export const addResourceVersion = (state: Object, action: Object) => {
                 action.draft.structure.forEach(item => {
                     if (item.tag.length > 0) {
                         if (checkIfCapital(item.tag.charAt(0))) {
-                            connectedResources.push(item.tag)
-                        } else if (item.tag === 'style') {
-                            connectedResources.push(item.properties.name)
+                            connectedResources.push({
+                                name: item.tag,
+                                type: 'plugin',
+                            })
                         }
                     }
                 })

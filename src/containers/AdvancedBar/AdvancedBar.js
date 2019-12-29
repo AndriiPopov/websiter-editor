@@ -7,12 +7,22 @@ import SizeDragController from './SizeDragController/SizeDragController'
 import * as actions from '../../store/actions'
 import Images from './Images/Images'
 import Plugins from './Plugins/Plugins'
-import Files from './Files/Files'
 import Pages from './Pages/Pages'
 import Account from './Account/Account'
 import Websites from './Websites/Websites'
 
-const AdvancedBar = props => {
+import type { initialStateType } from '../../store/reducer/reducer'
+
+type Props = {
+    undoResourceVersion: typeof actions.undoResourceVersion,
+    redoResourceVersion: typeof actions.redoResourceVersion,
+    setCurrentTopTab: typeof actions.setCurrentTopTab,
+    changeBarSize: typeof actions.changeBarSize,
+    toggleFindMode: typeof actions.toggleFindMode,
+    barSizes: $PropertyType<initialStateType, 'barSizes'>,
+}
+
+const AdvancedBar = (props: Props) => {
     const tabClass = ['react-tabs__tab', classes.reactTabsTab].join(' ')
 
     const pannelClass = [
@@ -25,7 +35,7 @@ const AdvancedBar = props => {
         classes.TabSelected,
     ].join(' ')
 
-    const undoRedoTabNames = ['page', 'plugin', '', 'file', '', '', '']
+    const undoRedoTabNames = ['page', 'plugin', '', '', '', '']
 
     const handleKeyDown = e => {
         if (!e.shiftKey && e.ctrlKey && (e.key === 'z' || e.key === 'Z'))
@@ -61,62 +71,30 @@ const AdvancedBar = props => {
             <Tabs
                 className={['react-tabs', classes.reactTabs].join(' ')}
                 onSelect={index => handleTabSelected(index)}
+                selectedTabClassName={tabClassSelected}
+                selectedTabPanelClassName={pannelClass}
             >
                 <TabList className={classes.TabList}>
-                    <Tab
-                        className={tabClass}
-                        selectedClassName={tabClassSelected}
-                    >
-                        Pages
-                    </Tab>
-                    <Tab
-                        className={tabClass}
-                        selectedClassName={tabClassSelected}
-                    >
-                        Plugins
-                    </Tab>
-                    <Tab
-                        className={tabClass}
-                        selectedClassName={tabClassSelected}
-                    >
-                        Media files
-                    </Tab>
-                    <Tab
-                        className={tabClass}
-                        selectedClassName={tabClassSelected}
-                    >
-                        Files
-                    </Tab>
-                    <Tab
-                        className={tabClass}
-                        selectedClassName={tabClassSelected}
-                    >
-                        Websites
-                    </Tab>
-                    <Tab
-                        className={tabClass}
-                        selectedClassName={tabClassSelected}
-                    >
-                        Account
-                    </Tab>
+                    <Tab className={tabClass}>Pages</Tab>
+                    <Tab className={tabClass}>Plugins</Tab>
+                    <Tab className={tabClass}>Media files</Tab>
+                    <Tab className={tabClass}>Websites</Tab>
+                    <Tab className={tabClass}>Account</Tab>
                 </TabList>
 
-                <TabPanel selectedClassName={pannelClass}>
+                <TabPanel>
                     <Pages />
                 </TabPanel>
-                <TabPanel selectedClassName={pannelClass}>
+                <TabPanel>
                     <Plugins />
                 </TabPanel>
-                <TabPanel selectedClassName={pannelClass}>
+                <TabPanel>
                     <Images />
                 </TabPanel>
-                <TabPanel selectedClassName={pannelClass}>
-                    <Files />
-                </TabPanel>
-                <TabPanel selectedClassName={pannelClass}>
+                <TabPanel>
                     <Websites />
                 </TabPanel>
-                <TabPanel selectedClassName={pannelClass}>
+                <TabPanel>
                     <Account />
                 </TabPanel>
             </Tabs>

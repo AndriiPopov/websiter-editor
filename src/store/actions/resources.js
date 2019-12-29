@@ -1,8 +1,12 @@
 import axios from 'axios'
+import { isEqual } from 'lodash'
 
 import { actionStart, actionFail, actionSuccess } from './website'
-import * as actionTypes from './actionTypes'
-import { isEqual } from 'lodash'
+
+import type {
+    initialStateType,
+    resourceType,
+} from '../../store/reducer/reducer'
 
 // $FlowFixMe
 const diffpatcher = require('jsondiffpatch/dist/jsondiffpatch.umd.js').create({
@@ -10,11 +14,11 @@ const diffpatcher = require('jsondiffpatch/dist/jsondiffpatch.umd.js').create({
 })
 
 export const addResource = (
-    websiteId: string,
-    currentResourceId: string,
-    resourceType: string,
+    websiteId: $PropertyType<initialStateType, 'loadedWebsite'>,
+    currentResourceId: $PropertyType<initialStateType, 'currentPage'>,
+    resourceType: 'page' | 'plugin',
     duplicate?: boolean,
-    resourceData?: Object,
+    resourceData?: resourceType,
     callback?: Function
 ) => (dispatch: Object) => {
     dispatch(actionStart())
@@ -39,15 +43,15 @@ export const addResource = (
         })
 }
 
-const addResourceSuccess = (data: Object, resourceType: string) => ({
+const addResourceSuccess = (data: Object, resourceType: 'page' | 'plugin') => ({
     type: 'ADD_RESOURCE_SUCCESS',
     ...data,
     resourceType,
 })
 
 export const deleteResource = (
-    currentResourceId: string,
-    resourceType: string
+    currentResourceId: $PropertyType<initialStateType, 'currentPage'>,
+    resourceType: 'page' | 'plugin'
 ) => (dispatch: Object) => {
     if (!currentResourceId) return
     if (
@@ -68,17 +72,20 @@ export const deleteResource = (
         })
 }
 
-const deleteResourceSuccess = (data: Object, resourceType: string) => ({
+const deleteResourceSuccess = (
+    data: Object,
+    resourceType: 'page' | 'plugin'
+) => ({
     type: 'DELETE_RESOURCE_SUCCESS',
     ...data,
     resourceType,
 })
 
 export const saveResourcesStructure = (
-    _id: string,
-    newStructure: Array<{}>,
-    oldStructure: Array<{}>,
-    resourceType: string
+    _id: $PropertyType<initialStateType, 'loadedWebsite'>,
+    newStructure: $PropertyType<initialStateType, 'pagesStructure'>,
+    oldStructure: $PropertyType<initialStateType, 'pagesStructure'>,
+    resourceType: 'page' | 'plugin'
 ) => (dispatch: Object) => {
     dispatch(actionStart())
     const structurePatch = diffpatcher.diff(oldStructure, newStructure)
@@ -102,25 +109,28 @@ export const saveResourcesStructure = (
 }
 
 const saveResourcesStructureSuccess = (
-    structure: Array<{}>,
-    resourceType: string
+    structure: $PropertyType<initialStateType, 'pagesStructure'>,
+    resourceType: 'page' | 'plugin'
 ) => ({
     type: 'SAVE_RESOURCES_STRUCTURE_SUCCESS',
     structure,
     resourceType,
 })
 
-export const chooseResource = (_id: string, resourceType: boolean) => ({
+export const chooseResource = (
+    _id: string,
+    resourceType: 'plugin' | 'page'
+) => ({
     type: 'SET_CURRENT_RESOURCE',
     _id,
     resourceType,
 })
 
 export const saveResource = (
-    currentResource: string,
-    resourcesObjects: {},
-    structure: Array<{}>,
-    resourceType: string
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
+    structure: $PropertyType<initialStateType, 'pagesStructure'>,
+    resourceType: 'page' | 'plugin'
 ) => (dispatch: Object) => {
     const present = resourcesObjects[currentResource].present
     const draft = resourcesObjects[currentResource].draft
@@ -143,24 +153,30 @@ export const saveResource = (
         })
 }
 
-const saveResourceInState = (currentResource: string, draft: Object) => ({
+const saveResourceInState = (
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    draft: resourceType
+) => ({
     type: 'SAVE_RESOURCE_IN_STATE',
     currentResource,
     draft,
 })
 
-const saveResourceDraftInState = (currentResource: string, draft: Object) => ({
+const saveResourceDraftInState = (
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    draft: resourceType
+) => ({
     type: 'SAVE_RESOURCE_DRAFT_IN_STATE',
     currentResource,
     draft,
 })
 
 export const publishRevertResource = (
-    currentResource: string,
-    structure: Array<{}>,
-    resourceType: string,
-    revert: boolean,
-    resourcesObjects: Object
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    structure: $PropertyType<initialStateType, 'pagesStructure'>,
+    resourceType: 'page' | 'plugin',
+    revert: ?boolean,
+    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>
 ) => (dispatch: Object) => {
     dispatch(actionStart())
     return axios
@@ -190,8 +206,8 @@ export const publishRevertResource = (
 }
 
 export const revertResourceToSaved = (
-    currentResource: string,
-    resourcesObjects: Object
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>
 ) => (dispatch: Object) => {
     dispatch(
         addResourceVersion(
@@ -202,14 +218,16 @@ export const revertResourceToSaved = (
     dispatch(removeResourceFromUnsaved(currentResource))
 }
 
-const removeResourceFromUnsaved = (currentResource: string) => ({
+const removeResourceFromUnsaved = (
+    currentResource: $PropertyType<initialStateType, 'currentPage'>
+) => ({
     type: 'REMOVE_RESOURCE_FROM_UNSAVED',
     currentResource,
 })
 
 export const addResourceVersion = (
-    currentResource: string,
-    draft: {},
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    draft: resourceType,
     isNotForHistory?: boolean
 ) => ({
     type: 'ADD_RESOURCE_VERSION',
@@ -227,31 +245,33 @@ export const redoResourceVersion = () => ({
 })
 
 export const chooseBoxInPlugin = (item: string, ctrl?: boolean) => ({
-    type: actionTypes.CHOOSE_BOX_IN_PLUGIN,
+    type: 'CHOOSE_BOX_IN_PLUGIN',
     item,
 })
 
 export const addBoxInPlugin = (text: boolean) => ({
-    type: actionTypes.ADD_BOX_IN_PLUGIN,
+    type: 'ADD_BOX_IN_PLUGIN',
     text,
 })
 
 export const deleteBoxInPlugin = (withChildren: boolean) => ({
-    type: actionTypes.DELETE_BOX_IN_PLUGIN,
+    type: 'DELETE_BOX_IN_PLUGIN',
     withChildren,
 })
 export const duplicateBoxInPlugin = (withChildren: boolean) => ({
-    type: actionTypes.DUPLICATE_BOX_IN_PLUGIN,
+    type: 'DUPLICATE_BOX_IN_PLUGIN',
     withChildren,
 })
 
 export const changeBoxPropertyInPlugin = (key: string, value: any) => ({
-    type: actionTypes.CHANGE_BOX_PROPERTY_IN_PLUGIN,
+    type: 'CHANGE_BOX_PROPERTY_IN_PLUGIN',
     key,
     value,
 })
 
-export const saveStructureInPlugin = (structure: Array<{}>) => ({
-    type: actionTypes.SAVE_STRUCTURE_IN_PLUGIN,
+export const saveStructureInPlugin = (
+    structure: $PropertyType<initialStateType, 'pagesStructure'>
+) => ({
+    type: 'SAVE_STRUCTURE_IN_PLUGIN',
     structure,
 })

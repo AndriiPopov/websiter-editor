@@ -101,7 +101,7 @@ const MenuItems = props => {
 
         const saveItems = []
         buildItems(newItems, [], saveItems)
-        const result = { menuItems: saveItems }
+        const result = { menuItems: saveItems, currentMenuId: -1 }
         if (newCurrentMenuId) result.currentMenuId = newCurrentMenuId
         props.changeProperty(result, '')
     }
@@ -158,9 +158,22 @@ const MenuItems = props => {
                         inline
                         buttonClicked={handleDeleteItem}
                         icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>'
+                        tooltip="Delete menu item"
                     />
                 </div>
                 <div className={classes.TreeContainer}>
+                    {treeData.length === 0 ? (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                border: '1px dashed #777',
+                                left: '20px',
+                                padding: '4px',
+                            }}
+                        >
+                            Drop menu items here
+                        </div>
+                    ) : null}
                     <SortableTree
                         onChange={handleChange}
                         treeData={treeData}
@@ -293,8 +306,6 @@ const mapDispatchToProps = (dispatch, props) => {
     return {
         changeBarSize: (barSizes, initiator) =>
             dispatch(actions.changeBarSize(barSizes, initiator)),
-        changeMenuItemProperty: (key, value) =>
-            dispatch(actions.changeMenuItemProperty(key, value)),
     }
 }
 

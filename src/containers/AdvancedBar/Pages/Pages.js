@@ -8,7 +8,18 @@ import ResourcesTree from '../../../components/ResourcesTree/ResourcesTree'
 import ElementsTree from '../../../components/ElementsTreeAndProperties/ElementsTree/ElementsTree'
 import Properties from '../../../components/ElementsTreeAndProperties/Properties/Properties'
 
-const Pages = props => {
+import type { initialStateType } from '../../../store/reducer/reducer'
+
+type Props = {
+    currentPage: $PropertyType<initialStateType, 'currentPage'>,
+    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
+    pagesStructure: $PropertyType<initialStateType, 'pagesStructure'>,
+    barSizes: $PropertyType<initialStateType, 'barSizes'>,
+    changeBarSize: typeof actions.changeBarSize,
+    changeBoxProperty: typeof actions.changeBoxProperty,
+}
+
+const Pages = (props: Props) => {
     const page = props.currentPage
         ? props.resourcesObjects[props.currentPage]
             ? !props.resourcesObjects[props.currentPage].present.structure

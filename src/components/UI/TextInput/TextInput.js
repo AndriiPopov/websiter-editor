@@ -12,6 +12,7 @@ type Props = {
     wrong?: boolean,
     inline?: boolean,
     right?: boolean,
+    minWidth?: number,
 }
 
 export const TextInput = (props: Props) => {
@@ -30,6 +31,9 @@ export const TextInput = (props: Props) => {
                     props.wrong ? classes.Wrong : '',
                     props.right ? classes.Right : '',
                 ].join(' ')}
+                style={{
+                    minWidth: props.minWidth ? props.minWidth + 'px' : 'auto',
+                }}
                 value={props.value || ''}
                 onChange={e =>
                     props.changed ? props.changed(e.target.value) : {}

@@ -8,7 +8,19 @@ import ResourcesTree from '../../../components/ResourcesTree/ResourcesTree'
 import ElementsTree from '../../../components/ElementsTreeAndProperties/ElementsTree/ElementsTree'
 import Properties from '../../../components/ElementsTreeAndProperties/Properties/Properties'
 
-const Plugins = props => {
+import type { initialStateType } from '../../../store/reducer/reducer'
+
+type Props = {
+    currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
+    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
+    pagesStructure: $PropertyType<initialStateType, 'pagesStructure'>,
+    pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
+    barSizes: $PropertyType<initialStateType, 'barSizes'>,
+    changeBarSize: typeof actions.changeBarSize,
+    changeBoxProperty: typeof actions.changeBoxProperty,
+}
+
+const Plugins = (props: Props) => {
     const page = props.currentPlugin
         ? props.resourcesObjects[props.currentPlugin]
             ? !props.resourcesObjects[props.currentPlugin].present.structure
@@ -53,7 +65,6 @@ const Plugins = props => {
                             currentResource={props.currentPlugin}
                             resourcesObjects={props.resourcesObjects}
                             resourceDraft={page}
-                            pluginsStructure={props.pluginsStructure}
                             mode="plugin"
                         />
 

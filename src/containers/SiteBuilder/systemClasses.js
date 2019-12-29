@@ -16,6 +16,8 @@ export const systemClassMenu = `
                     }
                     .systemclass_menu {
                         list-style: none;
+                            margin: 0px;
+    padding: 0px;
                     }
                     .systemclass_menu-hidden {
                         display: none;
@@ -31,7 +33,7 @@ export const systemClassMenu = `
                     .systemclass_menu-item-group-title {
                         color: #999;
                         line-height: 1.5;
-                        padding: 8px 10px;
+                        
                         border-bottom: 1px solid #dedede;
                     }
                     
@@ -49,7 +51,7 @@ export const systemClassMenu = `
                     .systemclass_menu-vertical.systemclass_menu-sub,
                     .systemclass_menu-vertical-left.systemclass_menu-sub,
                     .systemclass_menu-vertical-right.systemclass_menu-sub {
-                        min-width: 160px;
+                        
                         margin-top: 0;
                     }
                     .systemclass_menu-item,
@@ -57,7 +59,7 @@ export const systemClassMenu = `
                         margin: 0;
                         position: relative;
                         display: block;
-                        padding: 7px 7px 7px 16px;
+                        padding: 0px;
                         white-space: nowrap;
                     }
                     .systemclass_menu-item.systemclass_menu-item-disabled,
@@ -85,13 +87,11 @@ export const systemClassMenu = `
                     .systemclass_menu .systemclass_menu-item .anticon {
                         width: 14px;
                         height: 14px;
-                        margin-right: 8px;
+                        
                         top: -1px;
                     }
                     .systemclass_menu-horizontal {
-                        background-color: #f3f5f7;
                         border: none;
-                        border-bottom: 1px solid #d9d9d9;
                         box-shadow: none;
                         white-space: nowrap;
                         overflow: hidden;
@@ -100,11 +100,11 @@ export const systemClassMenu = `
                     .systemclass_menu-horizontal
                         > .systemclass_menu-submenu
                         > .systemclass_menu-submenu-title {
-                        padding: 15px 20px;
+                        
                     }
                     .systemclass_menu-horizontal > .systemclass_menu-submenu,
                     .systemclass_menu-horizontal > .systemclass_menu-item {
-                        border-bottom: 2px solid transparent;
+                        
                         display: inline-block;
                         vertical-align: bottom;
                     }
@@ -119,7 +119,7 @@ export const systemClassMenu = `
                     .systemclass_menu-vertical-left,
                     .systemclass_menu-vertical-right,
                     .systemclass_menu-inline {
-                        padding: 12px 0;
+                        
                     }
                     .systemclass_menu-vertical > .systemclass_menu-item,
                     .systemclass_menu-vertical-left > .systemclass_menu-item,
@@ -137,7 +137,7 @@ export const systemClassMenu = `
                     .systemclass_menu-inline
                         > .systemclass_menu-submenu
                         > .systemclass_menu-submenu-title {
-                        padding: 12px 8px 12px 24px;
+                        
                     }
                     .systemclass_menu-vertical .systemclass_menu-submenu-arrow,
                     .systemclass_menu-vertical-left
@@ -193,9 +193,8 @@ export const systemClassMenu = `
                     .systemclass_menu-sub.systemclass_menu-inline
                         > .systemclass_menu-submenu
                         > .systemclass_menu-submenu-title {
-                        padding-top: 8px;
-                        padding-bottom: 8px;
-                        padding-right: 0;
+                        
+                        padding: 0;
                     }
                     .systemclass_menu-open-slide-up-enter,
                     .systemclass_menu-open-slide-up-appear {

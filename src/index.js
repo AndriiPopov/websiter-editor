@@ -21,40 +21,41 @@ import 'react-sortable-tree/style.css'
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
 
 if (process.env.NODE_ENV === 'development') {
-    axios.defaults.baseURL = 'http://localhost:5000'
+    axios.defaults.baseURL = 'http://api.websiter.dev:5000'
 } else {
     axios.defaults.baseURL = 'https://api.websiter.dev'
 }
 
 export const store = createStore(
     reducer,
-    composeEnhancers(applyMiddleware(thunk))
+    composeEnhancers
+        ? composeEnhancers(applyMiddleware(thunk))
+        : applyMiddleware(thunk)
 )
 
 // set axios interceptors
 axios.interceptors.request.use(function(config) {
-    if (localStorage.getItem('currentAction')) {
+    const currentAction = sessionStorage.getItem('currentAction')
+    if (currentAction) {
         // $FlowFixMe
-        config.headers.currentAction = localStorage.getItem('currentAction')
-        localStorage.setItem(
-            'currentAction',
-            (parseInt(localStorage.getItem('currentAction')) + 1).toString()
-        )
+        config.headers.currentAction = currentAction
     }
     return config
 })
 
 axios.interceptors.response.use(
     function(response: { data: mixed }) {
+        // $FlowFixMe
         if (response.headers['x-auth-token'])
             axios.defaults.headers.common['x-auth-token'] =
+                // $FlowFixMe
                 response.headers['x-auth-token']
         return response
     },
     function(error) {
         if (error.response) {
             if (parseInt(error.response.status) === 412) {
-                store.dispatch(logout())
+                window.location.reload()
             }
         }
         return Promise.reject(error)
@@ -68,9 +69,10 @@ const app = (
         </BrowserRouter>
     </Provider>
 )
+const inIframe = window.self !== window.top
 
 const root = document.getElementById('root')
-if (root !== null) {
+if (root !== null && !inIframe) {
     ReactDOM.render(app, root)
 }
 

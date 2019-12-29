@@ -27,13 +27,13 @@ export {
 } from './builder'
 
 export {
-    auth,
     logout,
     authCheckState,
     deleteUser,
     changeBarSize,
     changeBarSizeDo,
-    saveBarSizes,
+    savePropertiesOnLeave,
+    switchTooltips,
 } from './auth'
 
 export {
@@ -45,6 +45,7 @@ export {
     changeWebsiteProperty,
     saveAllWebsitesDataFromServer,
     setCurrentTopTab,
+    verifyCustomDomain,
 } from './website'
 
 export { imageUpload, deleteImage, renameImage, chooseImage } from './images'

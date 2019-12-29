@@ -1,20 +1,24 @@
 import { isEqual, omit } from 'lodash'
 
-import type { pagesStructureType } from '../../flowTypes'
+import type {
+    initialStateType,
+    resourceType,
+    elementType,
+} from '../store/reducer/reducer'
 
 export const findDecedants = (
-    items: pagesStructureType,
+    items: $PropertyType<initialStateType, 'pagesStructure'>,
     id: string
-): pagesStructureType => {
+): $PropertyType<initialStateType, 'pagesStructure'> => {
     return items.filter(item =>
         item.path.some(element => element.toString() === id.toString())
     )
 }
 
 export const findDirectChildren = (
-    items: pagesStructureType,
+    items: $PropertyType<initialStateType, 'pagesStructure'>,
     id: string
-): pagesStructureType => {
+): $PropertyType<initialStateType, 'pagesStructure'> => {
     const elements = items.filter(item => item.id === id)
     if (elements.length !== 1) {
         return []
@@ -29,12 +33,8 @@ type child = {
     id: string,
 }
 
-export const buildItems = (
-    children: Array<child>,
-    path: Array<string>,
-    result: Array<{}>
-) => {
-    const doBuildItems = (children: Array<child>, path: Array<string>) => {
+export const buildItems = (children, path, result) => {
+    const doBuildItems = (children, path) => {
         children.forEach(element => {
             result.push({
                 ...omit(element, [
@@ -46,7 +46,8 @@ export const buildItems = (
                 ]),
                 path,
             })
-            doBuildItems(element.children, [...path, element.id])
+            if (element.children)
+                doBuildItems(element.children, [...path, element.id])
         })
     }
     doBuildItems(children, path)

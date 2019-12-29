@@ -4,23 +4,23 @@ import { connect } from 'react-redux'
 import * as classes from './SizeDragController.module.css'
 import { dragStart } from '../../../utils/dragFunction'
 
+import type { initialStateType } from '../../../store/reducer/reducer'
+
 type Props = {
     addClass: string,
     changed: (value: number) => {},
     vertical?: boolean,
     startValue: number,
-    barSizes: {},
+    barSizes?: $PropertyType<initialStateType, 'barSizes'>,
 }
 
 export const SizeDragController = (props: Props) => {
-    const startElY = props.startValue
-
     const handleDragMouseDown = e => {
         if (props.vertical) {
             dragStart(
                 e,
                 (difX, difY) => {
-                    let value = startElY - difY
+                    let value = props.startValue - difY
                     props.changed(value)
                 },
                 () => {}

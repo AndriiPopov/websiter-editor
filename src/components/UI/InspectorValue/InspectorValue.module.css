@@ -14,12 +14,19 @@
 }
 
 .InputHidden {
-    opacity: 0;
+    border: none;
+    background: transparent;
+    outline: none;
 }
 
 .Input,
 .Span {
     padding: 0px 4px;
+}
+
+.Span {
+    opacity: 0;
+    padding: 0px 5px;
 }
 
 .ItemHighlighted {

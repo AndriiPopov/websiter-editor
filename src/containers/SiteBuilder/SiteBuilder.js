@@ -1,7 +1,9 @@
-import React, { Component } from 'react'
+import React, { Component, useRef, useEffect } from 'react'
 import { connect } from 'react-redux'
-import { omit, isEqual, isEmpty, cloneDeep } from 'lodash'
+import { isEqual, cloneDeep } from 'lodash'
+import ReactDOMServer from 'react-dom/server'
 
+import { getCurrentResourceValue } from '../../utils/basic'
 import * as classes from './SiteBuilder.module.css'
 import * as actions from '../../store/actions/index'
 import Frame, { FrameContextConsumer } from './Frame/index'
@@ -9,173 +11,207 @@ import SiteBuilderLayout from '../../components/SiteBuilderLayout/SiteBuilderLay
 import BuilderElement from './BuilderElement/BuilderElement'
 import HoveredBoxHighlight from './HoveredBoxHighlight/HoveredBoxHighlight'
 import { systemClassMenu } from './systemClasses'
-import type {
-    pageStructureType,
-    filesStructureType,
-    resourcesObjectsType,
-} from '../../../flowTypes'
 import { Beforeunload } from 'react-beforeunload'
 import ReactResizeDetector from 'react-resize-detector'
+import saveRect from './methods/saveRect'
+import { Provider } from 'react-redux'
+import { renderToString } from 'react-dom/server'
+import { store } from '../../index'
 
-type Props = {
-    zoom: number,
-    currentPage: string,
-    resourcesObjects: {},
-    structure: pageStructureType,
-    filesStructure: filesStructureType,
-    resourcesObjects: resourcesObjectsType,
-    pluginsStructure: filesStructureType,
-    resourcesObjects: resourcesObjectsType,
-    hoveredElementId: string,
-    markRefreshing: Function,
-    isRefreshing: boolean,
-    sizeIsChanging: boolean,
-    notSavedResources: Array<string>,
-    saveBarSizes: Function,
-    changeBarSize: Function,
-    barSizes: {},
+import type {
+    resourceType,
+    initialStateType,
+} from '../../store/reducer/reducer'
+
+export type Props = {
+    zoom: $PropertyType<initialStateType, 'pageZoom'>,
+    currentPage: $PropertyType<initialStateType, 'currentPage'>,
+    currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
+    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
+    pagesStructure: $PropertyType<initialStateType, 'pagesStructure'>,
+    pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
+    hoveredElementId: $PropertyType<initialStateType, 'hoveredElementId'>,
+    isRefreshing: $PropertyType<initialStateType, 'isRefreshing'>,
+    sizeIsChanging: $PropertyType<initialStateType, 'sizeIsChanging'>,
+    notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>,
+    barSizes: $PropertyType<initialStateType, 'barSizes'>,
+    tooltipsOn: $PropertyType<initialStateType, 'tooltipsOn'>,
+    markRefreshing: typeof actions.markRefreshing,
+    savePropertiesOnLeave: typeof actions.savePropertiesOnLeave,
+    changeBarSize: typeof actions.changeBarSize,
+    saveHoveredElementRect: typeof actions.saveHoveredElementRect,
 }
 
 type State = {
-    head: any,
+    headValue: string,
 }
 
 class SiteBuilder extends Component<Props, State> {
     state = {
-        head: [],
+        headValue: '',
     }
 
     componentDidMount() {
-        const iframe = document.getElementById('builderFrame')
-        const innerDoc = iframe.contentDocument || iframe.contentWindow.document
-        const rect = innerDoc.body.getBoundingClientRect()
-        this.props.saveHoveredElementRect([{ id: 'element_1' }], {
-            left: rect.left,
-            top: rect.top,
-            width: rect.right - rect.left,
-            height: rect.bottom - rect.top,
-        })
-        // if (
-        //     this.props.currentPage &&
-        //     this.props.resourcesObjects &&
-        //     this.props.pageStructure.length === 0
-        // ) {
-        //     this.props.loadCurrentPageToBuilder(
-        //         this.props.currentPage,
-        //         this.props.resourcesObjects
-        //     )
-        // }
+        saveRect(this.props)
     }
     head = ''
 
-    componentWillReceiveProps(newProps) {
-        const structure =
-            newProps.resourcesObjects[newProps.currentPage].present.structure ||
-            newProps.resourcesObjects[newProps.currentPage].draft.structure
-        if (structure) {
-            const getHead = () => {
-                return structure
-                    ? structure
-                          .filter(item => item.path.length === 1)
-                          .map((item, index) => {
-                              if (index === 0)
-                                  return structure
-                                      .filter(itemInn =>
-                                          isEqual(itemInn.path, [item.id])
-                                      )
-                                      .map(itemInn => {
-                                          let Tag = itemInn.tag || 'link'
-                                          Tag = Tag.replace(/[^a-zA-Z]/g, '')
-                                          Tag = Tag.length > 0 ? Tag : 'link'
-                                          const properties = omit(
-                                              itemInn.properties,
-                                              ['style']
-                                          )
-                                          let propertiesString = ''
-                                          for (let attr in properties)
-                                              propertiesString +=
-                                                  attr +
-                                                  ' ="' +
-                                                  properties[attr] +
-                                                  '" '
-                                          let fileContent = ''
+    async componentWillReceiveProps(newProps: Props) {
+        const currentPageItemInStructure = newProps.pagesStructure.find(
+            item => item.id === newProps.currentPage
+        )
+        const resourceDraft = getCurrentResourceValue(
+            newProps.currentPage,
+            newProps.resourcesObjects
+        )
+        const newHead = resourceDraft
+            ? resourceDraft.structure
+                ? resourceDraft.structure
+                      .filter(itemInn =>
+                          isEqual(itemInn.path, ['element_-1', 'element_0'])
+                      )
+                      .map(itemInn => (
+                          <BuilderElement
+                              key={itemInn.id}
+                              structure={resourceDraft.structure}
+                              element={itemInn}
+                              hoveredElementId={newProps.hoveredElementId}
+                              pluginsStructure={newProps.pluginsStructure}
+                              resourcesObjects={newProps.resourcesObjects}
+                              document={document}
+                              pluginsPathArray={[]}
+                              resourceDraft={resourceDraft}
+                              currentResource={newProps.currentPage}
+                              pageInStructure={currentPageItemInStructure}
+                          />
+                      ))
+                : ''
+            : ''
+        const newHeadString = renderToString(
+            <Provider store={store}>{newHead}</Provider>
+        )
 
-                                          if (Tag === 'style') {
-                                              if (properties.name) {
-                                                  const file = newProps.filesStructure.find(
-                                                      file =>
-                                                          file.name ===
-                                                          properties.name
-                                                  )
-                                                  if (file) {
-                                                      if (!file.hidden) {
-                                                          fileContent =
-                                                              newProps
-                                                                  .resourcesObjects[
-                                                                  file.id
-                                                              ].value
-                                                      }
-                                                  }
-                                              }
-                                              return `<style ${propertiesString}>${fileContent}</style>`
-                                          }
-
-                                          return `<${Tag} ${propertiesString} />`
-                                      })
-                              return ''
-                          })
-                          .join(' ')
-                    : ''
-            }
-
-            const newHead = getHead()
-
-            if (JSON.stringify(newHead) !== this.state.head) {
-                this.head = newHead.slice(0)
+        if (newHeadString) {
+            if (newHeadString !== this.state.headValue) {
                 this.props.markRefreshing(true)
-
-                this.setState({ head: JSON.stringify(this.head) })
+                this.setState({ headValue: newHeadString })
             }
         }
     }
 
     checkOnLeave = e => {
-        this.props.saveBarSizes(this.props.barSizes)
+        //check if there are unsaved resources before leave
+        this.props.savePropertiesOnLeave(
+            this.props.barSizes,
+            this.props.tooltipsOn,
+            this.props.currentPage,
+            this.props.currentPlugin
+        )
         if (this.props.notSavedResources.length > 0)
             return 'Some data is not saved.'
         else return undefined
     }
 
     render() {
-        console.log(this.props.resourcesObjects)
-        const resourceDraft = this.props.currentPage
-            ? this.props.resourcesObjects[this.props.currentPage]
-                ? isEmpty(
-                      this.props.resourcesObjects[this.props.currentPage]
-                          .present
-                  )
-                    ? this.props.resourcesObjects[this.props.currentPage].draft
-                    : this.props.resourcesObjects[this.props.currentPage]
-                          .present
-                : null
-            : null
-        const { props } = this
-        const zoom = props.zoom / 100
-        const size = 100 / zoom + '%'
-        const structure =
-            props.resourcesObjects[props.currentPage].present.structure ||
-            props.resourcesObjects[props.currentPage].draft.structure
+        const currentPageItemInStructure = this.props.pagesStructure.find(
+            item => item.id === this.props.currentPage
+        )
+        const resourceDraft = getCurrentResourceValue(
+            this.props.currentPage,
+            this.props.resourcesObjects
+        )
 
-        const bodyElement = structure.filter(item => item.path.length === 1)[1]
-        const bodyProps = cloneDeep(bodyElement.properties)
-        const bodyStyle = bodyElement.style
-        if (bodyStyle) bodyProps.style = bodyStyle
+        let frame = null
+        if (resourceDraft) {
+            const { props } = this
+            const zoom = props.zoom / 100
+            const size = 100 / zoom + '%'
+            const structure = resourceDraft.structure
 
-        const htmlElement = structure.filter(item => item.path.length === 0)[0]
-        const htmlProps = cloneDeep(htmlElement.properties)
-        const htmlStyle = htmlElement.style
-        if (htmlStyle) htmlProps.style = htmlStyle
+            const bodyElement = structure.filter(
+                item => item.path.length === 1
+            )[1]
+            const bodyProps = cloneDeep(bodyElement.properties)
+            const bodyStyle = bodyElement.style
+            if (bodyStyle) bodyProps.style = bodyStyle
 
+            const htmlElement = structure.filter(
+                item => item.path.length === 0
+            )[0]
+            const htmlProps = cloneDeep(htmlElement.properties)
+            const htmlStyle = htmlElement.style
+            if (htmlStyle) htmlProps.style = htmlStyle
+
+            frame = this.props.isRefreshing ? (
+                <StopRefresh />
+            ) : (
+                <>
+                    <Frame
+                        id="builderFrame"
+                        key={1}
+                        style={{
+                            width: size,
+                            height: size,
+                            msZoom: zoom,
+                            MozTransform: `scale(${zoom})`,
+                            MozTransformOrigin: '0 0',
+                            OTransform: `scale(${zoom})`,
+                            OTransformOrigin: '0 0',
+                            WebkitTransform: `scale(${zoom})`,
+                            WebkitTransformOrigin: '0 0',
+                            border: 'none',
+                            margin: '0',
+                            padding: '0',
+                        }}
+                        bodyProps={bodyProps}
+                        htmlProps={htmlProps}
+                        initialContent={`<!DOCTYPE html><html><head>${systemClassMenu} ${
+                            this.state.headValue
+                        }</head><body></body></html>`}
+                    >
+                        <FrameContextConsumer>
+                            {({ document, window }) => {
+                                return structure
+                                    ? structure
+                                          .filter(itemInn =>
+                                              isEqual(itemInn.path, [
+                                                  'element_-1',
+                                                  'element_1',
+                                              ])
+                                          )
+                                          .map(itemInn => (
+                                              <BuilderElement
+                                                  key={itemInn.id}
+                                                  structure={structure}
+                                                  element={itemInn}
+                                                  hoveredElementId={
+                                                      props.hoveredElementId
+                                                  }
+                                                  pluginsStructure={
+                                                      props.pluginsStructure
+                                                  }
+                                                  resourcesObjects={
+                                                      props.resourcesObjects
+                                                  }
+                                                  document={document}
+                                                  pluginsPathArray={[]}
+                                                  resourceDraft={resourceDraft}
+                                                  currentResource={
+                                                      this.props.currentPage
+                                                  }
+                                                  pageInStructure={
+                                                      currentPageItemInStructure
+                                                  }
+                                              />
+                                          ))
+                                    : null
+                            }}
+                        </FrameContextConsumer>
+                        <HoveredBoxHighlight />
+                    </Frame>
+                </>
+            )
+        }
         return (
             <Beforeunload onBeforeunload={e => this.checkOnLeave(e)}>
                 <ReactResizeDetector
@@ -186,83 +222,7 @@ class SiteBuilder extends Component<Props, State> {
                     }
                 />
                 <SiteBuilderLayout>
-                    {this.props.isRefreshing ? (
-                        <StopRefresh />
-                    ) : (
-                        <>
-                            <Frame
-                                id="builderFrame"
-                                key={1}
-                                style={{
-                                    width: size,
-                                    height: size,
-                                    msZoom: zoom,
-                                    MozTransform: `scale(${zoom})`,
-                                    MozTransformOrigin: '0 0',
-                                    OTransform: `scale(${zoom})`,
-                                    OTransformOrigin: '0 0',
-                                    WebkitTransform: `scale(${zoom})`,
-                                    WebkitTransformOrigin: '0 0',
-                                    border: 'none',
-                                    margin: '0',
-                                    padding: '0',
-                                }}
-                                bodyProps={bodyProps}
-                                htmlProps={htmlProps}
-                                initialContent={`<!DOCTYPE html><html><head>${systemClassMenu} ${
-                                    this.head
-                                }</head><body></body></html>`}
-                            >
-                                <FrameContextConsumer>
-                                    {({ document, window }) => {
-                                        return structure
-                                            ? structure
-                                                  .filter(itemInn =>
-                                                      isEqual(itemInn.path, [
-                                                          structure.filter(
-                                                              item =>
-                                                                  item.path
-                                                                      .length ===
-                                                                  1
-                                                          )[1].id,
-                                                      ])
-                                                  )
-                                                  .map(itemInn => (
-                                                      <BuilderElement
-                                                          key={itemInn.id}
-                                                          structure={structure}
-                                                          element={itemInn}
-                                                          hoveredElementId={
-                                                              props.hoveredElementId
-                                                          }
-                                                          pluginsStructure={
-                                                              props.pluginsStructure
-                                                          }
-                                                          resourcesObjects={
-                                                              props.resourcesObjects
-                                                          }
-                                                          document={document}
-                                                          pluginsPathArray={[]}
-                                                          resourceDraft={
-                                                              resourceDraft
-                                                          }
-                                                          currentResource={
-                                                              this.props
-                                                                  .currentPage
-                                                          }
-                                                          filesStructure={
-                                                              this.props
-                                                                  .filesStructure
-                                                          }
-                                                      />
-                                                  ))
-                                            : null
-                                    }}
-                                </FrameContextConsumer>
-                                <HoveredBoxHighlight />
-                            </Frame>
-                        </>
-                    )}
+                    {frame}
                     {this.props.sizeIsChanging ? (
                         <div className={classes.Overlay} />
                     ) : null}
@@ -276,14 +236,16 @@ const mapStateToProps = state => {
     return {
         zoom: state.pageZoom,
         currentPage: state.currentPage,
+        currentPlugin: state.currentPlugin,
         resourcesObjects: state.resourcesObjects,
-        filesStructure: state.filesStructure,
         pluginsStructure: state.pluginsStructure,
+        pagesStructure: state.pagesStructure,
         isRefreshing: state.isRefreshing,
         sizeIsChanging: state.sizeIsChanging,
         notSavedResources: state.notSavedResources,
         barSizes: state.barSizes,
         findMode: state.findMode,
+        tooltipsOn: state.tooltipsOn,
     }
 }
 
@@ -291,7 +253,20 @@ const mapDispatchToProps = dispatch => {
     return {
         markRefreshing: refreshing =>
             dispatch(actions.markRefreshing(refreshing)),
-        saveBarSizes: barSizes => dispatch(actions.saveBarSizes(barSizes)),
+        savePropertiesOnLeave: (
+            barSizes,
+            tooltipsOn,
+            currentPage,
+            currentPlugin
+        ) =>
+            dispatch(
+                actions.savePropertiesOnLeave(
+                    barSizes,
+                    tooltipsOn,
+                    currentPage,
+                    currentPlugin
+                )
+            ),
         changeBarSize: (barSizes, initiator) =>
             dispatch(actions.changeBarSize(barSizes, initiator)),
         saveHoveredElementRect: (id, size) =>
@@ -303,8 +278,13 @@ const StopRefresh = connect(
     mapStateToProps,
     mapDispatchToProps
 )(props => {
-    setTimeout(() => props.markRefreshing(false), 1)
-    return <></>
+    const span = useRef(null)
+    useEffect(() => {
+        if (span.current) {
+            props.markRefreshing(false)
+        }
+    })
+    return <span ref={span} style={{ display: 'none' }} />
 })
 export default connect(
     mapStateToProps,

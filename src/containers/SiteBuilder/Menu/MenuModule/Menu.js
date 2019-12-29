@@ -394,6 +394,12 @@ var Menu =
                                 this.props.popupMenuItemActiveClasses || [],
                         })
                     }
+
+                    if ('activeKeys' in this.props) {
+                        this.store.setState({
+                            activeKeys: this.props.activeKeys || [],
+                        })
+                    }
                 },
             },
             {
@@ -456,5 +462,6 @@ Menu.defaultProps = {
     popupMenuBlockClasses: [],
     popupMenuItemClasses: [],
     popupMenuItemActiveClasses: [],
+    activeKeys: [],
 }
 export default Menu

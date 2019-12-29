@@ -5,13 +5,13 @@
     font-size: 12px;
     display: block;
     height: initial;
-    padding: 4px 5px;
+    padding: 1px;
 }
 
 .Input {
     width: 15px;
     height: 15px;
-    margin-left: 10px; 
+    margin-left: 10px;
 }
 
 .StyleControls {

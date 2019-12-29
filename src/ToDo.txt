@@ -1,49 +1,24 @@
-current task
-
-load pages, plugins and files when needed
 improve the design
-persist necessary/usual properties
 map, gallery 
 storage limit
-tests
 website
+add on free resource
 
-live version
-
-Create main server:
-    //sign in - my.websiter.dev/login
-    //serve live.websiter.dev/{website}
-    //relative links in client pages with optional url (https://live.websiter.dev/{website})
-    //send req to manager to add a custom domain
-    //attach and detach custom domains to new apps and add ssl -> limit 1000
-
-Manager
-    -- not now -- create new apps with hobby dynos
-
-Custom domain app
-    //serve live custom domains
-
-React client app 
-    //relative links in client pages with optional url (https://live.websiter.dev/{website})
-
-React editor app
-    Add custom domain
-
-All client and editors api to api.websiter.dev
-
-
-
+tests
+//add copy with size option in images
+//mobile view
+//load pages, plugins and files when needed
 // hover on text highlight
 //codemirror
-//add tultips
 //ctrl click -> go to plugin
 //inject code
 //save blocks of changes
-//comp                                                                                                                                                                                                                                                                                                                                                                                                      onents props
-                                                                                                                                                            
 
-{/* import { NavLink } from 'react-router-dom'
-        <NavLink to={props.link} exact activeClassName={classes.Active}>
-            <Svg icon={props.icon} />
-            {props.children}
-        </NavLink> */}
+
+sudo -i gedit /etc/hosts
+
+Switch to http: 
+
+Go to chrome://net-internals/#hsts. Enter 3rdrevolution.com under Delete domain security policies and press the Delete button.
+
+Now go to chrome://settings/clearBrowserData, tick the box Cached images and files and press click the button Clear data.

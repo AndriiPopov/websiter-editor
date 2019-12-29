@@ -1,8 +1,20 @@
+import { isEmpty } from 'lodash'
+
 export const checkIfCapital = (char: string) => {
     if (char === char.toUpperCase() && char !== char.toLowerCase()) {
         return true
     }
 }
+
+export const getCurrentResourceValue = (id: string, resourcesObjects: {}) =>
+    id
+        ? resourcesObjects[id]
+            ? isEmpty(resourcesObjects[id].present)
+                ? resourcesObjects[id].draft
+                : resourcesObjects[id].present
+            : null
+        : null
+
 function _objectSpread(target) {
     for (var i = 1; i < arguments.length; i++) {
         var source = arguments[i] != null ? arguments[i] : {}
@@ -92,4 +104,14 @@ export function buildTree(items) {
             return buildItem(item)
         })
     return tree
+}
+
+export const getInheritedPropertyName = (value: string) => {
+    const length = value.length
+    if (length > 2) {
+        if (value.charAt(0) === '$' && value.charAt(length - 1) === '$') {
+            return value.substr(1, length - 2)
+        }
+    }
+    return false
 }

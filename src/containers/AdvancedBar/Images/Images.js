@@ -9,6 +9,19 @@ import Svg from '../../../components/Svg/Svg'
 import { bucket, CloudFrontUrl } from '../../../awsConfig'
 import SmallButton from '../../../components/UI/Buttons/SmallButton/SmallButton'
 
+import type { initialStateType } from '../../../store/reducer/reducer'
+
+type Props = {
+    renameImage: typeof actions.renameImage,
+    deleteImage: typeof actions.deleteImage,
+    imageUpload: typeof actions.imageUpload,
+    chooseImage: typeof actions.chooseImage,
+    images: $PropertyType<initialStateType, 'images'>,
+    size: $PropertyType<initialStateType, 'storage'>,
+    userId: $PropertyType<initialStateType, 'userId'>,
+    currentImage: $PropertyType<initialStateType, 'currentImage'>,
+}
+
 const copyToClipboard = str => {
     const el = document.createElement('textarea') // Create a <textarea> element
     el.value = str // Set its value to the string that you want copied
@@ -36,20 +49,6 @@ const copyToClipboard = str => {
     }
 }
 
-type Props = {
-    renameImage: Function,
-    deleteImage: Function,
-    imageUpload: Function,
-    chooseImage: Function,
-    images: Array<{
-        name: string,
-        label: string,
-    }>,
-    size: number,
-    userId: string,
-    currentImage: string,
-}
-
 const Images = (props: Props) => (
     <div className={classes.Container}>
         <div className={classes.Buttons}>
@@ -57,16 +56,21 @@ const Images = (props: Props) => (
                 inline
                 icon='<svg height="20" viewBox="0 0 24 24" width="20"><path d="M5 4v3h5.5v12h3V7H19V4z" ></path></svg>'
                 buttonClicked={() => props.renameImage(props.currentImage)}
+                tooltip="Rename media file"
             />
             <SmallButton
                 inline
                 icon='<svg height="20" viewBox="0 0 24 24" width="20"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" ></path></svg>'
                 buttonClicked={() => props.deleteImage(props.currentImage)}
+                tooltip="Delete media file"
             />
             <SmallButton
                 inline
                 icon='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"></path><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>'
-                buttonClicked={() => copyToClipboard(props.currentImage)}
+                buttonClicked={() =>
+                    copyToClipboard('websiter/' + props.currentImage)
+                }
+                tooltip="Copy path to the media file to clipboard.<br>You can paste it where needed."
             />
         </div>
         <div className={classes.Images}>

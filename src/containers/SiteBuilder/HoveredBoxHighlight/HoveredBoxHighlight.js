@@ -2,8 +2,19 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { isEmpty } from 'lodash'
 
-const HoveredBoxHighlight = props => {
-    const iframe = document.getElementById('builderFrame')
+import type { initialStateType } from '../../../store/reducer/reducer'
+
+export type Props = {
+    currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
+    hoverMode: $PropertyType<initialStateType, 'hoverMode'>,
+    hoveredElementSize: $PropertyType<initialStateType, 'hoveredElementSize'>,
+    hoveredElementId: $PropertyType<initialStateType, 'hoveredElementId'>,
+}
+
+const HoveredBoxHighlight = (props: Props) => {
+    const iframe = ((document.getElementById(
+        'builderFrame'
+    ): any): HTMLIFrameElement)
     //const innerDoc = iframe.contentDocument || iframe.contentWindow.document
     if (!iframe) return null
     const scrollY = iframe.contentWindow.pageYOffset
@@ -30,6 +41,12 @@ const HoveredBoxHighlight = props => {
                         height: parent.height + 'px',
                         pointerEvents: 'none',
                         zIndex: '2147483647',
+                        border: 'none',
+                        margin: '0px',
+                        padding: '0px',
+                        borderRadius: '0px',
+                        boxShadow: 'none',
+                        backgroundImage: 'none',
                     }}
                 />
             )
@@ -50,11 +67,11 @@ const HoveredBoxHighlight = props => {
     }
     if (props.hoveredElementId) {
         if (props.hoverMode === 'page') {
-            if (props.sizes[props.hoveredElementId]) {
-                addHoverBoxes(props.sizes[props.hoveredElementId])
+            if (props.hoveredElementSize[props.hoveredElementId]) {
+                addHoverBoxes(props.hoveredElementSize[props.hoveredElementId])
             }
         } else if (props.hoverMode === 'plugin') {
-            findParents(props.sizes)
+            findParents(props.hoveredElementSize)
             parents.forEach(element => {
                 addHoverBoxes(element)
             })
@@ -66,7 +83,7 @@ const HoveredBoxHighlight = props => {
 const mapStateToProps = state => {
     return {
         hoveredElementId: state.hoveredElementId,
-        sizes: state.hoveredElementSize,
+        hoveredElementSize: state.hoveredElementSize,
         hoverMode: state.hoverMode,
         currentPlugin: state.currentPlugin,
     }

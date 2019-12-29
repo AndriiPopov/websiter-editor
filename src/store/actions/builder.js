@@ -1,14 +1,21 @@
-import * as actionTypes from './actionTypes'
 import * as actions from './index'
-import type { pageStructureType } from '../../../flowTypes'
 import { isEqual, omit, isObject, isEmpty, cloneDeep } from 'lodash'
 
-const findElementIndex = (draft: Object): number => {
+import type {
+    initialStateType,
+    resourceType,
+} from '../../store/reducer/reducer'
+
+const findElementIndex = (draft: resourceType): number => {
+    if (!draft.currentBox) return -1
     if (draft.currentBox.length < 1) return -1
     return draft.structure.findIndex(item => item.id === draft.currentBox)
 }
 
-const findRouteElements = (draft: Object, mode: string) => {
+const findRouteElements = (
+    draft: resourceType,
+    mode: 'plugin' | 'page'
+): Array<number> => {
     const result = []
     if (mode === 'plugin') {
         result.push(0)
@@ -21,9 +28,9 @@ const findRouteElements = (draft: Object, mode: string) => {
 }
 
 export const saveElementsStructure = (
-    structure: pageStructureType,
-    currentResource: string,
-    resourceDraft: {}
+    structure: $PropertyType<resourceType, 'structure'>,
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType
 ) => (dispatch: Object) => {
     if (!currentResource || !resourceDraft || !structure) return
     const draft = { ...resourceDraft, structure }
@@ -39,8 +46,8 @@ export const saveElementsStructure = (
 
 export const chooseBox = (
     item: string,
-    currentResource: string,
-    resourceDraft: {}
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType
 ) => (dispatch: Object) => {
     if (!currentResource || !item || !resourceDraft) return
     const draft = { ...resourceDraft, currentBox: item }
@@ -49,17 +56,20 @@ export const chooseBox = (
 }
 
 export const changeBoxProperty = (
-    key: string | Array<{}>,
+    key: string | {},
     value: any,
-    currentResource: string,
-    resourceDraft: {},
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType,
     isNotForHistory?: boolean
 ) => (dispatch: Object) => {
     if (!currentResource || !key || !resourceDraft) return
     const elementIndex = findElementIndex(resourceDraft)
     if (elementIndex < 0) return
 
-    const changes = isObject(key) ? key : { [key]: value }
+    let changes = {}
+    if (isObject(key) && !(typeof key === 'string' || key instanceof String))
+        changes = key
+    else changes[key.toString()] = value
     const draft = {
         ...resourceDraft,
         structure: [
@@ -90,8 +100,8 @@ const deleteFromHoveredSizes = (currentResource, removedElements) => ({
 
 const expandAllParents = (
     id: string,
-    currentResource: string,
-    resourceDraft: {}
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType
 ) => (dispatch: Object) => {
     if (!currentResource || !resourceDraft) return
     const box = resourceDraft.structure.find(item => item.id === id)
@@ -123,23 +133,40 @@ export const toggleFindMode = (value?: string) => ({
 })
 
 export const addBox = (
-    currentResource: string,
-    resourceDraft: {},
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType,
     mode: 'page' | 'plugin',
-    text: boolean
+    type?: 'children' | 'inside' | 'text'
 ) => (dispatch: Object) => {
     if (!currentResource || !resourceDraft) return
     const routeElements = findRouteElements(resourceDraft, mode)
     let elementIndex = findElementIndex(resourceDraft)
+    let putInside
     if (mode === 'plugin') {
-        if (elementIndex < 0) {
+        if (elementIndex <= 0) {
             elementIndex = 0
+            putInside = true
         }
     } else if (mode === 'page') {
         if (elementIndex < 1) {
             elementIndex = routeElements[routeElements.length - 1]
         }
+        if (resourceDraft.structure[elementIndex].path.length < 2) {
+            putInside = true
+        }
     }
+
+    const element = resourceDraft.structure[elementIndex]
+    if (element.isChildren) {
+        putInside = false
+    } else if (element.childrenTo) {
+        putInside = true
+    } else {
+        if (type === 'inside') putInside = true
+    }
+
+    if (type === 'inside') putInside = true
+
     const newId = `element_${resourceDraft.currentId}`
     const newCurrentId = resourceDraft.currentId + 1
 
@@ -149,14 +176,24 @@ export const addBox = (
             ...resourceDraft.structure.slice(0, elementIndex + 1),
             {
                 id: newId,
-                path:
-                    resourceDraft.structure[elementIndex].path.length === 0
-                        ? [resourceDraft.structure[elementIndex].id]
-                        : [...resourceDraft.structure[elementIndex].path],
-                tag: text ? 'text' : 'div',
-                text: text,
+                path: putInside
+                    ? [
+                          ...resourceDraft.structure[elementIndex].path,
+                          resourceDraft.structure[elementIndex].id,
+                      ]
+                    : [...resourceDraft.structure[elementIndex].path],
+                tag:
+                    type === 'text'
+                        ? 'text'
+                        : type === 'children'
+                        ? 'New children'
+                        : 'div',
+                textMode: 'text',
+                text: type === 'text',
                 textContent: '',
+                isChildren: type === 'children',
                 properties: {},
+                propertiesString: '',
             },
             ...resourceDraft.structure.slice(elementIndex + 1),
         ],
@@ -167,10 +204,10 @@ export const addBox = (
 }
 
 export const deleteBox = (
-    currentResource: string,
-    resourceDraft: {},
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType,
     mode: 'page' | 'plugin',
-    withChildren: boolean
+    withChildren?: boolean
 ) => (dispatch: Object) => {
     if (!currentResource || !resourceDraft) return
     const routeElements = findRouteElements(resourceDraft, mode)
@@ -210,10 +247,10 @@ export const deleteBox = (
 }
 
 export const duplicateBox = (
-    currentResource: string,
-    resourceDraft: {},
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType,
     mode: 'page' | 'plugin',
-    withChildren: boolean
+    withChildren?: boolean
 ) => (dispatch: Object) => {
     if (!currentResource || !resourceDraft) return
     const routeElements = findRouteElements(resourceDraft, mode)
@@ -297,10 +334,10 @@ export const duplicateBox = (
 }
 
 export const splitText = (
-    start: Number,
+    start: number,
     end: number,
-    currentResource: string,
-    resourceDraft: {}
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType
 ) => (dispatch: Object) => {
     const elementIndex = findElementIndex(resourceDraft)
     if (elementIndex < 0) return
@@ -310,6 +347,7 @@ export const splitText = (
     let newId
 
     const text = resourceDraft.structure[elementIndex].textContent
+    if (!text) return
     const textContent0 = text.substr(0, start)
     const textContent1 = text.substr(start, end - start)
     const textContent2 = text.substr(end)
@@ -353,10 +391,10 @@ export const splitText = (
 }
 
 export const textToSpan = (
-    start: Number,
+    start: number,
     end: number,
-    currentResource: string,
-    resourceDraft: {}
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType
 ) => (dispatch: Object) => {
     const elementIndex = findElementIndex(resourceDraft)
     if (elementIndex < 0) return
@@ -365,6 +403,7 @@ export const textToSpan = (
     let draft = { currentId: resourceDraft.currentId }
 
     const text = resourceDraft.structure[elementIndex].textContent
+    if (!text) return
     const textContent0 = text.substr(0, start)
     const textContent1 = text.substr(start, end - start)
     const textContent2 = text.substr(end)
@@ -384,8 +423,8 @@ export const textToSpan = (
         tag: 'span',
         text: false,
         textContent: '',
-        style: [],
-        styles: [],
+        style: '',
+        properties: {},
     })
 
     newId = `element_${draft.currentId}`
@@ -422,7 +461,7 @@ export const textToSpan = (
 export const chooseMenuItem = (
     id: string,
     resourceId: string,
-    resourcesObjects: {}
+    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>
 ) => (dispatch: Object) => {
     const resource = resourceId
         ? resourcesObjects[resourceId]
@@ -441,7 +480,7 @@ export const changeMenuItemProperty = (
     key: string,
     value: string,
     resourceId: string,
-    resourcesObjects: {}
+    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>
 ) => (dispatch: Object) => {
     const resource = resourceId
         ? resourcesObjects[resourceId]
@@ -471,20 +510,25 @@ export const changeMenuItemProperty = (
     }
 }
 export const markRefreshing = (refreshing: boolean) => ({
-    type: actionTypes.MARK_REFRESHING,
+    type: 'MARK_REFRESHING',
     refreshing,
 })
 
 export const mergeBoxToPlugin = (
-    currentResource: string,
-    resourceDraft: {},
-    websiteId: string,
-    mode: 'page' | 'plugin'
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType,
+    websiteId: $PropertyType<initialStateType, 'loadedWebsite'>,
+    mode: 'page' | 'plugin',
+    onlyChildren?: boolean
 ) => (dispatch: Object) => {
     if (!currentResource || !resourceDraft) return
     const routeElements = findRouteElements(resourceDraft, mode)
     let elementIndex = findElementIndex(resourceDraft)
-    if (elementIndex < 0 || routeElements.includes(elementIndex)) return
+    if (
+        elementIndex <= 0 ||
+        (!onlyChildren && routeElements.includes(elementIndex))
+    )
+        return
 
     const elementId = resourceDraft.structure[elementIndex].id
     let currentId = 1
@@ -492,7 +536,11 @@ export const mergeBoxToPlugin = (
     const oldResourcesIds = ['element_0']
 
     const resourceDataStructure = resourceDraft.structure
-        .filter(item => item.id === elementId || item.path.includes(elementId))
+        .filter(
+            item =>
+                (!onlyChildren && item.id === elementId) ||
+                item.path.includes(elementId)
+        )
         .map(item => {
             oldResourcesIds.push(item.id)
             const newItem = { ...item, id: `element_${currentId}` }
@@ -501,7 +549,9 @@ export const mergeBoxToPlugin = (
             } else {
                 newItem.path = [
                     'element_0',
-                    ...newItem.path.slice(newItem.path.indexOf(elementId)),
+                    ...newItem.path.slice(
+                        newItem.path.indexOf(elementId) + (onlyChildren ? 1 : 0)
+                    ),
                 ]
             }
             newResourcesIds.push(newItem.id)
@@ -514,7 +564,7 @@ export const mergeBoxToPlugin = (
                 id => newResourcesIds[oldResourcesIds.indexOf(id)]
             ),
         }))
-
+    if (resourceDataStructure.length === 0) return
     const resourceData = {
         structure: [
             {
@@ -522,6 +572,7 @@ export const mergeBoxToPlugin = (
                 path: [],
                 tag: 'Main element',
                 properties: {},
+                propertiesString: '',
             },
             ...resourceDataStructure,
         ],
@@ -540,15 +591,32 @@ export const mergeBoxToPlugin = (
                     const draft = {
                         ...resourceDraft,
                         structure: [
-                            ...resourceDraft.structure.slice(0, elementIndex),
+                            ...resourceDraft.structure.slice(
+                                0,
+                                elementIndex + (onlyChildren ? 1 : 0)
+                            ),
                             {
                                 ...resourceDraft.structure[elementIndex],
+                                path: [
+                                    ...resourceDraft.structure[elementIndex]
+                                        .path,
+                                    ...(onlyChildren
+                                        ? [
+                                              resourceDraft.structure[
+                                                  elementIndex
+                                              ].id,
+                                          ]
+                                        : []),
+                                ],
                                 tag: data.newResourceName,
                                 text: false,
                                 textContent: '',
                                 properties: {},
+                                id: oldResourcesIds[1],
                             },
-                            ...resourceDraft.structure.slice(elementIndex + 1),
+                            ...resourceDraft.structure.slice(
+                                elementIndex + resourceDataStructure.length
+                            ),
                         ],
                     }
                     dispatch(actions.addResourceVersion(currentResource, draft))
@@ -559,10 +627,10 @@ export const mergeBoxToPlugin = (
 }
 
 export const dissolvePluginToBox = (
-    currentResource: string,
-    resourceDraft: {},
-    pluginsStructure: Array<{}>,
-    resourcesObjects: {}
+    currentResource: $PropertyType<initialStateType, 'currentPage'>,
+    resourceDraft: resourceType,
+    pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
+    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>
 ) => (dispatch: Object) => {
     if (!currentResource || !resourceDraft) return
     let elementIndex = findElementIndex(resourceDraft)

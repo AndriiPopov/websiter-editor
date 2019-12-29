@@ -1,23 +1,27 @@
 import axios from 'axios'
 
-import * as actionTypes from './actionTypes'
+import type { initialStateType } from '../../store/reducer/reducer'
 
 const actionStartImageUpload = () => ({
-    type: actionTypes.ACTION_START_IMAGE_UPLOAD,
+    type: 'ACTION_START_IMAGE_UPLOAD',
 })
 
 const actionSuccessImageUpload = () => ({
-    type: actionTypes.ACTION_SUCCESS_IMAGE_UPLOAD,
+    type: 'ACTION_SUCCESS_IMAGE_UPLOAD',
 })
 
 const actionFailImageUpload = (error: string) => ({
-    type: actionTypes.ACTION_FAIL_IMAGE_UPLOAD,
+    type: 'ACTION_FAIL_IMAGE_UPLOAD',
     error,
 })
 
-const getSignedRequest = (file, images, storage, userId) => (
-    dispatch: Object
-) => {
+const getSignedRequest = (
+    file,
+    images: $PropertyType<initialStateType, 'images'>,
+    storage: $PropertyType<initialStateType, 'storage'>,
+    userId: $PropertyType<initialStateType, 'userId'>
+) => (dispatch: Object) => {
+    if (!userId) return
     let name = userId + '/' + file.name.replace(/([^a-zA-Z0-9\\.\\-])/g, '_')
 
     let namePrefix = ''
@@ -100,7 +104,7 @@ const saveImageUrlAndSize = (fileDetails, url) => (dispatch: Object) => {
 }
 
 const saveImageUrlAndSizeInRedux = (storage, images) => ({
-    type: actionTypes.SAVE_IMAGE_AND_SIZE_IN_REDUX,
+    type: 'SAVE_IMAGE_AND_SIZE_IN_REDUX',
     storage,
     images,
 })
@@ -164,15 +168,15 @@ export const renameImage = (url: string) => (dispatch: Object) => {
 }
 
 export const chooseImage = (image: string) => ({
-    type: actionTypes.CHOOSE_IMAGE,
+    type: 'CHOOSE_IMAGE',
     image,
 })
 
 export const imageUpload = (
     files: Array<{ type: string, size: number, name: string }>,
-    images: Array<{ url: string, name: string, size: number }>,
-    storage: number,
-    userId: string
+    images: $PropertyType<initialStateType, 'images'>,
+    storage: $PropertyType<initialStateType, 'storage'>,
+    userId: $PropertyType<initialStateType, 'userId'>
 ) => (dispatch: Object) => {
     const file = files[0]
     if (file == null) {

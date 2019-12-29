@@ -384,6 +384,7 @@ function (_React$Component) {
       delete props.popupMenuBlockClasses;
       delete props.popupMenuItemClasses;
       delete props.popupMenuItemActiveClasses;
+      delete props.activeKeys;
       return React.createElement(DOMWrap, Object.assign({}, props, {
         prefixCls: prefixCls,
         mode: mode,

@@ -1,16 +1,16 @@
 import axios from 'axios'
 
-import * as actionTypes from './actionTypes'
-import * as actions from './index'
+import type { initialStateType } from '../../store/reducer/reducer'
 
 export const saveAllWebsitesDataFromServer = (data: Object) => ({
     type: 'SAVE_ALL_WEBSITES_DATA_FROM_SERVER',
     data,
 })
 
-export const addWebsite = (duplicate?: boolean, currentWebsite?: string) => (
-    dispatch: Object
-) => {
+export const addWebsite = (
+    duplicate?: boolean,
+    currentWebsite?: $PropertyType<initialStateType, 'loadedWebsite'>
+) => (dispatch: Object) => {
     dispatch(actionStart())
     return axios
         .post(
@@ -33,8 +33,21 @@ export const addWebsite = (duplicate?: boolean, currentWebsite?: string) => (
         })
 }
 
-export const loadWebsite = (_id: string) => (dispatch: Object) => {
+export const loadWebsite = (
+    _id: $PropertyType<initialStateType, 'loadedWebsite'>,
+    notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>
+) => (dispatch: Object) => {
     if (_id) {
+        if (notSavedResources.length > 0) {
+            if (
+                !window.confirm(
+                    `Are you sure you want to load another website? All unsaved resources in the current website will be lost. There are ${
+                        notSavedResources.length
+                    } notsaved resources.`
+                )
+            )
+                return
+        }
         dispatch(actionStart())
         return axios
             .get(`/api/websites/${_id}`)
@@ -52,15 +65,30 @@ export const loadWebsite = (_id: string) => (dispatch: Object) => {
     }
 }
 
-export const chooseWebsite = (id: string) => ({
+export const chooseWebsite = (
+    id: $PropertyType<initialStateType, 'loadedWebsite'>
+) => ({
     type: 'CHOOSE_WEBSITE',
     id,
 })
 
+export const verifyCustomDomain = (id: string) => (dispatch: Object) => {
+    dispatch(actionStart())
+    return axios
+        .post(`/api/websites/verify/${id}`)
+        .then(response => {
+            dispatch(saveAllWebsitesDataFromServer(response.data))
+            dispatch(actionSuccess())
+        })
+        .catch(err => {
+            dispatch(actionFail(err.message))
+        })
+}
+
 export const changeWebsiteProperty = (
     key: string,
-    value: string,
-    id: string
+    value: any,
+    id: $PropertyType<initialStateType, 'loadedWebsite'>
 ) => (dispatch: Object) => {
     if (id) {
         dispatch(actionStart())
@@ -81,11 +109,13 @@ export const changeWebsiteProperty = (
     }
 }
 
-export const deleteWebsite = (_id: string) => (dispatch: Object) => {
+export const deleteWebsite = (
+    _id: $PropertyType<initialStateType, 'loadedWebsite'>
+) => (dispatch: Object) => {
     if (_id) {
         if (
             !window.confirm(
-                'Are you sure you want to delete this website? All data in this website will be deleted including pages, files and plugins. However, your media files will not be removed.'
+                'Are you sure you want to delete this website? All data in this website will be deleted including pages and plugins. However, your media files will not be removed.'
             )
         )
             return
@@ -123,15 +153,15 @@ export const setSizeIsChanging = (isChanging: boolean) => ({
 // })
 
 export const actionStart = () => ({
-    type: actionTypes.ACTION_START,
+    type: 'ACTION_START',
 })
 
 export const actionSuccess = () => ({
-    type: actionTypes.ACTION_SUCCESS,
+    type: 'ACTION_SUCCESS',
 })
 
 export const actionFail = (error: string) => ({
-    type: actionTypes.ACTION_FAIL,
+    type: 'ACTION_FAIL',
     error,
 })
 

@@ -11,3 +11,13 @@
 .Textarea:focus {
     outline: 1px blue solid;
 }
+
+.Editors {
+    flex: 1 1;
+}
+
+.SelectContainer {
+    width: 120px;
+    position: relative;
+    display: inline-block;
+}

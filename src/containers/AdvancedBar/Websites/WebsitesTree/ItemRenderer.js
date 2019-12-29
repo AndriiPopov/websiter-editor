@@ -11,12 +11,17 @@ import {
 } from '../../../../utils/sortTreeMethods'
 import Svg from '../../../../components/Svg/Svg'
 
-// type Props = {
-//     chooseWebsite: Function,
-//     loadedWebsite: string,
-//     changeWebsiteProperty: Function,
-// }
-const ItemRenderer = props => {
+type Props = {
+    chooseWebsite: typeof actions.chooseWebsite,
+    loadedWebsite: string,
+    changeWebsiteProperty: typeof actions.changeWebsiteProperty,
+    connectDragPreview: Function,
+    className: string,
+    style: string,
+    node: { name: string, id: string },
+}
+
+const ItemRenderer = (props: Props) => {
     var _this$props = props,
         connectDragPreview = _this$props.connectDragPreview,
         className = _this$props.className,

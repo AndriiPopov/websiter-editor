@@ -1,17 +1,22 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-// import { Controlled as CodeMirror } from 'react-codemirror2'
 import * as actions from '../../store/actions/index'
 import AceEditor from 'react-ace'
 
 import ace from 'ace-builds'
-// import 'ace-builds/webpack-resolver'
 import 'ace-builds/src-noconflict/mode-css'
 import 'ace-builds/src-noconflict/mode-json'
+import 'ace-builds/src-noconflict/mode-javascript'
+import 'ace-builds/src-noconflict/mode-text'
 import 'ace-builds/src-noconflict/theme-github'
 import 'ace-builds/src-min-noconflict/ext-searchbox'
 import 'ace-builds/src-min-noconflict/ext-language_tools'
-import beautify from 'ace-builds/src-min-noconflict/ext-beautify'
+// import beautify from 'ace-builds/src-min-noconflict/ext-beautify'
+import beautify_js, { css as beautify_css } from 'js-beautify'
+import Select from '../UI/Select/Select'
+
+import type { elementType } from '../../../../store/reducer/reducer'
+
 ace.config.set('basePath', '/ace-builds/src-noconflict')
 ace.config.set('modePath', '/ace-builds/src-noconflict')
 ace.config.set('themePath', '/ace-builds/src-noconflict')
@@ -19,15 +24,12 @@ ace.config.set('workerPath', '/ace-builds/src-noconflict')
 
 // var editor = ace.edit('editor') // get reference to editor
 
-// $FlowFixMe
-// require('codemirror/mode/htmlmixed/htmlmixed')
-
 type Props = {
-    currentElement: string,
-    elementValue: string,
-    elementCurrentCursor: {},
-    editorMode: string,
-    handleChange: Function,
+    currentElement: $PropertyType<elementType, 'id'>,
+    elementValue: $PropertyType<elementType, 'propertiesString'>,
+    elementCurrentCursor: $PropertyType<elementType, 'cursorPosition'>,
+    editorMode: 'json' | 'css',
+    handleChange: (value: string, cursorPosition: {}) => {},
 }
 
 type State = {
@@ -37,7 +39,7 @@ type State = {
 }
 
 class Editor extends Component<Props, State> {
-    onChange(value) {
+    onChange = value => {
         this.setState({
             value,
             updateValue: false,
@@ -53,6 +55,60 @@ class Editor extends Component<Props, State> {
         )
     }
 
+    handleSelectProperty = selectedOption => {
+        if (!selectedOption) return
+        let obj
+        try {
+            obj = JSON.parse(this.state.value)
+        } catch (e) {
+            obj = null
+        }
+        if (obj) {
+            obj[selectedOption.label] = selectedOption.value
+            const resultString = JSON.stringify(obj)
+            this.onChange(resultString)
+        }
+        this.makeCodePrettier()
+    }
+
+    makeCodePrettier = () => {
+        setTimeout(() => {
+            this.editor.moveCursorToPosition(
+                this.props.elementCurrentCursor || {
+                    column: 0,
+                    row: 0,
+                }
+            )
+            if (!this.state.updateValue) {
+                this.setState({ isBeatifying: true })
+                if (this.props.editorMode === 'json') {
+                    let obj
+                    try {
+                        obj = JSON.parse(this.state.value)
+                    } catch (e) {
+                        obj = null
+                    }
+                    if (obj) {
+                        this.setState({
+                            value: JSON.stringify(obj, null, '\t'),
+                            updateValue: false,
+                        })
+                    }
+                } else {
+                    // beautify.beautify(this.editor.session)
+                    if (this.props.editorMode === 'css') {
+                        const newValue = beautify_css(this.state.value)
+                        this.setState({ value: newValue })
+                    } else if (this.props.editorMode === 'javascript') {
+                        const newValue = beautify_js(this.state.value)
+                        this.setState({ value: newValue })
+                    }
+                }
+                this.setState({ isBeatifying: false })
+            }
+        }, 10)
+    }
+
     componentDidUpdate(prevProps, prevState) {
         const { props } = this
         if (
@@ -62,7 +118,8 @@ class Editor extends Component<Props, State> {
         } else {
             if (
                 props.currentElement !== prevProps.currentElement ||
-                this.state.updateValue
+                this.state.updateValue ||
+                props.editorMode !== prevProps.editorMode
             ) {
                 if (!props.currentElement) {
                     this.setState({
@@ -74,44 +131,19 @@ class Editor extends Component<Props, State> {
                         value: props.elementValue,
                         updateValue: false,
                     })
-                    setTimeout(() => {
-                        this.editor.moveCursorToPosition(
-                            props.elementCurrentCursor || {
-                                column: 0,
-                                row: 0,
-                            }
-                        )
-                        if (!this.state.updateValue) {
-                            this.setState({ isBeatifying: true })
-                            beautify.beautify(this.editor.session)
-                            this.setState({ isBeatifying: false })
-                        }
-                    }, 10)
+                    this.makeCodePrettier()
                 }
             }
         }
     }
     editor
-    // $FlowFixMe
     componentDidMount() {
         this.editor = this.refs.aceEditor.editor
         this.setState({
             value: this.props.elementValue,
             updateValue: false,
         })
-        setTimeout(() => {
-            this.editor.moveCursorToPosition(
-                this.props.elementCurrentCursor || {
-                    column: 0,
-                    row: 0,
-                }
-            )
-            if (!this.state.updateValue) {
-                this.setState({ isBeatifying: true })
-                beautify.beautify(this.editor.session)
-                this.setState({ isBeatifying: false })
-            }
-        }, 10)
+        this.makeCodePrettier()
     }
     constructor(props) {
         super(props)
@@ -121,53 +153,68 @@ class Editor extends Component<Props, State> {
 
     render() {
         return (
-            <AceEditor
-                ref="aceEditor"
-                value={this.state.value}
-                mode={this.props.editorMode}
-                theme="github"
-                onChange={this.onChange}
-                name={this.props.name}
-                fontSize={14}
-                showPrintMargin={true}
-                showGutter={true}
-                highlightActiveLine={true}
-                width="100%"
-                height="100%"
-                setOptions={{
-                    enableBasicAutocompletion: true,
-                    enableLiveAutocompletion: true,
-                    enableSnippets: true,
-                    showLineNumbers: true,
-                    tabSize: 2,
-                    useWorker: false,
-                }}
-                commands={[
-                    {
-                        name: 'undo',
-                        bindKey: { win: 'Ctrl-z', mac: 'Command-z' },
-                        exec: () => {
-                            this.setState({
-                                updateValue: true,
-                            })
-                            this.props.undoResourceVersion()
+            <>
+                {this.props.suggestOptions ? (
+                    <div>
+                        <Select
+                            placeholder="Possible properties"
+                            onChange={this.handleSelectProperty}
+                            options={this.props.suggestOptions}
+                            isSearchable
+                        />
+                    </div>
+                ) : null}
+                <AceEditor
+                    ref="aceEditor"
+                    value={this.state.value}
+                    mode={this.props.editorMode}
+                    theme="github"
+                    onChange={this.onChange}
+                    name={this.props.name}
+                    fontSize={14}
+                    showPrintMargin={true}
+                    showGutter={true}
+                    highlightActiveLine={true}
+                    width="100%"
+                    height="100%"
+                    placeholder="Put your code here"
+                    setOptions={{
+                        enableBasicAutocompletion:
+                            this.props.editorMode !== 'text',
+                        enableLiveAutocompletion:
+                            this.props.editorMode !== 'text',
+                        enableSnippets: this.props.editorMode !== 'text',
+                        showLineNumbers: this.props.editorMode !== 'text',
+                        tabSize: 2,
+                        useWorker: false,
+                    }}
+                    commands={[
+                        {
+                            name: 'undo',
+                            bindKey: { win: 'Ctrl-z', mac: 'Command-z' },
+                            exec: () => {
+                                this.setState({
+                                    updateValue: true,
+                                })
+                                this.props.undoResourceVersion()
+                            },
                         },
-                    },
-                    {
-                        name: 'redo',
-                        bindKey: {
-                            win: 'Ctrl-Shift-z',
-                            mac: 'Command-Shift-z',
+                        {
+                            name: 'redo',
+                            bindKey: {
+                                win: 'Ctrl-Shift-z',
+                                mac: 'Command-Shift-z',
+                            },
+                            exec: () => {
+                                this.setState({
+                                    updateValue: true,
+                                })
+                                this.props.redoResourceVersion()
+                            },
                         },
-                        exec: () => {
-                            this.setState({
-                                updateValue: true,
-                            })
-                            this.props.redoResourceVersion()
-                        },
-                    },
-                ]}
-            />
+                    ]}
+                />
+            </>
         )
     }
 }
@@ -181,7 +228,9 @@ const mapDispatchToProps = (dispatch, props) => {
 
 export default connect(
     null,
-    mapDispatchToProps
+    mapDispatchToProps,
+    null,
+    { forwardRef: true }
 )(Editor)
 // <ControlledEditor
 //     width="100%"

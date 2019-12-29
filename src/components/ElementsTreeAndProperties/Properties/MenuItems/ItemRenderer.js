@@ -10,9 +10,40 @@ import {
     isDescendant,
     _toConsumableArray,
     _objectSpread,
+    // $FlowFixMe
 } from '../../../../utils/sortTreeMethods'
 
-const ItemRenderer = props => {
+import type {
+    menuItemType,
+    initialStateType,
+} from '../../../../store/reducer/reducer'
+
+type Props = {
+    chooseMenuItem: typeof actions.chooseMenuItem,
+    changeMenuItemProperty: typeof actions.changeMenuItemProperty,
+    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
+    connectDragPreview: Function,
+    scaffoldBlockPxWidth: number,
+    toggleChildrenVisibility: Function,
+    connectDragPreview: Function,
+    connectDragSource: Function,
+    isDragging: boolean,
+    canDrop: boolean,
+    canDrag: boolean,
+    node: menuItemType & { children: Array<menuItemType>, expanded: boolean },
+    draggedNode: {},
+    path: Array<string>,
+    treeIndex: number,
+    isSearchMatch: boolean,
+    isSearchFocus: boolean,
+    className: string,
+    style: string,
+    didDrop: boolean,
+    currentPage: $PropertyType<initialStateType, 'currentPage'>,
+    currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
+}
+
+const ItemRenderer = (props: Props) => {
     var _this$props = props,
         scaffoldBlockPxWidth = _this$props.scaffoldBlockPxWidth,
         toggleChildrenVisibility = _this$props.toggleChildrenVisibility,
@@ -30,7 +61,6 @@ const ItemRenderer = props => {
         className = _this$props.className,
         style = _this$props.style,
         didDrop = _this$props.didDrop,
-        rowDirection = _this$props.rowDirection,
         otherProps = _objectWithoutProperties(_this$props, [
             'scaffoldBlockPxWidth',
             'toggleChildrenVisibility',
@@ -54,7 +84,6 @@ const ItemRenderer = props => {
             'treeId',
             'isOver',
             'parentNode',
-            'rowDirection',
             'currentPage',
             'currentPlugin',
             'resourcesObjects',
@@ -87,8 +116,7 @@ const ItemRenderer = props => {
             )
         } else {
             handle = connectDragSource(
-                <div className={classes.rst__moveHandle} />,
-                { dropEffect: 'copy' }
+                <div className={classes.rst__moveHandle} />
             )
         }
     }
@@ -97,12 +125,6 @@ const ItemRenderer = props => {
     var isDraggedDescendant = draggedNode && isDescendant(draggedNode, node)
     var buttonStyle = {
         left: -0.5 * scaffoldBlockPxWidth,
-    }
-
-    if (rowDirection === 'rtl') {
-        buttonStyle = {
-            right: -0.5 * scaffoldBlockPxWidth,
-        }
     }
 
     const { name, id, sourceItem, type } = props.node

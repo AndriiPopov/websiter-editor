@@ -8,16 +8,16 @@ import * as actions from './store/actions/index'
 import Auth from './containers/Auth/Auth'
 import Spinner from './components/UI/Spinner/Spinner'
 
-// import LiveWebsite from './containers/LiveWebsite/LiveWebsite'
+import { initialState } from './store/reducer/reducer'
 
 const asyncSiteBuilder = asyncComponent(() => {
     return import('./containers/SiteBuilder/SiteBuilder')
 })
 
 type Props = {
-    onTryAutoSignup: Object,
+    onTryAutoSignup: Function,
     isAuthenticated: boolean,
-    loading: boolean,
+    loading: typeof initialState.loading,
 }
 
 class App extends Component<Props> {
@@ -29,7 +29,7 @@ class App extends Component<Props> {
         let routes = (
             <Switch>
                 <Route path="/login" component={Auth} />
-                <Route path="/signup" component={Auth} />
+                {/* <Route path="/signup" component={Auth} /> */}
                 {/* <Route path="/live" component={LiveWebsite} /> */}
                 <Redirect to="/login" />
             </Switch>

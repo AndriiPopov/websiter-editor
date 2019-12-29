@@ -2,18 +2,59 @@ import React from 'react'
 import { connect } from 'react-redux'
 
 import * as actions from '../../../store/actions/index'
-//import * as classes from './ElementsTree.module.css'
 import * as classes from '../../ResourcesTree/ResourcesTree.module.css'
 import InspectorValue from '../../UI/InspectorValue/InspectorValue'
 import {
     _extends,
     _objectWithoutProperties,
     isDescendant,
-    _toConsumableArray,
     _objectSpread,
+    // $FlowFixMe
 } from '../../../utils/sortTreeMethods'
+import tagItems from '../../../utils/tagItems'
 
-const ItemRenderer = props => {
+import type {
+    initialStateType,
+    elementType,
+    resourceType,
+} from '../../../store/reducer/reducer'
+
+type Props = {
+    changeBoxProperty: typeof actions.changeBoxProperty,
+    chooseBox: typeof actions.chooseBox,
+    hoverBox: typeof actions.hoverBox,
+    unhoverBox: typeof actions.unhoverBox,
+    connectDragPreview: Function,
+    scaffoldBlockPxWidth: number,
+    toggleChildrenVisibility: Function,
+    connectDragPreview: Function,
+    connectDragSource: Function,
+    isDragging: boolean,
+    canDrop: boolean,
+    canDrag: boolean,
+    node: elementType & {
+        children: Array<elementType>,
+        expanded: boolean,
+        resourceDraft: resourceType,
+        currentResource:
+            | $PropertyType<initialStateType, 'currentPage'>
+            | $PropertyType<initialStateType, 'currentPlugin'>,
+        pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
+        mode: 'page' | 'plugin',
+        itemPath: Array<{}>,
+    },
+    draggedNode: {},
+    path: Array<string>,
+    treeIndex: number,
+    isSearchMatch: boolean,
+    isSearchFocus: boolean,
+    className: string,
+    style: string,
+    didDrop: boolean,
+    type: 'page' | 'plugin',
+}
+
+const ItemRenderer = (props: Props) => {
     var _this$props = props,
         scaffoldBlockPxWidth = _this$props.scaffoldBlockPxWidth,
         toggleChildrenVisibility = _this$props.toggleChildrenVisibility,
@@ -31,7 +72,6 @@ const ItemRenderer = props => {
         className = _this$props.className,
         style = _this$props.style,
         didDrop = _this$props.didDrop,
-        rowDirection = _this$props.rowDirection,
         otherProps = _objectWithoutProperties(_this$props, [
             'scaffoldBlockPxWidth',
             'toggleChildrenVisibility',
@@ -55,7 +95,6 @@ const ItemRenderer = props => {
             'treeId',
             'isOver',
             'parentNode',
-            'rowDirection',
             'chooseBox',
             'hoverBox',
             'unhoverBox',
@@ -66,40 +105,17 @@ const ItemRenderer = props => {
             'properties',
             'mode',
             'itemPath',
+            'text',
+            'isChildren',
+            'forChildren',
+            'textContent',
+            'rowDirection',
         ])
-
-    const tagItems = ['div', 'image', 'span', 'nav', 'ul', 'li'].map(item => {
-        return { abbr: item, name: item }
-    })
 
     var handle
 
     if (canDrag) {
-        if (typeof node.children === 'function' && node.expanded) {
-            handle = (
-                <div className={classes.rst__loadingHandle}>
-                    <div className={classes.rst__loadingCircle}>
-                        {_toConsumableArray(new Array(12)).map(function(
-                            _,
-                            index
-                        ) {
-                            return (
-                                <div
-                                    key={index}
-                                    className={classes.rst__loadingCirclePoint}
-                                />
-                            )
-                        })}
-                        )}
-                    </div>
-                </div>
-            )
-        } else {
-            handle = connectDragSource(
-                <div className={classes.rst__moveHandle} />,
-                { dropEffect: 'copy' }
-            )
-        }
+        handle = connectDragSource(<div className={classes.rst__moveHandle} />)
     }
 
     var isLandingPadActive = !didDrop && isDragging
@@ -108,25 +124,20 @@ const ItemRenderer = props => {
         left: -0.5 * scaffoldBlockPxWidth,
     }
 
-    if (rowDirection === 'rtl') {
-        buttonStyle = {
-            right: -0.5 * scaffoldBlockPxWidth,
-        }
-    }
-
     const {
         tag,
         id,
         text,
+        textContent,
+        isChildren,
         resourceDraft,
         currentResource,
         pluginsStructure,
         properties,
         mode,
         itemPath,
+        childrenTo,
     } = props.node
-
-    console.log(path)
 
     const rowClasses = [classes.rst__row]
     if (isLandingPadActive) rowClasses.push(classes.rst__rowLandingPad)
@@ -220,17 +231,31 @@ const ItemRenderer = props => {
                         >
                             <div className={classes.rst__rowLabel}>
                                 {text ? (
-                                    'text'
+                                    'text' +
+                                    (textContent
+                                        ? ' - "' +
+                                          textContent.substr(0, 25) +
+                                          (textContent.length > 25
+                                              ? '...'
+                                              : '') +
+                                          '"'
+                                        : '')
                                 ) : (
                                     <>
-                                        {'<'}
+                                        {!isChildren ? '<' : ''}
                                         {(mode === 'plugin' &&
                                             itemPath.length > 0) ||
                                         (mode === 'page' &&
                                             itemPath.length > 1) ? (
                                             <InspectorValue
+                                                readonly={childrenTo}
                                                 value={tag}
-                                                items={tagItems}
+                                                items={tagItems.map(item => {
+                                                    return {
+                                                        abbr: item,
+                                                        name: item,
+                                                    }
+                                                })}
                                                 blur={handleRename}
                                                 withState
                                             />
@@ -243,7 +268,9 @@ const ItemRenderer = props => {
                                         {properties.class
                                             ? ` class="${properties.class}"`
                                             : ''}
-                                        {' >'}
+                                        {!isChildren
+                                            ? ' >'
+                                            : ' (inherited children)'}
                                     </>
                                 )}
                             </div>

@@ -31,3 +31,21 @@
     margin-right: auto;
     display: block;
 }
+
+.Tooltip:before,
+.Tooltip:after {
+    content: none;
+}
+
+.Tooltip {
+    margin: 0px !important;
+    max-width: 300px;
+    text-align: left !important;
+    background: #eee !important;
+    color: #333 !important;
+    border: 1px solid #ccc !important;
+}
+
+.Tooltip > * {
+    text-align: left !important;
+}

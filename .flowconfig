@@ -16,6 +16,8 @@
 .*\frame-provider.js
 .*\scope-provider.js
 .*\sortTreeMethods.js
+.*/src/containers/SiteBuilder/Frame/.*
+.*/src/containers/SiteBuilder/Menu/MenuModule/.*
 
 [include]
 

@@ -4,17 +4,171 @@ import * as images from './images'
 import * as resources from './resources'
 import { createReducer } from 'redux-starter-kit'
 
-export const initialState = {
+export type menuItemType = {
+    all: boolean,
+    id: string,
+    generatedFrom: string,
+    sourceItem: boolean,
+    name: string,
+    type: string,
+    path: Array<string>,
+    properties: {
+        url: string,
+        class: string,
+    },
+}
+
+export type elementType = {
+    id: string,
+    path: Array<string>,
+    tag: string,
+    properties: {
+        name?: string,
+        topMenuBlockClasses?: Array<string>,
+        topMenuItemClasses?: Array<string>,
+        topMenuItemActiveClasses?: Array<string>,
+        popupMenuBlockClasses?: Array<string>,
+        popupMenuItemClasses?: Array<string>,
+        popupMenuItemActiveClasses?: Array<string>,
+        mode?: 'horizontal' | 'vertical',
+        trigger?: 'click',
+        id?: string,
+        class?: string,
+    },
+    propertiesString: string,
+    style?: string,
+    expanded?: boolean,
+    textMode: string,
+    cursorPosition?: {
+        row: number,
+        column: number,
+    },
+    text?: boolean,
+    textContent?: string,
+    isChildren?: boolean,
+    childrenTo?: string,
+    forPlugin?: string,
+    sourcePlugin?: string,
+    menuItems?: Array<menuItemType>,
+    currentMenuItem?: string,
+    children?: Array<elementType>,
+}
+export type resourceType = {
+    currentId: number,
+    structure: Array<elementType>,
+    currentBox?: string,
+    cursorPosition?: {
+        row: number,
+        column: number,
+    },
+    value?: string,
+}
+
+export type pageType = {
+    id: string,
+    path: Array<string>,
+    name: string,
+    url: string,
+    homepage: boolean,
+    hidden: boolean,
+    notPublished: boolean,
+    connectedResources: {
+        name: string,
+        type: string,
+    },
+}
+
+export type pluginType = {
+    id: string,
+    path: Array<string>,
+    name: string,
+    url: string,
+    homepage: boolean,
+    notPublished: boolean,
+    hidden: boolean,
+    connectedResources: {
+        name: string,
+        type: string,
+    },
+}
+
+export type websiteType = {
+    _id: string,
+    domain: string,
+    name: string,
+    customDomain?: string,
+    domainHidden?: boolean,
+    customDomainHidden?: boolean,
+    customDomainVerified?: boolean,
+    verifyCode?: string,
+    cname?: string,
+}
+
+export type imageType = {
+    name: string,
+    label: string,
+    url: string,
+    size: number,
+}
+
+export type initialStateType = {
+    websites: Array<websiteType>,
+    resourcesObjects: {
+        [key: string]: {
+            draft: resourceType,
+            present: resourceType,
+            future: Array<resourceType>,
+            past: Array<resourceType>,
+        },
+    },
+    pagesStructure: Array<pageType>,
+    pluginsStructure: Array<pluginType>,
+    loadedWebsite: string,
+    error: null | {},
+    loading: boolean,
+    currentPage: string,
+    currentPlugin: string,
+    domainNotOk: boolean,
+    customDomainNotOk: boolean,
+    storage: number,
+    images: Array<imageType>,
+    uploadingImage: boolean,
+    currentBoxInPlugin: string,
+    currentImage: string,
+    sizeIsChanging: boolean,
+    currentWebsite: string,
+    notSavedResources: Array<string>,
+    pageZoom: number,
+    hoveredElementId: null | string,
+    hoveredElementSize: {
+        [key: string]: {
+            children: {},
+            left: number,
+            top: number,
+            width: number,
+            height: number,
+        },
+    },
+    isRefreshing: boolean,
+    userId: null | string,
+    barSizes: { height: number, width: number, width2: number, width3: number },
+    currentTopTab: string,
+    findMode: null | string,
+    hoverMode: string,
+    fromFrame: boolean,
+    search: {},
+    tooltipsOn: boolean,
+}
+
+export const initialState: initialStateType = {
     websites: [],
     resourcesObjects: {},
     pagesStructure: [],
-    filesStructure: [],
     pluginsStructure: [],
     loadedWebsite: '',
     error: null,
     loading: false,
     currentPage: '',
-    currentFile: '',
     currentPlugin: '',
     domainNotOk: false,
     customDomainNotOk: false,
@@ -35,11 +189,14 @@ export const initialState = {
         height: 200,
         width: 500,
         width2: 200,
+        width3: 200,
     },
     currentTopTab: 'page',
     findMode: null,
     hoverMode: '',
     fromFrame: false,
+    search: {},
+    tooltipsOn: true,
 }
 
 const saveAllWebsitesDataFromServer = (state, action) => {
@@ -53,8 +210,9 @@ const saveAllWebsitesDataFromServer = (state, action) => {
             (state.resourcesObjects[state.currentPage]
                 ? state.currentPage
                 : ''),
+        hoveredElementSize: {},
         barSizes: { ...state.barSizes, ...action.data.barSizes },
-        currentWebsite: action.data.loadedWebsite,
+        currentWebsite: action.data.loadedWebsite || state.currentWebsite,
     }
 }
 
@@ -208,6 +366,12 @@ const reducer = createReducer(initialState, {
     },
     TOGGLE_FIND_MODE: (state: Object, action: Object) =>
         toggleFindMode(state, action),
+    MARK_REFRESHING: (state: Object, action: Object) => {
+        state.isRefreshing = action.refreshing
+    },
+    SWITCH_TOOLTIPS: (state: Object) => {
+        state.tooltipsOn = !state.tooltipsOn
+    },
 })
 
 export default reducer
