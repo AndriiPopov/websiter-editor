@@ -1,6 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { isEmpty } from 'lodash'
+import isEmpty from 'lodash/isEmpty'
 
 import type { initialStateType } from '../../../store/reducer/reducer'
 
@@ -82,7 +82,7 @@ const HoveredBoxHighlight = (props: Props) => {
 
 const mapStateToProps = state => {
     return {
-        hoveredElementId: state.hoveredElementId,
+        hoveredElementId: -100,
         hoveredElementSize: state.hoveredElementSize,
         hoverMode: state.hoverMode,
         currentPlugin: state.currentPlugin,

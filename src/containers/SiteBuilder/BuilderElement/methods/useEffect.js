@@ -9,13 +9,17 @@ export const setBoxProperties = (
 ) => {
     while (box.attributes.length > 0)
         box.removeAttribute(box.attributes[0].name)
-    if (props.element.style) {
-        const style = props.element.style.replace(/\$[^:;\$\s]*\$/g, match => {
-            const inheritedPropertyName = getInheritedPropertyName(match)
-            return inheritedPropertyName
-                ? props.parentPluginProps[inheritedPropertyName] || ''
-                : ''
-        })
+    if (props.elementValues.style) {
+        const style = props.elementValues.style.replace(
+            //eslint-disable-next-line
+            /\$[^:;\$\s]*\$/g,
+            match => {
+                const inheritedPropertyName = getInheritedPropertyName(match)
+                return inheritedPropertyName
+                    ? props.parentPluginProps[inheritedPropertyName] || ''
+                    : ''
+            }
+        )
         box.setAttribute('style', style)
     }
 

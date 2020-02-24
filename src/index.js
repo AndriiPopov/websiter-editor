@@ -2,15 +2,15 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter } from 'react-router-dom'
 import { Provider } from 'react-redux'
-import { createStore, applyMiddleware, compose } from 'redux'
+import { createStore, applyMiddleware } from 'redux'
 import thunk from 'redux-thunk'
 import axios from 'axios'
+import throttle from './store/middleware/throttle'
 
 import './index.css'
 import App from './App'
 //import * as serviceWorker from './serviceWorker';
 import reducer from './store/reducer/reducer'
-import { logout } from './store/actions/index'
 // $FlowFixMe
 import 'react-sortable-tree/style.css'
 
@@ -26,40 +26,19 @@ if (process.env.NODE_ENV === 'development') {
     axios.defaults.baseURL = 'https://api.websiter.dev'
 }
 
+const defaultWait = 300
+const defaultThrottleOption = {
+    leading: true,
+    trailing: true,
+}
+
+const throttleMiddleware = throttle(defaultWait, defaultThrottleOption)
+
 export const store = createStore(
     reducer,
     composeEnhancers
-        ? composeEnhancers(applyMiddleware(thunk))
-        : applyMiddleware(thunk)
-)
-
-// set axios interceptors
-axios.interceptors.request.use(function(config) {
-    const currentAction = sessionStorage.getItem('currentAction')
-    if (currentAction) {
-        // $FlowFixMe
-        config.headers.currentAction = currentAction
-    }
-    return config
-})
-
-axios.interceptors.response.use(
-    function(response: { data: mixed }) {
-        // $FlowFixMe
-        if (response.headers['x-auth-token'])
-            axios.defaults.headers.common['x-auth-token'] =
-                // $FlowFixMe
-                response.headers['x-auth-token']
-        return response
-    },
-    function(error) {
-        if (error.response) {
-            if (parseInt(error.response.status) === 412) {
-                window.location.reload()
-            }
-        }
-        return Promise.reject(error)
-    }
+        ? composeEnhancers(applyMiddleware(throttleMiddleware, thunk))
+        : applyMiddleware(throttleMiddleware, thunk)
 )
 
 const app = (

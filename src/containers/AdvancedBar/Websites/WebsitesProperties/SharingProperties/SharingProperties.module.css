@@ -1,0 +1,52 @@
+.Span {
+    margin-left: 5px;
+    min-width: 155px;
+    display: inline-block;
+}
+
+.Input {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.Button {
+    display: inline-block;
+}
+
+.LocalDomain {
+    border-bottom: 1px #ccc solid;
+    padding-bottom: 20px;
+    margin-bottom: 10px;
+}
+
+.Title {
+    margin-bottom: 5px;
+    height: 18px;
+    position: relative;
+}
+.Title > span {
+    bottom: 0px;
+    position: absolute;
+}
+
+.SharingTable td,
+.SharingTable th {
+    border: 1px solid #ccc;
+    text-align: center;
+    padding: 5px;
+}
+
+.SharingTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.SharingTable tr:not(:first-child):hover,
+.Active {
+    background: #bfefff;
+}
+.Ava {
+    border-radius: 100%;
+    border: 1px solid blue;
+    width: 60px;
+}

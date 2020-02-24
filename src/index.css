@@ -13,3 +13,11 @@ body,
 #root {
     height: 100%;
 }
+
+#root:empty:after {
+    content: 'Loading...';
+}
+
+.tox.tox-tinymce {
+    flex: 1;
+}

@@ -5,7 +5,7 @@
     outline: none;
     cursor: pointer;
     font: inherit;
-    margin-top: 30px;
+    margin: 30px;
 }
 
 .Button:first-of-type {

@@ -1,45 +1,40 @@
 import React, { Component, useRef, useEffect } from 'react'
 import { connect } from 'react-redux'
-import { isEqual, cloneDeep } from 'lodash'
-import ReactDOMServer from 'react-dom/server'
+import isEqual from 'lodash/isEqual'
+import cloneDeep from 'lodash/cloneDeep'
 
-import { getCurrentResourceValue } from '../../utils/basic'
 import * as classes from './SiteBuilder.module.css'
 import * as actions from '../../store/actions/index'
 import Frame, { FrameContextConsumer } from './Frame/index'
-import SiteBuilderLayout from '../../components/SiteBuilderLayout/SiteBuilderLayout'
 import BuilderElement from './BuilderElement/BuilderElement'
 import HoveredBoxHighlight from './HoveredBoxHighlight/HoveredBoxHighlight'
 import { systemClassMenu } from './systemClasses'
-import { Beforeunload } from 'react-beforeunload'
-import ReactResizeDetector from 'react-resize-detector'
-import saveRect from './methods/saveRect'
+// import saveRect from './methods/saveRect'
 import { Provider } from 'react-redux'
 import { renderToString } from 'react-dom/server'
 import { store } from '../../index'
+import { refinePropertiesFromCMS } from './BuilderElement/methods/refineProperties'
+import refreshPageStructure from './methods/refreshPageStructure'
+import Overlay from '../../components/UI/Overlay/Overlay'
 
-import type {
-    resourceType,
-    initialStateType,
-} from '../../store/reducer/reducer'
+import type { initialStateType } from '../../store/reducer/reducer'
 
 export type Props = {
     zoom: $PropertyType<initialStateType, 'pageZoom'>,
-    currentPage: $PropertyType<initialStateType, 'currentPage'>,
-    currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
-    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
-    pagesStructure: $PropertyType<initialStateType, 'pagesStructure'>,
-    pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
     hoveredElementId: $PropertyType<initialStateType, 'hoveredElementId'>,
     isRefreshing: $PropertyType<initialStateType, 'isRefreshing'>,
-    sizeIsChanging: $PropertyType<initialStateType, 'sizeIsChanging'>,
     notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>,
     barSizes: $PropertyType<initialStateType, 'barSizes'>,
-    tooltipsOn: $PropertyType<initialStateType, 'tooltipsOn'>,
     markRefreshing: typeof actions.markRefreshing,
     savePropertiesOnLeave: typeof actions.savePropertiesOnLeave,
-    changeBarSize: typeof actions.changeBarSize,
     saveHoveredElementRect: typeof actions.saveHoveredElementRect,
+    markShouldRefreshing: typeof actions.markShouldRefreshing,
+    shouldRefresh?: boolean,
+    saveElementsStructure: typeof actions.saveElementsStructure,
+    currentSiteBuilderMode: $PropertyType<
+        initialStateType,
+        'currentSiteBuilderMode'
+    >,
 }
 
 type State = {
@@ -51,82 +46,109 @@ class SiteBuilder extends Component<Props, State> {
         headValue: '',
     }
 
-    componentDidMount() {
-        saveRect(this.props)
-    }
+    // componentDidMount() {
+    //     //saveRect(this.props)
+    // }
     head = ''
 
-    async componentWillReceiveProps(newProps: Props) {
-        const currentPageItemInStructure = newProps.pagesStructure.find(
-            item => item.id === newProps.currentPage
+    shouldComponentUpdate(nextProps) {
+        if (nextProps.zoom !== this.props.zoom) return true
+        if (nextProps.isRefreshing !== this.props.isRefreshing) return true
+        if (nextProps.isRefreshing !== this.props.isRefreshing) return true
+        if (nextProps.shouldRefresh !== this.props.shouldRefresh) return true
+        if (nextProps.pageTemplateId !== this.props.pageTemplateId) return true
+        if (!isEqual(nextProps.pagesStructure, this.props.pagesStructure))
+            return true
+        if (
+            !isEqual(
+                nextProps.currentPageDraftStructure,
+                this.props.currentPageDraftStructure
+            )
         )
-        const resourceDraft = getCurrentResourceValue(
-            newProps.currentPage,
-            newProps.resourcesObjects
+            return true
+        if (
+            !isEqual(
+                nextProps.pageTemplateDraftStructure,
+                this.props.pageTemplateDraftStructure
+            )
         )
-        const newHead = resourceDraft
-            ? resourceDraft.structure
-                ? resourceDraft.structure
-                      .filter(itemInn =>
-                          isEqual(itemInn.path, ['element_-1', 'element_0'])
-                      )
-                      .map(itemInn => (
-                          <BuilderElement
-                              key={itemInn.id}
-                              structure={resourceDraft.structure}
-                              element={itemInn}
-                              hoveredElementId={newProps.hoveredElementId}
-                              pluginsStructure={newProps.pluginsStructure}
-                              resourcesObjects={newProps.resourcesObjects}
-                              document={document}
-                              pluginsPathArray={[]}
-                              resourceDraft={resourceDraft}
-                              currentResource={newProps.currentPage}
-                              pageInStructure={currentPageItemInStructure}
-                          />
-                      ))
-                : ''
-            : ''
-        const newHeadString = renderToString(
-            <Provider store={store}>{newHead}</Provider>
-        )
+            return true
+        if (!isEqual(nextProps.refinedProperties, this.props.refinedProperties))
+            return true
+        return false
+    }
 
-        if (newHeadString) {
-            if (newHeadString !== this.state.headValue) {
-                this.props.markRefreshing(true)
-                this.setState({ headValue: newHeadString })
+    componentWillReceiveProps(newProps: Props) {
+        if (newProps.pagesStructure) {
+            if (
+                newProps.currentPageDraftStructure &&
+                newProps.pageTemplateDraftStructure
+            ) {
+                const newStructure = refreshPageStructure(
+                    newProps.currentPageDraftStructure,
+                    newProps.pageTemplateDraftStructure
+                )
+                console.log(newStructure)
+                if (
+                    !isEqual(newStructure, newProps.currentPageDraftStructure)
+                ) {
+                    this.props.saveElementsStructureFromBuilder(
+                        'page',
+                        newStructure
+                    )
+                } else {
+                    const newHead = newProps.pageTemplateDraftStructure
+                        .filter(itemInn =>
+                            isEqual(itemInn.path, ['element_01', 'element_0'])
+                        )
+                        .map(itemInn => {
+                            return (
+                                <BuilderElement
+                                    key={itemInn.id}
+                                    structure={
+                                        newProps.pageTemplateDraftStructure
+                                    }
+                                    element={itemInn}
+                                    hoveredElementId={newProps.hoveredElementId}
+                                    document={document}
+                                    pluginsPathArray={[]}
+                                    parentPluginProps={
+                                        newProps.refinedProperties
+                                    }
+                                    isHead
+                                    currentResource={newProps.pageTemplateId}
+                                />
+                            )
+                        })
+
+                    const newHeadString =
+                        renderToString(
+                            <Provider store={store}>{newHead}</Provider>
+                        ) || ''
+                    if (
+                        newHeadString !== this.state.headValue ||
+                        newProps.shouldRefresh
+                    ) {
+                        this.props.markRefreshing(true)
+                        this.props.markShouldRefreshing()
+                        this.setState({ headValue: newHeadString })
+                    }
+                }
             }
         }
     }
 
-    checkOnLeave = e => {
-        //check if there are unsaved resources before leave
-        this.props.savePropertiesOnLeave(
-            this.props.barSizes,
-            this.props.tooltipsOn,
-            this.props.currentPage,
-            this.props.currentPlugin
-        )
-        if (this.props.notSavedResources.length > 0)
-            return 'Some data is not saved.'
-        else return undefined
-    }
-
     render() {
-        const currentPageItemInStructure = this.props.pagesStructure.find(
-            item => item.id === this.props.currentPage
-        )
-        const resourceDraft = getCurrentResourceValue(
-            this.props.currentPage,
-            this.props.resourcesObjects
-        )
-
         let frame = null
-        if (resourceDraft) {
+
+        if (
+            this.props.pageTemplateDraftStructure &&
+            this.props.currentPageDraftStructure
+        ) {
             const { props } = this
             const zoom = props.zoom / 100
             const size = 100 / zoom + '%'
-            const structure = resourceDraft.structure
+            const structure = props.pageTemplateDraftStructure
 
             const bodyElement = structure.filter(
                 item => item.path.length === 1
@@ -165,9 +187,12 @@ class SiteBuilder extends Component<Props, State> {
                         }}
                         bodyProps={bodyProps}
                         htmlProps={htmlProps}
-                        initialContent={`<!DOCTYPE html><html><head>${systemClassMenu} ${
-                            this.state.headValue
-                        }</head><body></body></html>`}
+                        initialContent={
+                            systemClassMenu +
+                            ' ' +
+                            this.state.headValue +
+                            ' <script src="src/tinymce_5.1.5.zip"></script>'
+                        }
                     >
                         <FrameContextConsumer>
                             {({ document, window }) => {
@@ -175,7 +200,7 @@ class SiteBuilder extends Component<Props, State> {
                                     ? structure
                                           .filter(itemInn =>
                                               isEqual(itemInn.path, [
-                                                  'element_-1',
+                                                  'element_01',
                                                   'element_1',
                                               ])
                                           )
@@ -187,20 +212,13 @@ class SiteBuilder extends Component<Props, State> {
                                                   hoveredElementId={
                                                       props.hoveredElementId
                                                   }
-                                                  pluginsStructure={
-                                                      props.pluginsStructure
-                                                  }
-                                                  resourcesObjects={
-                                                      props.resourcesObjects
-                                                  }
                                                   document={document}
                                                   pluginsPathArray={[]}
-                                                  resourceDraft={resourceDraft}
-                                                  currentResource={
-                                                      this.props.currentPage
+                                                  parentPluginProps={
+                                                      props.refinedProperties
                                                   }
-                                                  pageInStructure={
-                                                      currentPageItemInStructure
+                                                  currentResource={
+                                                      props.pageTemplateId
                                                   }
                                               />
                                           ))
@@ -212,40 +230,34 @@ class SiteBuilder extends Component<Props, State> {
                 </>
             )
         }
+
         return (
-            <Beforeunload onBeforeunload={e => this.checkOnLeave(e)}>
-                <ReactResizeDetector
-                    handleWidth
-                    handleHeight
-                    onResize={() =>
-                        this.props.changeBarSize(this.props.barSizes)
-                    }
-                />
-                <SiteBuilderLayout>
-                    {frame}
-                    {this.props.sizeIsChanging ? (
-                        <div className={classes.Overlay} />
-                    ) : null}
-                </SiteBuilderLayout>
-            </Beforeunload>
+            <main
+                data-testid="siteBuilderLayoutMain"
+                className={classes.Content}
+            >
+                {frame}
+                <Overlay />
+            </main>
         )
     }
 }
 
 const mapStateToProps = state => {
+    const refinedProperties = refinePropertiesFromCMS(state.mD)
     return {
         zoom: state.pageZoom,
-        currentPage: state.currentPage,
-        currentPlugin: state.currentPlugin,
-        resourcesObjects: state.resourcesObjects,
-        pluginsStructure: state.pluginsStructure,
-        pagesStructure: state.pagesStructure,
         isRefreshing: state.isRefreshing,
-        sizeIsChanging: state.sizeIsChanging,
-        notSavedResources: state.notSavedResources,
-        barSizes: state.barSizes,
-        findMode: state.findMode,
-        tooltipsOn: state.tooltipsOn,
+        shouldRefresh: state.shouldRefresh,
+        pagesStructure: state.mD.pagesStructure,
+        currentPageDraftStructure: state.mD.currentPageDraft
+            ? state.mD.currentPageDraft.structure
+            : null,
+        pageTemplateDraftStructure: state.mD.pageTemplateDraft
+            ? state.mD.pageTemplateDraft.structure
+            : null,
+        refinedProperties,
+        pageTemplateId: state.mD.pageTemplateId,
     }
 }
 
@@ -253,24 +265,14 @@ const mapDispatchToProps = dispatch => {
     return {
         markRefreshing: refreshing =>
             dispatch(actions.markRefreshing(refreshing)),
-        savePropertiesOnLeave: (
-            barSizes,
-            tooltipsOn,
-            currentPage,
-            currentPlugin
-        ) =>
-            dispatch(
-                actions.savePropertiesOnLeave(
-                    barSizes,
-                    tooltipsOn,
-                    currentPage,
-                    currentPlugin
-                )
-            ),
-        changeBarSize: (barSizes, initiator) =>
-            dispatch(actions.changeBarSize(barSizes, initiator)),
         saveHoveredElementRect: (id, size) =>
             dispatch(actions.saveHoveredElementRect(id, size)),
+        markShouldRefreshing: value =>
+            dispatch(actions.markShouldRefreshing(value)),
+        saveElementsStructure: (type, structure) =>
+            dispatch(actions.saveElementsStructure(type, structure)),
+        saveElementsStructureFromBuilder: (type, structure) =>
+            dispatch(actions.saveElementsStructureFromBuilder(type, structure)),
     }
 }
 

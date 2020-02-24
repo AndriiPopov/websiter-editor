@@ -1,3 +1,4 @@
+/* eslint-disable */
 import warning from 'rc-util/es/warning'
 function _typeof(obj) {
     if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {

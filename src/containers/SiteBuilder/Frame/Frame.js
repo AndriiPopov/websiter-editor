@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use strict'
 
 Object.defineProperty(exports, '__esModule', {
@@ -201,10 +202,28 @@ var Frame = (function(_Component) {
 
                 if (initialRender) {
                     doc.open('text/html', 'replace')
-                    doc.write(this.props.initialContent)
+                    doc.write(
+                        '<!DOCTYPE html><html><head></head><body></body></html>'
+                    )
                     doc.close()
                     this._setInitialContent = true
                 }
+                function decodeEntities(encodedString) {
+                    var textArea = document.createElement('textarea')
+                    textArea.innerHTML = encodedString
+                    return textArea.value
+                }
+                doc.head.innerHTML = decodeEntities(this.props.initialContent)
+                // .replace(
+                //     /&(l|g|quo)t;/g,
+                //     function(a, b) {
+                //         return {
+                //             l: '<',
+                //             g: '>',
+                //             quo: '"',
+                //         }[b]
+                //     }
+                // )
 
                 var mountTarget = this.getMountTarget()
                 for (let attr in this.props.bodyProps) {
@@ -218,7 +237,6 @@ var Frame = (function(_Component) {
                         this.props.htmlProps[attr]
                     )
                 }
-
                 return [
                     //_reactDom2.default.createPortal(this.props.head, this.getDoc().head),
                     _reactDom2.default.createPortal(contents, mountTarget),

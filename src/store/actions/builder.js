@@ -1,10 +1,12 @@
 import * as actions from './index'
-import { isEqual, omit, isObject, isEmpty, cloneDeep } from 'lodash'
+import * as wsActions from '../../websocketActions'
+import isEqual from 'lodash/isEqual'
+import omit from 'lodash/omit'
+import isObject from 'lodash/isObject'
+import { current, resourceDraftIndex } from '../../utils/resourceTypeIndex'
 
-import type {
-    initialStateType,
-    resourceType,
-} from '../../store/reducer/reducer'
+import type { resourceType } from '../../store/reducer/reducer'
+var htmlparser = require('htmlparser2')
 
 const findElementIndex = (draft: resourceType): number => {
     if (!draft.currentBox) return -1
@@ -14,57 +16,142 @@ const findElementIndex = (draft: resourceType): number => {
 
 const findRouteElements = (
     draft: resourceType,
-    mode: 'plugin' | 'page'
+    mode: 'plugin' | 'template' | 'page'
 ): Array<number> => {
     const result = []
     if (mode === 'plugin') {
         result.push(0)
-    } else if (mode === 'page') {
+    } else if (mode === 'template') {
         draft.structure.forEach((item, index) => {
-            if (item.path.length < 2) result.push(index)
+            if (item.path.length === 0 || isEqual(item.path, ['element_01']))
+                result.push(index)
         })
     }
     return result
 }
 
 export const saveElementsStructure = (
-    structure: $PropertyType<resourceType, 'structure'>,
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType
-) => (dispatch: Object) => {
-    if (!currentResource || !resourceDraft || !structure) return
-    const draft = { ...resourceDraft, structure }
+    type,
+    structure: $PropertyType<resourceType, 'structure'>
+) => (dispatch: Object, getState) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!mD || !type || !resourceDraft || !structure) return
+
+    const newStructure = structure.map(item => {
+        const oldItem = resourceDraft.structure.find(
+            itemInn => itemInn.id === item.id
+        )
+        if (oldItem)
+            return {
+                ...item,
+                ...oldItem,
+                expanded: item.expanded,
+                path: item.path,
+            }
+        else return item
+    })
+    const draft = { ...resourceDraft, structure: newStructure }
 
     const isNotForHistory = isEqual(
-        resourceDraft.structure.map(item => omit(item, ['expanded'])),
-        structure.map(item => omit(item, ['expanded']))
+        resourceDraft.structure.map(item =>
+            omit(item, ['expanded', 'children', 'itemPath'])
+        ),
+        newStructure.map(item =>
+            omit(item, ['expanded', 'children', 'itemPath'])
+        )
     )
-    dispatch(
-        actions.addResourceVersion(currentResource, draft, isNotForHistory)
-    )
+    dispatch(actions.addResourceVersion(mD, type, draft, {}, isNotForHistory))
 }
 
-export const chooseBox = (
-    item: string,
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType
-) => (dispatch: Object) => {
-    if (!currentResource || !item || !resourceDraft) return
+export const saveElementsStructureFromBuilder = (
+    type,
+    structure: $PropertyType<resourceType, 'structure'>
+) => (dispatch: Object, getState) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!mD || !type || !resourceDraft || !structure) return
+
+    const pageTemplateDraft = mD.pageTemplateDraft
+    const newValues = {}
+    const newStructure = structure.map(item => {
+        const oldItem = resourceDraft.structure.find(
+            itemInn => itemInn.id === item.id
+        )
+        let newItem = { ...item }
+        if (oldItem) newItem = { ...newItem, ...oldItem }
+
+        newValues[item.id] = {
+            ...pageTemplateDraft.values[item.id],
+            value: '',
+            menuItems: [],
+            currentMenuItem: '',
+            currentMenuId: 0,
+            // properties: {},
+
+            ...(resourceDraft.values[item.id] || {}),
+        }
+        // console.log(newValues)
+        // console.log(pageTemplateDraft.values[item.id])
+
+        return { ...newItem, path: item.path }
+    })
+    const draft = {
+        ...resourceDraft,
+        structure: newStructure,
+        values: newValues,
+    }
+
+    const isNotForHistory =
+        isEqual(
+            resourceDraft.structure.map(item =>
+                omit(item, ['expanded', 'children', 'itemPath'])
+            ),
+            newStructure.map(item =>
+                omit(item, ['expanded', 'children', 'itemPath'])
+            )
+        ) && isEqual(resourceDraft.values, draft.values)
+    dispatch(actions.addResourceVersion(mD, type, draft, {}, isNotForHistory))
+}
+
+export const chooseBox = (type, item: string) => (
+    dispatch: Object,
+    getState
+) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!mD || !type || !item || !resourceDraft) return
     const draft = { ...resourceDraft, currentBox: item }
-    dispatch(actions.addResourceVersion(currentResource, draft, true))
+    dispatch(actions.addResourceVersion(mD, type, draft, {}, true))
     dispatch(unhoverBox())
 }
 
-export const changeBoxProperty = (
+export const changeBoxPropertyInStructure = (
+    type,
     key: string | {},
     value: any,
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType,
-    isNotForHistory?: boolean
-) => (dispatch: Object) => {
-    if (!currentResource || !key || !resourceDraft) return
-    const elementIndex = findElementIndex(resourceDraft)
+    isNotForHistory?: boolean,
+    boxId?: string
+) => (dispatch: Object, getState) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!mD || !type || !key || !resourceDraft) return
+    let elementIndex
+    if (boxId) {
+        elementIndex = resourceDraft.structure.findIndex(
+            item => item.id === boxId
+        )
+    } else {
+        elementIndex = findElementIndex(resourceDraft)
+    }
     if (elementIndex < 0) return
+    if (key === 'tag') {
+        dispatch(
+            deleteFromHoveredSizes(mD[current[type]], [
+                resourceDraft.structure[elementIndex].id,
+            ])
+        )
+    }
 
     let changes = {}
     if (isObject(key) && !(typeof key === 'string' || key instanceof String))
@@ -81,8 +168,74 @@ export const changeBoxProperty = (
             ...resourceDraft.structure.slice(elementIndex + 1),
         ],
     }
+
     dispatch(
-        actions.addResourceVersion(currentResource, draft, isNotForHistory)
+        actions.addResourceVersion(
+            mD,
+            type,
+            draft,
+            {
+                throttle: 100,
+            },
+            isNotForHistory
+        )
+    )
+}
+
+export const changeBoxPropertyInValues = (
+    type,
+    key: string | {},
+    value: any,
+    isNotForHistory?: boolean,
+    boxId?: string
+) => (dispatch: Object, getState) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!mD || !type || !key || !resourceDraft) return
+    let elementIndex
+    if (boxId) {
+        elementIndex = resourceDraft.structure.findIndex(
+            item => item.id === boxId
+        )
+    } else {
+        elementIndex = findElementIndex(resourceDraft)
+    }
+    if (elementIndex < 0) return
+    if (key === 'tag') {
+        dispatch(
+            deleteFromHoveredSizes(mD[current[type]], [
+                resourceDraft.structure[elementIndex].id,
+            ])
+        )
+    }
+
+    let changes = {}
+    if (isObject(key) && !(typeof key === 'string' || key instanceof String))
+        changes = key
+    else changes[key.toString()] = value
+    const draft = {
+        ...resourceDraft,
+        values: {
+            ...resourceDraft.values,
+            [resourceDraft.structure[elementIndex].id]: {
+                ...resourceDraft.values[
+                    resourceDraft.structure[elementIndex].id
+                ],
+                ...changes,
+            },
+        },
+    }
+
+    dispatch(
+        actions.addResourceVersion(
+            mD,
+            type,
+            draft,
+            {
+                throttle: 1000,
+            },
+            isNotForHistory
+        )
     )
 }
 
@@ -97,24 +250,6 @@ const deleteFromHoveredSizes = (currentResource, removedElements) => ({
     currentResource,
     removedElements,
 })
-
-const expandAllParents = (
-    id: string,
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType
-) => (dispatch: Object) => {
-    if (!currentResource || !resourceDraft) return
-    const box = resourceDraft.structure.find(item => item.id === id)
-    if (!box) return
-
-    const draft = cloneDeep(resourceDraft)
-
-    box.path.forEach(item => {
-        const element = draft.structure.find(element => element.id === item)
-        if (element) element.expanded = true
-    })
-    dispatch(actions.addResourceVersion(currentResource, draft))
-}
 
 export const hoverBox = (id: string, mode: string, fromFrame?: boolean) => ({
     type: 'HOVER_ELEMENT',
@@ -133,27 +268,33 @@ export const toggleFindMode = (value?: string) => ({
 })
 
 export const addBox = (
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType,
-    mode: 'page' | 'plugin',
-    type?: 'children' | 'inside' | 'text'
-) => (dispatch: Object) => {
-    if (!currentResource || !resourceDraft) return
+    mode: 'plugin' | 'template' | 'page',
+    type?: 'children' | 'inside' | 'text' | 'cmsVariable'
+) => (dispatch: Object, getState) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[mode]]
+    if (!resourceDraft) return
     const routeElements = findRouteElements(resourceDraft, mode)
     let elementIndex = findElementIndex(resourceDraft)
+
     let putInside
     if (mode === 'plugin') {
         if (elementIndex <= 0) {
             elementIndex = 0
             putInside = true
         }
-    } else if (mode === 'page') {
-        if (elementIndex < 1) {
+    } else if (mode === 'template') {
+        if (elementIndex < 0)
             elementIndex = routeElements[routeElements.length - 1]
-        }
-        if (resourceDraft.structure[elementIndex].path.length < 2) {
+
+        if (resourceDraft.structure[elementIndex].id === 'element_01')
+            elementIndex = routeElements[routeElements.length - 1]
+
+        if (
+            resourceDraft.structure[elementIndex].path.length < 2 &&
+            !isEqual(resourceDraft.structure[elementIndex].path, ['element_02'])
+        )
             putInside = true
-        }
     }
 
     const element = resourceDraft.structure[elementIndex]
@@ -169,6 +310,10 @@ export const addBox = (
 
     const newId = `element_${resourceDraft.currentId}`
     const newCurrentId = resourceDraft.currentId + 1
+
+    const isCMSVariable =
+        resourceDraft.structure[elementIndex].id === 'element_02' ||
+        isEqual(resourceDraft.structure[elementIndex].path, ['element_02'])
 
     const draft = {
         ...resourceDraft,
@@ -187,30 +332,43 @@ export const addBox = (
                         ? 'text'
                         : type === 'children'
                         ? 'New children'
+                        : isCMSVariable
+                        ? 'New CMS variable'
                         : 'div',
                 textMode: 'text',
                 text: type === 'text',
-                textContent: '',
                 isChildren: type === 'children',
-                properties: {},
-                propertiesString: '',
+                isCMSVariable: isCMSVariable,
+                isElementFromCMSVariable: type === 'cmsVariable',
             },
             ...resourceDraft.structure.slice(elementIndex + 1),
         ],
+        values: {
+            ...resourceDraft.values,
+            [newId]: {
+                textContent: '',
+                properties: {},
+                propertiesString: '',
+                CMSVariableType: 'text',
+                CMSVariableSystemName: 'newCmsVariable',
+                CMSVariableDescription: 'New CMS variable description',
+                CMSVariableDefaultValue: 'New CMS variable default value',
+            },
+        },
         currentId: newCurrentId,
         currentBox: newId,
     }
-    dispatch(actions.addResourceVersion(currentResource, draft))
+    dispatch(actions.addResourceVersion(mD, mode, draft))
 }
 
 export const deleteBox = (
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType,
-    mode: 'page' | 'plugin',
+    type: 'page' | 'plugin' | 'template',
     withChildren?: boolean
-) => (dispatch: Object) => {
-    if (!currentResource || !resourceDraft) return
-    const routeElements = findRouteElements(resourceDraft, mode)
+) => (dispatch: Object, getState) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!resourceDraft) return
+    const routeElements = findRouteElements(resourceDraft, type)
     let elementIndex = findElementIndex(resourceDraft)
     if (elementIndex < 0 || routeElements.includes(elementIndex)) return
 
@@ -242,18 +400,21 @@ export const deleteBox = (
             ],
         }
     }
-    dispatch(actions.addResourceVersion(currentResource, draft))
-    dispatch(deleteFromHoveredSizes(currentResource, removedElements))
+    for (let item of removedElements) {
+        delete draft.values[item.id]
+    }
+    dispatch(actions.addResourceVersion(mD, type, draft))
+    dispatch(deleteFromHoveredSizes(mD[current[type]], removedElements))
 }
 
 export const duplicateBox = (
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType,
-    mode: 'page' | 'plugin',
+    type: 'page' | 'plugin' | 'template',
     withChildren?: boolean
-) => (dispatch: Object) => {
-    if (!currentResource || !resourceDraft) return
-    const routeElements = findRouteElements(resourceDraft, mode)
+) => (dispatch: Object, getState) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!resourceDraft) return
+    const routeElements = findRouteElements(resourceDraft, type)
     let elementIndex = findElementIndex(resourceDraft)
     if (elementIndex < 0 || routeElements.includes(elementIndex)) return
 
@@ -268,12 +429,13 @@ export const duplicateBox = (
 
     if (withChildren) {
         const idMatch = { [elementId]: newId }
-
+        const newValuesElements = { [newId]: resourceDraft.values[elementId] }
         const newChildren = sourceChildren
             .map(item => {
                 let newItemId = `element_${draft.currentId}`
                 draft.currentId += 1
                 idMatch[item.id] = newItemId
+                newValuesElements[newItemId] = resourceDraft.values[item.id]
                 return {
                     ...item,
                     id: newItemId,
@@ -310,6 +472,10 @@ export const duplicateBox = (
                     elementIndex + sourceChildren.length
                 ),
             ],
+            values: {
+                ...resourceDraft.values,
+                ...newValuesElements,
+            },
         }
     } else {
         draft = {
@@ -328,17 +494,22 @@ export const duplicateBox = (
                     elementIndex + sourceChildren.length
                 ),
             ],
+            values: {
+                ...resourceDraft.values,
+                [newId]: resourceDraft.values[elementId],
+            },
         }
     }
-    dispatch(actions.addResourceVersion(currentResource, draft))
+    dispatch(actions.addResourceVersion(mD, type, draft))
 }
 
-export const splitText = (
-    start: number,
-    end: number,
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType
-) => (dispatch: Object) => {
+export const splitText = (type, start: number, end: number) => (
+    dispatch: Object,
+    getState
+) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!resourceDraft) return
     const elementIndex = findElementIndex(resourceDraft)
     if (elementIndex < 0) return
 
@@ -355,17 +526,27 @@ export const splitText = (
     const newElements = [
         {
             ...resourceDraft.structure[elementIndex],
-            textContent: textContent0,
         },
     ]
+
+    const newValues = {
+        [elementIndex]: {
+            ...resourceDraft.values[resourceDraft.structure[elementIndex].id],
+            textContent: textContent0,
+        },
+    }
+
     if (textContent1.length > 0) {
         newId = `element_${draft.currentId}`
         draft.currentId = draft.currentId + 1
         newElements.push({
             ...resourceDraft.structure[elementIndex],
-            textContent: textContent1,
             id: newId,
         })
+        newValues[newId] = {
+            ...resourceDraft.values[resourceDraft.structure[elementIndex].id],
+            textContent: textContent1,
+        }
     }
 
     if (textContent2.length > 0 || textContent1.length === 0) {
@@ -373,9 +554,12 @@ export const splitText = (
         draft.currentId = draft.currentId + 1
         newElements.push({
             ...resourceDraft.structure[elementIndex],
-            textContent: textContent2,
             id: newId,
         })
+        newValues[newId] = {
+            ...resourceDraft.values[resourceDraft.structure[elementIndex].id],
+            textContent: textContent2,
+        }
     }
 
     draft = {
@@ -386,16 +570,21 @@ export const splitText = (
             ...newElements,
             ...resourceDraft.structure.slice(elementIndex + 1),
         ],
+        values: {
+            ...resourceDraft.values,
+            ...newValues,
+        },
     }
-    dispatch(actions.addResourceVersion(currentResource, draft))
+    dispatch(actions.addResourceVersion(mD, type, draft))
 }
 
-export const textToSpan = (
-    start: number,
-    end: number,
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType
-) => (dispatch: Object) => {
+export const textToSpan = (type, start: number, end: number) => (
+    dispatch: Object,
+    getState
+) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!resourceDraft) return
     const elementIndex = findElementIndex(resourceDraft)
     if (elementIndex < 0) return
 
@@ -411,9 +600,15 @@ export const textToSpan = (
     const newElements = [
         {
             ...resourceDraft.structure[elementIndex],
-            textContent: textContent0,
         },
     ]
+
+    const newValues = {
+        [elementIndex]: {
+            ...resourceDraft.values[resourceDraft.structure[elementIndex].id],
+            textContent: textContent0,
+        },
+    }
 
     const spanId = `element_${draft.currentId}`
     draft.currentId = draft.currentId + 1
@@ -422,10 +617,13 @@ export const textToSpan = (
         path: [...resourceDraft.structure[elementIndex].path],
         tag: 'span',
         text: false,
+    })
+
+    newValues[spanId] = {
         textContent: '',
         style: '',
         properties: {},
-    })
+    }
 
     newId = `element_${draft.currentId}`
     draft.currentId = draft.currentId + 1
@@ -436,6 +634,11 @@ export const textToSpan = (
         id: newId,
     })
 
+    newValues[newId] = {
+        ...resourceDraft.values[resourceDraft.structure[elementIndex].id],
+        textContent: textContent1,
+    }
+
     if (textContent2.length > 0) {
         newId = `element_${draft.currentId}`
         draft.currentId = draft.currentId + 1
@@ -444,6 +647,10 @@ export const textToSpan = (
             textContent: textContent2,
             id: newId,
         })
+        newValues[newId] = {
+            ...resourceDraft.values[resourceDraft.structure[elementIndex].id],
+            textContent: textContent2,
+        }
     }
 
     draft = {
@@ -454,59 +661,44 @@ export const textToSpan = (
             ...newElements,
             ...resourceDraft.structure.slice(elementIndex + 1),
         ],
+        values: {
+            ...resourceDraft.values,
+            ...newValues,
+        },
     }
-    dispatch(actions.addResourceVersion(currentResource, draft))
+    dispatch(actions.addResourceVersion(mD, type, draft))
 }
-// Menu
-export const chooseMenuItem = (
-    id: string,
-    resourceId: string,
-    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>
-) => (dispatch: Object) => {
-    const resource = resourceId
-        ? resourcesObjects[resourceId]
-            ? isEmpty(resourcesObjects[resourceId].present)
-                ? resourcesObjects[resourceId].draft
-                : resourcesObjects[resourceId].present
-            : null
-        : null
-    if (!resource) return
-    dispatch(
-        changeBoxProperty('currentMenuItem', id, resourceId, resource, true)
-    )
-}
+//Menu
 
 export const changeMenuItemProperty = (
+    type,
     key: string,
     value: string,
-    resourceId: string,
-    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>
-) => (dispatch: Object) => {
-    const resource = resourceId
-        ? resourcesObjects[resourceId]
-            ? isEmpty(resourcesObjects[resourceId].present)
-                ? resourcesObjects[resourceId].draft
-                : resourcesObjects[resourceId].present
-            : null
-        : null
+    itemId?: string
+) => (dispatch: Object, getState) => {
+    const { mD } = getState()
+    const resource = mD[resourceDraftIndex[type]]
 
     if (!resource) return
+
     const elementIndex = findElementIndex(resource)
     if (elementIndex < 0) return
-    if (!resource.structure[elementIndex].menuItems) return
-    const newMenuItems = resource.structure[elementIndex].menuItems.map(
-        item => {
-            if (item.id === resource.structure[elementIndex].currentMenuItem) {
-                return { ...item, [key]: value }
-            } else {
-                return item
-            }
+    const elementId = resource.structure[elementIndex].id
+
+    if (!resource.values[elementId].menuItems) return
+    const newMenuItems = resource.values[elementId].menuItems.map(item => {
+        if (
+            item.id ===
+            (itemId ? itemId : resource.values[elementId].currentMenuItem)
+        ) {
+            return { ...item, [key]: value }
+        } else {
+            return item
         }
-    )
-    if (!isEqual(newMenuItems, resource.structure[elementIndex].menuItems)) {
-        dispatch(
-            changeBoxProperty('menuItems', newMenuItems, resourceId, resource)
-        )
+    })
+    console.log(newMenuItems)
+    if (!isEqual(newMenuItems, resource.values[elementId].menuItems)) {
+        dispatch(changeBoxPropertyInValues(type, 'menuItems', newMenuItems))
     }
 }
 export const markRefreshing = (refreshing: boolean) => ({
@@ -514,15 +706,20 @@ export const markRefreshing = (refreshing: boolean) => ({
     refreshing,
 })
 
+export const markShouldRefreshing = (value?: boolean) => ({
+    type: 'MARK_SHOULD_REFRESHING',
+    value,
+})
+
 export const mergeBoxToPlugin = (
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType,
-    websiteId: $PropertyType<initialStateType, 'loadedWebsite'>,
-    mode: 'page' | 'plugin',
+    type: 'page' | 'plugin' | 'template',
     onlyChildren?: boolean
-) => (dispatch: Object) => {
-    if (!currentResource || !resourceDraft) return
-    const routeElements = findRouteElements(resourceDraft, mode)
+) => (dispatch: Object, getState) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+
+    if (!resourceDraft) return
+    const routeElements = findRouteElements(resourceDraft, type)
     let elementIndex = findElementIndex(resourceDraft)
     if (
         elementIndex <= 0 ||
@@ -534,6 +731,7 @@ export const mergeBoxToPlugin = (
     let currentId = 1
     const newResourcesIds = ['element_0']
     const oldResourcesIds = ['element_0']
+    const resourceDataValues = {}
 
     const resourceDataStructure = resourceDraft.structure
         .filter(
@@ -544,6 +742,9 @@ export const mergeBoxToPlugin = (
         .map(item => {
             oldResourcesIds.push(item.id)
             const newItem = { ...item, id: `element_${currentId}` }
+            resourceDataValues[newItem.id] = {
+                ...resourceDraft.values[item.id],
+            }
             if (item.id === elementId) {
                 newItem.path = ['element_0']
             } else {
@@ -573,83 +774,78 @@ export const mergeBoxToPlugin = (
                 tag: 'Main element',
                 properties: {},
                 propertiesString: '',
+                textMode: '',
             },
             ...resourceDataStructure,
         ],
+        values: resourceDataValues,
         currentId,
     }
 
-    dispatch(
-        actions.addResource(
-            websiteId,
-            '',
-            'plugin',
-            false,
-            resourceData,
-            data => {
-                if (data.newResourceName) {
-                    const draft = {
-                        ...resourceDraft,
-                        structure: [
-                            ...resourceDraft.structure.slice(
-                                0,
-                                elementIndex + (onlyChildren ? 1 : 0)
-                            ),
-                            {
-                                ...resourceDraft.structure[elementIndex],
-                                path: [
-                                    ...resourceDraft.structure[elementIndex]
-                                        .path,
-                                    ...(onlyChildren
-                                        ? [
-                                              resourceDraft.structure[
-                                                  elementIndex
-                                              ].id,
-                                          ]
-                                        : []),
-                                ],
-                                tag: data.newResourceName,
-                                text: false,
-                                textContent: '',
-                                properties: {},
-                                id: oldResourcesIds[1],
-                            },
-                            ...resourceDraft.structure.slice(
-                                elementIndex + resourceDataStructure.length
-                            ),
-                        ],
-                    }
-                    dispatch(actions.addResourceVersion(currentResource, draft))
-                }
-            }
-        )
-    )
+    const newPluginName =
+        prompt('Name the new plugin', 'New plugin') || 'New plugin'
+
+    wsActions.addResource(mD, 'plugin', false, newPluginName, resourceData)
+
+    const draft = {
+        ...resourceDraft,
+        structure: [
+            ...resourceDraft.structure.slice(
+                0,
+                elementIndex + (onlyChildren ? 1 : 0)
+            ),
+            {
+                ...resourceDraft.structure[elementIndex],
+                path: [
+                    ...resourceDraft.structure[elementIndex].path,
+                    ...(onlyChildren
+                        ? [resourceDraft.structure[elementIndex].id]
+                        : []),
+                ],
+                tag: newPluginName,
+                text: false,
+                textContent: '',
+                properties: {},
+                id: oldResourcesIds[1],
+            },
+            ...resourceDraft.structure.slice(
+                elementIndex + resourceDataStructure.length
+            ),
+        ],
+        values: {
+            ...resourceDraft.values,
+            [oldResourcesIds[1]]: {},
+        },
+    }
+    for (let i = 2; i < oldResourcesIds.length; i++) {
+        delete draft.values[oldResourcesIds[i]]
+    }
+    dispatch(actions.addResourceVersion(mD, type, draft, { throttle: 1000 }))
 }
 
-export const dissolvePluginToBox = (
-    currentResource: $PropertyType<initialStateType, 'currentPage'>,
-    resourceDraft: resourceType,
-    pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
-    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>
-) => (dispatch: Object) => {
-    if (!currentResource || !resourceDraft) return
+export const dissolvePluginToBox = type => (dispatch: Object, getState) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!resourceDraft) return
     let elementIndex = findElementIndex(resourceDraft)
     if (elementIndex < 0) return
 
-    const elementId = resourceDraft.structure[elementIndex].id
+    // const elementId = resourceDraft.structure[elementIndex].id
 
-    const plugin = pluginsStructure.find(
+    const plugin = mD.pluginsStructure.find(
         item => item.name === resourceDraft.structure[elementIndex].tag
     )
     if (!plugin) return
+    if (!mD.resourcesObjects[plugin.id]) return
 
-    const pluginResource = isEmpty(resourcesObjects[plugin.id].present)
-        ? resourcesObjects[plugin.id].draft
-        : resourcesObjects[plugin.id].present
+    const pluginResource = !mD.resourcesObjects[plugin.id].present.structure
+        ? mD.resourcesObjects[plugin.id].draft
+        : mD.resourcesObjects[plugin.id].present
 
     let currentId = resourceDraft.currentId
     const newResourcesIds = []
     const oldResourcesIds = []
+    const pluginDataValues = {}
 
     const pluginDataStructure = pluginResource.structure
         .filter(item => item.path.length > 0)
@@ -660,6 +856,8 @@ export const dissolvePluginToBox = (
                 id: `element_${currentId}`,
                 path: [...item.path.slice(1)],
             }
+            pluginDataValues[newItem.id] = resourceDraft.values[item.id]
+
             newResourcesIds.push(newItem.id)
             currentId++
             return newItem
@@ -682,9 +880,85 @@ export const dissolvePluginToBox = (
             ...pluginDataStructure,
             ...resourceDraft.structure.slice(elementIndex + 1),
         ],
+        values: {
+            ...resourceDraft.values,
+            ...pluginDataValues,
+        },
     }
-    dispatch(actions.addResourceVersion(currentResource, draft))
+    dispatch(actions.addResourceVersion(mD, type, draft))
 }
+
+export const setCurrentSiteBuilderMode = (mode: string) => ({
+    type: 'SET_CURRENT_SITEBUILDER_MODE',
+    mode,
+})
+
+export const parseHTML = (type, value: string) => (
+    dispatch: Object,
+    getState
+) => {
+    const { mD } = getState()
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!resourceDraft) return
+    const elementIndex = findElementIndex(resourceDraft)
+    if (elementIndex < 0) return
+    let draft = { currentId: resourceDraft.currentId }
+
+    const htmlArray = htmlparser.parseDOM(value)
+    const newElements = []
+    const newElementsValues = {}
+    const parseToWebsiter = (curArray, path) => {
+        curArray.forEach(item => {
+            if (!(item.type === 'text' && item.data.trim() === '')) {
+                if (item.type === 'text' || item.type === 'tag') {
+                    const newId = `element_${draft.currentId}`
+                    draft.currentId = draft.currentId + 1
+                    const properties = item.attribs
+                        ? omit(item.attribs, 'style')
+                        : {}
+                    const newElement = {
+                        id: newId,
+                        path,
+                        tag: item.name || 'div',
+                        text: false,
+                    }
+                    const newElementValues = {
+                        textContent: '',
+                        style: item.attribs ? item.attribs.style || '' : '',
+                        properties,
+                        propertiesString: JSON.stringify(properties),
+                    }
+                    if (item.type === 'text') {
+                        newElement.tag = 'text'
+                        newElement.text = true
+                        newElementValues.textMode = 'text'
+                        newElementValues.textContent = item.data
+                    }
+                    newElements.push(newElement)
+                    newElementsValues[newId] = newElementValues
+                    if (item.children)
+                        parseToWebsiter(item.children, [...path, newId])
+                }
+            }
+        })
+    }
+    parseToWebsiter(htmlArray, resourceDraft.structure[elementIndex].path)
+    draft = {
+        ...resourceDraft,
+        ...draft,
+        structure: [
+            ...resourceDraft.structure.slice(0, elementIndex),
+            ...newElements,
+            ...resourceDraft.structure.slice(elementIndex + 1),
+        ],
+        values: {
+            ...resourceDraft.values,
+            ...newElementsValues,
+        },
+    }
+    dispatch(actions.addResourceVersion(mD, type, draft))
+}
+
 /////////////////////OLDOLDOLDOLDOLD
 // export const changeElementStyleValue = (
 //     index: number,

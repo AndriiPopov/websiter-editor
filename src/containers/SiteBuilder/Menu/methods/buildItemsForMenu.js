@@ -4,9 +4,24 @@ import type { Props } from '../Menu'
 
 export default (props: Props) => {
     const buildMenuItems = menuItems => {
+        // console.log(menuItems)
+        let structureAfterVariables = []
         const structure = []
-        if (menuItems)
+        if (menuItems) {
             menuItems.forEach(item => {
+                if (item.generatedFrom === 'variable') {
+                    if (props.parentPluginProps[item.name]) {
+                        structureAfterVariables = [
+                            ...structureAfterVariables,
+                            ...props.parentPluginProps[item.name],
+                        ]
+                    }
+                } else {
+                    structureAfterVariables.push(item)
+                }
+            })
+
+            structureAfterVariables.forEach(item => {
                 if (item.generatedFrom === 'all') {
                     props.pagesStructure.forEach(page => {
                         if (!hiddenPages.includes(page.id)) {
@@ -71,6 +86,7 @@ export default (props: Props) => {
                     })
                 }
             })
+        }
         return structure
     }
     const hiddenPages = []
@@ -85,5 +101,5 @@ export default (props: Props) => {
         })
     })
 
-    return buildTree(buildMenuItems(props.element.menuItems))
+    return buildTree(buildMenuItems(props.elementValues.menuItems))
 }

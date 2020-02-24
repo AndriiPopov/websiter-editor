@@ -20,7 +20,7 @@ const asyncComponent = (importComponent: Object) => {
 
         render() {
             const C = this.state.component
-            return C ? <C {...this.props} /> : null
+            return C ? <C {...this.props} /> : <div>Loading...</div>
         }
     }
 }

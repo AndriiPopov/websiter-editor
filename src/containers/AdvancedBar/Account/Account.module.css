@@ -1,0 +1,25 @@
+.StorageContainer {
+    position: relative;
+    width: 300px;
+    white-space: nowrap;
+    background: #eee;
+    display: inline-block;
+}
+
+.StorageContainer > div {
+    left: 0px;
+    top: 0px;
+}
+
+.StorageFill {
+    position: absolute;
+    overflow: hidden;
+    width: 20%;
+    background: blue;
+    color: white;
+}
+
+.StorageEmpty {
+    background: #eee;
+    width: 100%;
+}

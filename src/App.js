@@ -10,8 +10,8 @@ import Spinner from './components/UI/Spinner/Spinner'
 
 import { initialState } from './store/reducer/reducer'
 
-const asyncSiteBuilder = asyncComponent(() => {
-    return import('./containers/SiteBuilder/SiteBuilder')
+const asyncSiteBuilderLayout = asyncComponent(() => {
+    return import('./components/SiteBuilderLayout/SiteBuilderLayout')
 })
 
 type Props = {
@@ -29,8 +29,6 @@ class App extends Component<Props> {
         let routes = (
             <Switch>
                 <Route path="/login" component={Auth} />
-                {/* <Route path="/signup" component={Auth} /> */}
-                {/* <Route path="/live" component={LiveWebsite} /> */}
                 <Redirect to="/login" />
             </Switch>
         )
@@ -38,9 +36,11 @@ class App extends Component<Props> {
             routes = (
                 <div style={{ height: '100%' }}>
                     <Switch>
-                        <Route path="/editor" component={asyncSiteBuilder} />
+                        <Route
+                            path="/editor"
+                            component={asyncSiteBuilderLayout}
+                        />
                         <Route path="/logout" component={Logout} />
-                        {/* <Route path="/live" component={LiveWebsite} /> */}
                         <Redirect to="/editor" />
                     </Switch>
                 </div>

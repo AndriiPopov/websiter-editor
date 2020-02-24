@@ -15,11 +15,11 @@ export const authLogout = (state: Object) => {
 
 export const authSuccess = (state: Object, action: Object) => {
     state.userId = action.data._id
+    state.accountInfo = action.data.accountInfo
     state.error = null
     state.loading = false
-    state.storage = action.data.storage
-    state.images = action.data.images
     state.barSizes = { ...state.barSizes, ...action.data.barSizes }
+    state.tryWebsiter = action.data.tryWebsiter
 }
 
 export const changeBarSize = (state: Object, action: Object) => {

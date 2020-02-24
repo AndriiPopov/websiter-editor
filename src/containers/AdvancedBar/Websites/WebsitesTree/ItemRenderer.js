@@ -9,16 +9,18 @@ import {
     _objectSpread,
     // $FlowFixMe
 } from '../../../../utils/sortTreeMethods'
-import Svg from '../../../../components/Svg/Svg'
+import checkUserRights from '../../../../utils/checkUserRights'
+import * as wsActions from '../../../../websocketActions'
+
+import type { initialStateType } from '../../../../store/reducer/reducer'
 
 type Props = {
     chooseWebsite: typeof actions.chooseWebsite,
-    loadedWebsite: string,
-    changeWebsiteProperty: typeof actions.changeWebsiteProperty,
     connectDragPreview: Function,
     className: string,
     style: string,
     node: { name: string, id: string },
+    userId: $PropertyType<initialStateType, 'userId'>,
 }
 
 const ItemRenderer = (props: Props) => {
@@ -60,8 +62,10 @@ const ItemRenderer = (props: Props) => {
                                     value={name}
                                     items={[]}
                                     blur={value => {
-                                        if (value !== name)
-                                            props.changeWebsiteProperty(
+                                        if (!props.checkUserRights(['owner']))
+                                            return
+                                        else if (value !== name)
+                                            wsActions.changeWebsiteProperty(
                                                 'name',
                                                 value,
                                                 id
@@ -69,11 +73,6 @@ const ItemRenderer = (props: Props) => {
                                     }}
                                     withState
                                 />
-                                {props.loadedWebsite === id ? (
-                                    <div className={classes.Loaded}>
-                                        <Svg icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"></path></svg>' />
-                                    </div>
-                                ) : null}
                             </div>
                         </div>
                     </div>
@@ -85,15 +84,15 @@ const ItemRenderer = (props: Props) => {
 
 const mapStateToProps = state => {
     return {
-        loadedWebsite: state.loadedWebsite,
+        resourcesObjects: state.resourcesObjects,
+        userId: state.userId,
     }
 }
 
 const mapDispatchToProps = dispatch => {
     return {
         chooseWebsite: id => dispatch(actions.chooseWebsite(id)),
-        changeWebsiteProperty: (key, value, id) =>
-            dispatch(actions.changeWebsiteProperty(key, value, id)),
+        checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }
 

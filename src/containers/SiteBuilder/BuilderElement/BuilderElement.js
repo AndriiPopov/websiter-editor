@@ -1,33 +1,32 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, memo } from 'react'
 import { connect } from 'react-redux'
-import { isEqual, isEmpty, omit } from 'lodash'
+import isEqual from 'lodash/isEqual'
+import omit from 'lodash/omit'
 import Menu from '../Menu/Menu'
+import { getCurrentResourceValue } from '../../../utils/basic'
 
 import * as actions from '../../../store/actions/index'
-import {
-    getCurrentResourceValue,
-    checkIfCapital,
-    getInheritedPropertyName,
-} from '../../../utils/basic'
+import { checkIfCapital, getInheritedPropertyName } from '../../../utils/basic'
 
-import { setBoxProperties, saveHoveredElementRect } from './methods/useEffect'
+import { setBoxProperties } from './methods/useEffect'
 import refineProperties from './methods/refineProperties'
 import { hoverBox, unhoverBox, chooseBox } from './methods/boxMethods'
 import { emptyTags, headTags } from './methods/tagsLibrary'
+// import debounceRender from 'react-debounce-render'
+
+import parse from 'html-react-parser'
+import sanitize from 'sanitize-html'
 
 import type {
     elementType,
     resourceType,
     initialStateType,
-    pageType,
 } from '../../../store/reducer/reducer'
 
 export type Props = {
     element: elementType,
     saveHoveredElementRect: typeof actions.saveHoveredElementRect,
     structure: $PropertyType<resourceType, 'structure'>,
-    pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
-    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
     document: {},
     pluginsPathArray: Array<{
         id: string,
@@ -41,11 +40,9 @@ export type Props = {
     chooseResource: typeof actions.chooseResource,
     unhoverBox: typeof actions.unhoverBox,
     chooseBox: typeof actions.chooseBox,
-    currentResource: string,
-    resourceDraft: resourceType,
     toggleFindMode: typeof actions.toggleFindMode,
     childrenForPlugin: Array<elementType>,
-    pageInStructure: pageType,
+    isHead?: boolean,
 }
 
 const _BuilderElement = (props: Props) => {
@@ -54,8 +51,17 @@ const _BuilderElement = (props: Props) => {
     useEffect(() => {
         const box = elementRef.current
         if (box) {
-            setBoxProperties(box, refinedProperties, props)
-            saveHoveredElementRect(box, props)
+            if (Tag === 'script') {
+                //$FlowFixMe
+                const newScript = props.document.createElement(Tag)
+                newScript.textContent = box.textContent
+                setBoxProperties(newScript, refinedProperties, props)
+                box.parentNode.appendChild(newScript)
+                // box.parentNode.removeChild(box)
+            } else {
+                // saveHoveredElementRect(box, props)
+                setBoxProperties(box, refinedProperties, props)
+            }
         }
     })
 
@@ -97,91 +103,68 @@ const _BuilderElement = (props: Props) => {
                         key={item.id}
                         structure={newStructure}
                         element={item}
-                        pluginsStructure={props.pluginsStructure}
-                        resourcesObjects={props.resourcesObjects}
                         document={props.document}
                         pluginsPathArray={props.pluginsPathArray}
                         sourcePlugin={childrenMainElement.sourcePlugin}
                         routePlugin={props.routePlugin}
-                        resourceDraft={props.resourceDraft}
-                        currentResource={props.currentResource}
                         parentPluginProps={props.parentPluginProps}
                         childrenForPlugin={props.childrenForPlugin}
-                        pageInStructure={props.pageInStructure}
+                        currentResource={props.currentResource}
                     />
                 ))
         }
         return null
+    } else if (props.element.isElementFromCMSVariable) {
+        const inheritedPropertyName = props.element.tag
+
+        let parseText = ''
+        if (inheritedPropertyName) {
+            if (props.parentPluginProps[inheritedPropertyName]) {
+                parseText = props.parentPluginProps[inheritedPropertyName]
+            }
+        }
+
+        return parse(
+            sanitize(parseText, {
+                allowedTags: false,
+                allowedAttributes: false,
+            })
+        )
     } else if (checkIfCapital(Tag.charAt(0))) {
         const plugin = props.pluginsStructure.find(item => item.name === Tag)
         if (plugin) {
-            if (!plugin.hidden) {
-                const pluginResource = isEmpty(
-                    props.resourcesObjects[plugin.id].present
-                )
-                    ? props.resourcesObjects[plugin.id].draft
-                    : props.resourcesObjects[plugin.id].present
-
-                //Pass children to plugin
-                const childrenForPlugin = [
-                    ...props.structure.filter(itemInn =>
-                        itemInn.path.includes(props.element.id)
-                    ),
-                    ...(props.childrenForPlugin ? props.childrenForPlugin : []),
-                ]
-
-                if (!pluginResource.structure) return
-
-                return pluginResource.structure
-                    .filter(itemInn =>
-                        isEqual(itemInn.path, [
-                            pluginResource.structure.filter(
-                                item => item.path.length === 0
-                            )[0].id,
-                        ])
-                    )
-                    .map(itemInn => {
-                        if (
-                            props.pluginsPathArray.find(
-                                item => item.plugin === plugin.id
-                            )
-                        ) {
-                            return null
-                        }
-                        return (
-                            <BuilderElement
-                                key={itemInn.id}
-                                structure={pluginResource.structure}
-                                element={itemInn}
-                                pluginsStructure={props.pluginsStructure}
-                                resourcesObjects={props.resourcesObjects}
-                                document={props.document}
-                                sourcePlugin={plugin.id}
-                                routePlugin={
-                                    props.routePlugin || props.element.id
-                                }
-                                pluginsPathArray={[
-                                    ...props.pluginsPathArray,
-                                    {
-                                        id: props.element.id,
-                                        plugin: plugin.id,
-                                    },
-                                ]}
-                                resourceDraft={props.resourceDraft}
-                                currentResource={props.currentResource}
-                                parentPluginProps={refinedProperties}
-                                childrenForPlugin={childrenForPlugin}
-                                pageInStructure={props.pageInStructure}
-                            />
-                        )
-                    })
-            }
+            const childrenForPlugin = [
+                ...props.structure.filter(itemInn =>
+                    itemInn.path.includes(props.element.id)
+                ),
+                ...(props.childrenForPlugin ? props.childrenForPlugin : []),
+            ]
+            return (
+                <PluginElement
+                    pluginsStructure={props.pluginsStructure}
+                    plugin={plugin}
+                    tag={Tag}
+                    document={props.document}
+                    routePlugin={props.routePlugin || props.element.id}
+                    pluginsPathArray={[
+                        ...props.pluginsPathArray,
+                        {
+                            id: props.element.id,
+                            plugin: plugin.id,
+                        },
+                    ]}
+                    parentPluginProps={refinedProperties}
+                    childrenForPlugin={childrenForPlugin}
+                    currentResource={props.currentResource}
+                />
+            )
         }
         return null
     } else if (!props.isHead || headTags.includes(Tag)) {
         if (Tag === 'websiterMenu') {
             return (
                 <div
+                    //$FlowFixMe
                     ref={elementRef}
                     onMouseEnter={e => hoverBox(e, props)}
                     onMouseMove={e => hoverBox(e, props)}
@@ -190,16 +173,23 @@ const _BuilderElement = (props: Props) => {
                 >
                     <Menu
                         element={props.element}
+                        elementValues={props.elementValues}
                         document={props.document}
                         parentPluginProps={props.parentPluginProps}
                         childrenForPlugin={props.childrenForPlugin}
-                        pageInStructure={props.pageInStructure}
                     />
                 </div>
             )
-        } else if (Tag === 'text') {
-            if (props.element.textContent) {
-                return props.element.textContent.replace(
+        } else if (Tag === 'richEditor') {
+            return parse(
+                sanitize(props.elementValues.textContent, {
+                    allowedTags: false,
+                    allowedAttributes: false,
+                })
+            )
+        } else if (props.element.text) {
+            if (props.elementValues.textContent) {
+                return props.elementValues.textContent.replace(
                     // /\$[^:;\$\s]*\$/g,
                     /\$[A-Za-z0-9]*\$/g,
                     match => {
@@ -223,6 +213,10 @@ const _BuilderElement = (props: Props) => {
                     onMouseMove={e => hoverBox(e, props)}
                     onMouseLeave={e => unhoverBox(e, props)}
                     onMouseDown={e => chooseBox(e, props)}
+                    {...omit(props.isHead ? refinedProperties : {}, [
+                        'class',
+                        'for',
+                    ])}
                 />
             ) : (
                 <Tag
@@ -231,6 +225,10 @@ const _BuilderElement = (props: Props) => {
                     onMouseMove={e => hoverBox(e, props)}
                     onMouseLeave={e => unhoverBox(e, props)}
                     onMouseDown={e => chooseBox(e, props)}
+                    {...omit(props.isHead ? refinedProperties : {}, [
+                        'class',
+                        'for',
+                    ])}
                 >
                     {Tag !== 'menu'
                         ? props.structure
@@ -243,32 +241,37 @@ const _BuilderElement = (props: Props) => {
                                               itemInn.path.includes(item.id)
                                       )}
                                       element={item}
-                                      pluginsStructure={props.pluginsStructure}
-                                      resourcesObjects={props.resourcesObjects}
                                       document={props.document}
                                       pluginsPathArray={props.pluginsPathArray}
                                       sourcePlugin={props.sourcePlugin}
                                       routePlugin={props.routePlugin}
-                                      resourceDraft={props.resourceDraft}
-                                      currentResource={props.currentResource}
                                       parentPluginProps={
                                           props.parentPluginProps
                                       }
                                       childrenForPlugin={
                                           props.childrenForPlugin
                                       }
-                                      pageInStructure={props.pageInStructure}
+                                      currentResource={props.currentResource}
                                   />
                               ))
                         : null}
                 </Tag>
             )
         }
+    } else {
+        return null
     }
 }
 
 const mapStateToProps = (state, props) => {
-    return { findMode: state.findMode }
+    return {
+        findMode: state.findMode,
+        elementValues: getCurrentResourceValue(
+            props.sourcePlugin || props.currentResource,
+            state.resourcesObjects
+        ).values[props.element.id],
+        pluginsStructure: state.mD.pluginsStructure,
+    }
 }
 
 const mapDispatchToProps = dispatch => {
@@ -278,17 +281,85 @@ const mapDispatchToProps = dispatch => {
         hoverBox: (id, mode, fromFrame) =>
             dispatch(actions.hoverBox(id, mode, fromFrame)),
         unhoverBox: () => dispatch(actions.unhoverBox()),
-        chooseBox: (id, currentResource, resourceDraft) =>
-            dispatch(actions.chooseBox(id, currentResource, resourceDraft)),
+        chooseBox: (id, currentResource) =>
+            dispatch(actions.chooseBox(id, currentResource)),
         toggleFindMode: value => dispatch(actions.toggleFindMode(value)),
-        chooseResource: (id, type) =>
-            dispatch(actions.chooseResource(id, type)),
+        chooseResource: (id, type, mD) =>
+            dispatch(actions.chooseResource(id, type, mD)),
     }
 }
 
 const BuilderElement = connect(
     mapStateToProps,
     mapDispatchToProps
-)(_BuilderElement)
+)(
+    // debounceRender(
+    memo(
+        _BuilderElement,
+        (prevProps, nextProps) =>
+            isEqual(prevProps.elementValues, nextProps.elementValues) &&
+            isEqual(prevProps.structure, nextProps.structure) &&
+            isEqual(prevProps.parentPluginProps, nextProps.parentPluginProps)
+    )
+    // ,
+    //     300
+    // )
+)
 
 export default BuilderElement
+
+const PluginElementRaw = props => {
+    if (!props.plugin.hidden && props.pluginStructure) {
+        //Pass children to plugin
+
+        return props.pluginStructure
+            .filter(itemInn =>
+                isEqual(itemInn.path, [
+                    props.pluginStructure.filter(
+                        item => item.path.length === 0
+                    )[0].id,
+                ])
+            )
+            .map(itemInn => {
+                if (
+                    props.pluginsPathArray.find(
+                        item => item.plugin === props.plugin.id
+                    )
+                ) {
+                    return null
+                }
+                return (
+                    <BuilderElement
+                        key={itemInn.id}
+                        structure={props.pluginStructure}
+                        element={itemInn}
+                        document={props.document}
+                        sourcePlugin={props.plugin.id}
+                        routePlugin={props.routePlugin}
+                        pluginsPathArray={props.pluginsPathArray}
+                        parentPluginProps={props.parentPluginProps}
+                        childrenForPlugin={props.childrenForPlugin}
+                        currentResource={props.currentResource}
+                    />
+                )
+            })
+    }
+
+    return null
+}
+
+const mapStateToPropsPlugin = (state, props) => {
+    const plugin = getCurrentResourceValue(
+        props.plugin.id,
+        state.resourcesObjects
+    )
+    return {
+        pluginStructure: plugin ? plugin.structure : [],
+    }
+}
+//props.mD.resourcesObjects[plugin.id]
+const PluginElement = connect(mapStateToPropsPlugin)(
+    memo(PluginElementRaw, (prevProps, nextProps) =>
+        isEqual(prevProps.elementValues, nextProps.elementValues)
+    )
+)

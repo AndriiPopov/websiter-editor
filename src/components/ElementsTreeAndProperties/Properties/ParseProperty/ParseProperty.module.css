@@ -1,0 +1,23 @@
+.Textarea {
+    width: 100%;
+    height: calc(100% - 28px);
+    box-sizing: border-box;
+    margin: 0px;
+    border: none;
+    padding: 10px;
+    resize: none;
+}
+
+.Textarea:focus {
+    outline: 1px blue solid;
+}
+
+.Editors {
+    flex: 1 1;
+}
+
+.SelectContainer {
+    width: 120px;
+    position: relative;
+    display: inline-block;
+}

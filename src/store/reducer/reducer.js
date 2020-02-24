@@ -1,8 +1,8 @@
-import * as plugins from './plugins'
 import * as auth from './auth'
 import * as images from './images'
 import * as resources from './resources'
-import { createReducer } from 'redux-starter-kit'
+import { createReducer } from '@reduxjs/toolkit'
+import resourcesAreEqual from '../../utils/resourcesAreEqual'
 
 export type menuItemType = {
     all: boolean,
@@ -17,6 +17,8 @@ export type menuItemType = {
         class: string,
     },
 }
+
+export type requiredRightsType = Array<string>
 
 export type elementType = {
     id: string,
@@ -52,6 +54,15 @@ export type elementType = {
     menuItems?: Array<menuItemType>,
     currentMenuItem?: string,
     children?: Array<elementType>,
+    isElementFromCMSVariable?: boolean,
+    isCMSVariable?: boolean,
+    CMSVariableType?: string,
+    CMSVariableSystemName?: string,
+    CMSVariableDescription?: string,
+    CMSVariableDefaultValue?: any,
+    currentMenuId?: string,
+    defaultMenuItems?: Array<menuItemType>,
+    value?: any,
 }
 export type resourceType = {
     currentId: number,
@@ -69,6 +80,7 @@ export type pageType = {
     path: Array<string>,
     name: string,
     url: string,
+    template: string,
     homepage: boolean,
     hidden: boolean,
     notPublished: boolean,
@@ -83,6 +95,7 @@ export type pluginType = {
     path: Array<string>,
     name: string,
     url: string,
+    template: string,
     homepage: boolean,
     notPublished: boolean,
     hidden: boolean,
@@ -92,6 +105,27 @@ export type pluginType = {
     },
 }
 
+export type templateType = {
+    id: string,
+    path: Array<string>,
+    name: string,
+    url: string,
+    template: string,
+    homepage: boolean,
+    notPublished: boolean,
+    hidden: boolean,
+    connectedResources: {
+        name: string,
+        type: string,
+    },
+}
+
+export type imageType = {
+    name: string,
+    label: string,
+    url: string,
+    size: number,
+}
 export type websiteType = {
     _id: string,
     domain: string,
@@ -102,13 +136,14 @@ export type websiteType = {
     customDomainVerified?: boolean,
     verifyCode?: string,
     cname?: string,
-}
-
-export type imageType = {
-    name: string,
-    label: string,
-    url: string,
-    size: number,
+    domainNoIndex?: boolean,
+    sharing: Array<{
+        userId: string,
+        rights: Array<string>,
+    }>,
+    user: string,
+    storage: number,
+    images: Array<imageType>,
 }
 
 export type initialStateType = {
@@ -123,15 +158,16 @@ export type initialStateType = {
     },
     pagesStructure: Array<pageType>,
     pluginsStructure: Array<pluginType>,
+    templatesStructure: Array<templateType>,
     loadedWebsite: string,
     error: null | {},
     loading: boolean,
     currentPage: string,
     currentPlugin: string,
+    currentTemplate: string,
     domainNotOk: boolean,
     customDomainNotOk: boolean,
-    storage: number,
-    images: Array<imageType>,
+    maxStorage: number,
     uploadingImage: boolean,
     currentBoxInPlugin: string,
     currentImage: string,
@@ -157,29 +193,29 @@ export type initialStateType = {
     hoverMode: string,
     fromFrame: boolean,
     search: {},
-    tooltipsOn: boolean,
+    tryWebsiter: boolean,
+    currentUserInWebsiteSharing: string,
+    currentSiteBuilderMode: 'template' | 'page' | '',
+    accountInfo: {
+        displayName?: string,
+        emails?: Array<string>,
+        photos?: Array<string>,
+    },
 }
 
 export const initialState: initialStateType = {
-    websites: [],
     resourcesObjects: {},
-    pagesStructure: [],
-    pluginsStructure: [],
-    loadedWebsite: '',
     error: null,
     loading: false,
-    currentPage: '',
-    currentPlugin: '',
     domainNotOk: false,
     customDomainNotOk: false,
-    storage: 0,
-    images: [],
+    maxStorage: 0,
     uploadingImage: false,
     currentBoxInPlugin: '',
     currentImage: '',
     sizeIsChanging: false,
-    currentWebsite: '',
     notSavedResources: [],
+    newVersionResources: [],
     pageZoom: 100,
     hoveredElementId: null,
     hoveredElementSize: {},
@@ -187,7 +223,7 @@ export const initialState: initialStateType = {
     userId: null,
     barSizes: {
         height: 200,
-        width: 500,
+        width: 400,
         width2: 200,
         width3: 200,
     },
@@ -196,24 +232,11 @@ export const initialState: initialStateType = {
     hoverMode: '',
     fromFrame: false,
     search: {},
-    tooltipsOn: true,
-}
-
-const saveAllWebsitesDataFromServer = (state, action) => {
-    return {
-        ...state,
-        ...action.data,
-        domainNotOk: false,
-        customDomainNotOk: false,
-        currentPage:
-            action.data.currentPage ||
-            (state.resourcesObjects[state.currentPage]
-                ? state.currentPage
-                : ''),
-        hoveredElementSize: {},
-        barSizes: { ...state.barSizes, ...action.data.barSizes },
-        currentWebsite: action.data.loadedWebsite || state.currentWebsite,
-    }
+    shouldRefresh: false,
+    tryWebsiter: false,
+    currentUserInWebsiteSharing: '',
+    // currentSiteBuilderMode: '',
+    mD: {},
 }
 
 const saveHoveredElementRect = (state, action) => {
@@ -273,12 +296,8 @@ const toggleFindMode = (state, action) => {
 }
 
 const reducer = createReducer(initialState, {
-    SAVE_ALL_WEBSITES_DATA_FROM_SERVER: (state, action) =>
-        saveAllWebsitesDataFromServer(state, action),
-    CHOOSE_WEBSITE: (state, action) => {
-        state.currentWebsite = action.id
-    },
-
+    REMOVE_RESOURCE_FROM_UNSAVED: (state, action) =>
+        resources.removeResourceFromUnsaved(state, action),
     ACTION_START_IMAGE_UPLOAD: (state, action) =>
         images.actionStartImageUpload(state),
     ACTION_FAIL_IMAGE_UPLOAD: (state, action) =>
@@ -287,15 +306,9 @@ const reducer = createReducer(initialState, {
         images.actionSuccessImageUpload(state),
     CHOOSE_IMAGE: (state, action) => images.chooseImage(state, action),
 
-    SAVE_IMAGE_AND_SIZE_IN_REDUX: (state, action) => {
-        state.images = action.images || state.images
-        state.storage = action.storage || state.storage
-    },
-
     SIZE_IS_CHANGING: (state, action) => {
         state.sizeIsChanging = action.isChanging
     },
-
     ACTION_START: (state, action) => {
         state.error = null
         state.pagesLoading = true
@@ -309,38 +322,12 @@ const reducer = createReducer(initialState, {
         state.pagesLoading = false
     },
 
-    ADD_RESOURCE_SUCCESS: (state, action) =>
-        resources.addResourceSuccess(state, action),
-    DELETE_RESOURCE_SUCCESS: (state, action) =>
-        resources.deleteResourceSuccess(state, action),
-    SAVE_RESOURCES_STRUCTURE_SUCCESS: (state, action) =>
-        resources.saveResourcesStructureSuccess(state, action),
-    SET_CURRENT_RESOURCE: (state, action) =>
-        resources.setCurrentResource(state, action),
-    SAVE_RESOURCE_IN_STATE: (state, action) =>
-        resources.saveResourceInState(state, action),
-    REMOVE_RESOURCE_FROM_UNSAVED: (state, action) =>
-        resources.removeResourceFromUnsaved(state, action),
-    SAVE_RESOURCE_DRAFT_IN_STATE: (state, action) =>
-        resources.saveResourceDraftInState(state, action),
     ADD_RESOURCE_VERSION: (state, action) =>
         resources.addResourceVersion(state, action),
     UNDO_RESOURCE_VERSION: (state, action) =>
         resources.undoResourceVersion(state, action),
     REDO_RESOURCE_VERSION: (state, action) =>
         resources.redoResourceVersion(state, action),
-
-    CHOOSE_BOX_IN_PLUGIN: (state, action) =>
-        plugins.chooseBoxInPlugin(state, action),
-    ADD_BOX_IN_PLUGIN: (state, action) => plugins.addBoxInPlugin(state, action),
-    DELETE_BOX_IN_PLUGIN: (state, action) =>
-        plugins.deleteBoxInPlugin(state, action),
-    DUPLICATE_BOX_IN_PLUGIN: (state, action) =>
-        plugins.duplicateBoxInPlugin(state, action),
-    CHANGE_BOX_PROPERTY_IN_PLUGIN: (state, action) =>
-        plugins.changeBoxPropertyInPlugin(state, action),
-    SAVE_STRUCTURE_IN_PLUGIN: (state, action) =>
-        plugins.saveStructureInPlugin(state, action),
 
     AUTH_START: (state, action) => auth.authStart(state),
     AUTH_SUCCESS: (state, action) => auth.authSuccess(state, action),
@@ -369,8 +356,95 @@ const reducer = createReducer(initialState, {
     MARK_REFRESHING: (state: Object, action: Object) => {
         state.isRefreshing = action.refreshing
     },
-    SWITCH_TOOLTIPS: (state: Object) => {
-        state.tooltipsOn = !state.tooltipsOn
+    MARK_SHOULD_REFRESHING: (state: Object, action: Object) => {
+        state.shouldRefresh = action.value
+    },
+    CHOOSE_USER_IN_WEBSITE_SHARING: (state: Object, action: Object) => {
+        state.currentUserInWebsiteSharing = action.id
+    },
+    SET_CURRENT_SITEBUILDER_MODE: (state: Object, action: Object) => {
+        state.currentSiteBuilderMode = action.mode
+    },
+    SAVE_MAIN_DATA: (state: Object, action: Object) => {
+        state.mD = action.mD
+    },
+    //ws
+    ADD_RESOURCE: (state: Object, action: Object) => {
+        const { mD } = state
+        if (action.data) {
+            if (action.data._id) {
+                if (mD.resourcesObjects[action.data._id]) {
+                    if (mD.resourcesObjects[action.data._id].draft) {
+                        state.resourcesObjects[action.data._id] = {
+                            ...mD.resourcesObjects[action.data._id],
+                            draft: action.data.draft,
+                            __v: action.data.__v,
+                        }
+                        let saved
+                        if (
+                            !mD.resourcesObjects[action.data._id].present
+                                .structure
+                        )
+                            saved = true
+                        else
+                            saved = resourcesAreEqual(
+                                action.data.draft,
+                                mD.resourcesObjects[action.data._id].present
+                            )
+
+                        if (saved) {
+                            resources.removeResourceFromUnsaved(state, {
+                                _id: action.data._id,
+                            })
+                            resources.removeResourceFromNewVersions(state, {
+                                _id: action.data._id,
+                            })
+                        } else {
+                            resources.addResourceToUnsaved(state, {
+                                _id: action.data._id,
+                            })
+                            resources.addResourceToNewVersions(state, {
+                                _id: action.data._id,
+                            })
+                        }
+                    } else {
+                        state.resourcesObjects[action.data._id] = {
+                            ...state.resourcesObjects[action.data._id],
+                            ...action.data,
+                        }
+                    }
+                } else state.resourcesObjects[action.data._id] = action.data
+                if (action.data._id.toString() === mD.userId.toString()) {
+                    if (action.data.settings)
+                        if (action.data.settings.barSizes)
+                            state.barSizes = action.data.settings.barSizes
+                }
+            }
+        }
+    },
+
+    DELETE_RESOURCE: (state: Object, action: Object) => {
+        if (action.data) {
+            delete state.resourcesObjects[action.data.resourceId]
+        }
+    },
+    REVERT_RESOURCE: (state: Object, action: Object) => {
+        if (action.data) {
+            state.resourcesObjects[action.data._id].present = action.data.draft
+            if (action.data.to === 'draft') {
+                resources.removeResourceFromUnsaved(state, {
+                    _id: action.data._id,
+                })
+                resources.removeResourceFromNewVersions(state, {
+                    _id: action.data._id,
+                })
+            }
+        }
+    },
+    SAVE_OBJECT: (state: Object, action: Object) => {
+        if (action.data) {
+            state.resourcesObjects[action.data._id] = action.data
+        }
     },
 })
 

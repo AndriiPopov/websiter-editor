@@ -6,15 +6,29 @@ import type Props from '../BuilderElement'
 
 export default (props: Props) => {
     const result = {}
-    for (let attribute in props.element.properties) {
+    for (let attribute in props.elementValues.properties) {
         const inheritedPropertyName = getInheritedPropertyName(
-            props.element.properties[attribute]
+            props.elementValues.properties[attribute]
         )
         result[attribute] = inheritedPropertyName
             ? props.parentPluginProps[inheritedPropertyName]
-            : props.element.properties[attribute]
+            : props.elementValues.properties[attribute]
+        result[attribute] = JSON.parse(
+            JSON.stringify(result[attribute]).replace(
+                // /\$[^:;\$\s]*\$/g,
+                /\$[A-Za-z0-9]*\$/g,
+                match => {
+                    const inheritedPropertyName = getInheritedPropertyName(
+                        match
+                    )
+                    return inheritedPropertyName
+                        ? props.parentPluginProps[inheritedPropertyName] || ''
+                        : ''
+                }
+            )
+        )
         if (attribute === 'src') {
-            let url = result[attribute]
+            let url = result[attribute] || ''
             const path = url.split('/')
             if (path.length > 1) {
                 if (path[0] === 'websiter') {
@@ -67,5 +81,39 @@ export default (props: Props) => {
             }
         }
     }
+    return result
+}
+
+export const refinePropertiesFromCMS = mD => {
+    const result = {}
+    if (mD.pageTemplateDraft && mD.currentPageDraft)
+        mD.pageTemplateDraft.structure.forEach(item => {
+            if (item.path.length > 0) {
+                if (item.path[0] === 'element_02') {
+                    const resourceVariable = mD.currentPageDraft.values[item.id]
+
+                    const itemValues = mD.pageTemplateDraft.values[item.id]
+                    if (itemValues.CMSVariableSystemName)
+                        if (itemValues.CMSVariableType === 'menuItems') {
+                            result[
+                                itemValues.CMSVariableSystemName
+                            ] = resourceVariable
+                                ? resourceVariable.menuItems
+                                    ? resourceVariable.menuItems.length > 0
+                                        ? resourceVariable.menuItems
+                                        : itemValues.defaultMenuItems
+                                    : itemValues.defaultMenuItems
+                                : itemValues.defaultMenuItems
+                        } else {
+                            result[
+                                itemValues.CMSVariableSystemName
+                            ] = resourceVariable
+                                ? resourceVariable.value ||
+                                  itemValues.CMSVariableDefaultValue
+                                : itemValues.CMSVariableDefaultValue
+                        }
+                }
+            }
+        })
     return result
 }

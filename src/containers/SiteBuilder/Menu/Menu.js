@@ -3,17 +3,13 @@ import Menu, { SubMenu, MenuItem } from './MenuModule/index'
 import buildItemsForMenu from './methods/buildItemsForMenu'
 import { connect } from 'react-redux'
 
-import type {
-    initialStateType,
-    elementType,
-    pageType,
-} from '../../../store/reducer/reducer'
+import type { elementType, pageType } from '../../../store/reducer/reducer'
 
 export type Props = {
     pageInStructure: pageType,
     element: elementType,
     document: {},
-    pagesStructure: $PropertyType<initialStateType, 'pagesStructure'>,
+    parentPluginProps: $PropertyType<elementType, 'properties'>,
 }
 
 const activeKeys = []
@@ -58,21 +54,27 @@ const MenuElement = (props: Props) => {
             prefixCls={'systemclass_menu'}
             // $FlowFixMe
             getPopupContainer={() => props.document.body}
-            topMenuBlockClasses={props.element.properties.topMenuBlockClasses}
-            topMenuItemClasses={props.element.properties.topMenuItemClasses}
+            topMenuBlockClasses={
+                props.elementValues.properties.topMenuBlockClasses
+            }
+            topMenuItemClasses={
+                props.elementValues.properties.topMenuItemClasses
+            }
             topMenuItemActiveClasses={
-                props.element.properties.topMenuItemActiveClasses
+                props.elementValues.properties.topMenuItemActiveClasses
             }
             popupMenuBlockClasses={
-                props.element.properties.popupMenuBlockClasses
+                props.elementValues.properties.popupMenuBlockClasses
             }
-            popupMenuItemClasses={props.element.properties.popupMenuItemClasses}
+            popupMenuItemClasses={
+                props.elementValues.properties.popupMenuItemClasses
+            }
             popupMenuItemActiveClasses={
-                props.element.properties.popupMenuItemActiveClasses
+                props.elementValues.properties.popupMenuItemActiveClasses
             }
-            mode={props.element.properties.mode}
+            mode={props.elementValues.properties.mode}
             selectable={false}
-            triggerSubMenuAction={props.element.properties.trigger}
+            triggerSubMenuAction={props.elementValues.properties.trigger}
             activeKeys={activeKeys}
         >
             {menuElements}
@@ -121,7 +123,8 @@ const SubMenu2 = SubMenu1
 
 const mapStateToProps = state => {
     return {
-        pagesStructure: state.pagesStructure,
+        pagesStructure: state.mD.pagesStructure,
+        pageInStructure: state.mD.currentPageItem,
     }
 }
 

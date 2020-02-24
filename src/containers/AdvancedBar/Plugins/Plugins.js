@@ -7,27 +7,21 @@ import SizeDragController from '../SizeDragController/SizeDragController'
 import ResourcesTree from '../../../components/ResourcesTree/ResourcesTree'
 import ElementsTree from '../../../components/ElementsTreeAndProperties/ElementsTree/ElementsTree'
 import Properties from '../../../components/ElementsTreeAndProperties/Properties/Properties'
+import checkUserRights from '../../../utils/checkUserRights'
 
 import type { initialStateType } from '../../../store/reducer/reducer'
 
 type Props = {
-    currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
-    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
-    pagesStructure: $PropertyType<initialStateType, 'pagesStructure'>,
-    pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
     barSizes: $PropertyType<initialStateType, 'barSizes'>,
-    changeBarSize: typeof actions.changeBarSize,
     changeBoxProperty: typeof actions.changeBoxProperty,
 }
 
 const Plugins = (props: Props) => {
-    const page = props.currentPlugin
-        ? props.resourcesObjects[props.currentPlugin]
-            ? !props.resourcesObjects[props.currentPlugin].present.structure
-                ? props.resourcesObjects[props.currentPlugin].draft
-                : props.resourcesObjects[props.currentPlugin].present
-            : null
-        : null
+    const handleChangeBoxProperty = (key, value) => {
+        if (props.checkUserRights(['content']))
+            props.changeBoxPropertyInValues('plugin', key, value)
+    }
+
     return (
         <div className={classes.Content}>
             <div
@@ -36,23 +30,14 @@ const Plugins = (props: Props) => {
                     flex: '0 0 ' + props.barSizes.width + 'px',
                 }}
             >
-                <ResourcesTree
-                    type="plugin"
-                    structure={props.pluginsStructure}
-                    currentResource={props.currentPlugin}
-                />
+                <ResourcesTree type="plugin" />
                 <SizeDragController
                     addClass={classes.widthControll}
                     startValue={props.barSizes.width}
-                    changed={value =>
-                        props.changeBarSize(props.barSizes, {
-                            key: 'width',
-                            value,
-                        })
-                    }
+                    type="width"
                 />
             </div>
-            {page ? (
+            {props.currentPluginDraftExists ? (
                 <>
                     <div
                         className={classes.Container}
@@ -60,38 +45,18 @@ const Plugins = (props: Props) => {
                             flex: '0 0 ' + props.barSizes.width2 + 'px',
                         }}
                     >
-                        <ElementsTree
-                            pagesStructure={props.pagesStructure}
-                            currentResource={props.currentPlugin}
-                            resourcesObjects={props.resourcesObjects}
-                            resourceDraft={page}
-                            mode="plugin"
-                        />
+                        <ElementsTree mode="plugin" />
 
                         <SizeDragController
                             addClass={classes.widthControll}
                             startValue={props.barSizes.width2}
-                            changed={value =>
-                                props.changeBarSize(props.barSizes, {
-                                    key: 'width2',
-                                    value,
-                                })
-                            }
+                            type="width2"
                         />
                     </div>
                     <div className={classes.LastContainer}>
                         <Properties
                             mode="plugin"
-                            currentResource={props.currentPlugin}
-                            resourceDraft={page}
-                            changeProperty={(key, value) =>
-                                props.changeBoxProperty(
-                                    key,
-                                    value,
-                                    props.currentPlugin,
-                                    page
-                                )
-                            }
+                            changeProperty={handleChangeBoxProperty}
                         />
                     </div>
                 </>
@@ -103,25 +68,16 @@ const Plugins = (props: Props) => {
 const mapStateToProps = state => {
     return {
         barSizes: state.barSizes,
-        pluginsStructure: state.pluginsStructure,
-        currentPlugin: state.currentPlugin,
-        resourcesObjects: state.resourcesObjects,
+        currentPluginDraftExists:
+            typeof state.mD.currentPluginDraft != 'undefined',
     }
 }
 
 const mapDispatchToProps = dispatch => {
     return {
-        changeBarSize: (barSizes, initiator) =>
-            dispatch(actions.changeBarSize(barSizes, initiator)),
-        changeBoxProperty: (key, value, currentResource, resourceDraft) =>
-            dispatch(
-                actions.changeBoxProperty(
-                    key,
-                    value,
-                    currentResource,
-                    resourceDraft
-                )
-            ),
+        changeBoxPropertyInValues: (type, key, value) =>
+            dispatch(actions.changeBoxPropertyInValues(type, key, value)),
+        checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }
 

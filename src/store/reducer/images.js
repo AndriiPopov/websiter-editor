@@ -15,7 +15,7 @@ export const actionSuccessImageUpload = (state: Object) => ({
 export const actionFailImageUpload = (state: Object, action: Object) => ({
     ...state,
     error: action.error,
-    loadng: false,
+    loading: false,
 })
 
 export const chooseImage = (state: Object = initialState, action: Object) => {

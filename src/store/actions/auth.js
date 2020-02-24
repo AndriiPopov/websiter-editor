@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken'
 
 import * as actions from './index'
 
-import type { initialStateType } from '../../store/reducer/reducer'
+import cloneDeep from 'lodash/cloneDeep'
+import { webSocket } from '../../components/ReserveWebsite/ReserveWebsite'
 
 const cookies = new Cookies()
 
@@ -36,73 +37,62 @@ export const deleteFail = (error: string) => ({
 })
 
 export const deleteUser = () => (dispatch: Object) => {
-    dispatch(deleteStart())
-    return axios
-        .delete('/api/users')
-        .then(response => {
-            dispatch(logout())
-            dispatch(deleteSuccess())
-        })
-        .catch(err => {
-            dispatch(deleteFail(err.message))
-        })
+    if (sessionStorage.getItem('tryWebsiter'))
+        return alert(
+            'This function is not available in test mode. Please create your free account at https://my.websiter.dev/login'
+        )
+    if (window.confirm('Are you sure you would like to delete your account?'))
+        if (
+            window.confirm(
+                'This action cannot be reverted. All your websites will be deleted.'
+            )
+        )
+            webSocket.send(
+                JSON.stringify({
+                    messageCode: 'deleteUser',
+                })
+            )
 }
 
-export const logout = (all?: boolean) => {
+export const logout = (all?: boolean) => (dispatch: Object) => {
+    if (sessionStorage.getItem('tryWebsiter'))
+        return alert(
+            'This function is not available in test mode. Please create your free account at https://my.websiter.dev/login'
+        )
     if (!all) {
         cookies.remove('auth_token')
         axios.defaults.headers.common['x-auth-token'] = null
-        return {
-            type: 'AUTH_LOGOUT',
-        }
+        dispatch(logoutDo())
     } else {
-        return axios
-            .post('/api/auth/logoutall')
-            .then(response => {
-                cookies.remove('auth_token')
-                axios.defaults.headers.common['x-auth-token'] = null
-                return {
-                    type: 'AUTH_LOGOUT',
-                }
-            })
-            .catch(err => {})
+        if (webSocket) {
+            webSocket.send(
+                JSON.stringify({
+                    messageCode: 'logoutAll',
+                })
+            )
+        }
     }
 }
 
-// export const auth = (email: string, password: string, isSignup?: boolean) => (
-//     dispatch: Object
-// ) => {
-//     dispatch(authStart())
-//     const authData = {
-//         email,
-//         password,
-//     }
-
-//     let url = '/api/users'
-//     if (!isSignup) {
-//         url = '/api/auth'
-//     }
-//     axios.defaults.headers.post['Content-Type'] = 'application/json'
-//     axios.defaults.headers.put['Content-Type'] = 'application/json'
-//     axios.defaults.headers.delete['Content-Type'] = 'application/json'
-//     axios.defaults.headers.common.Accept = 'application/json'
-
-//     return axios
-//         .post(url, JSON.stringify(authData))
-//         .then(response => {
-//             localStorage.setItem('token', response.data.token)
-//             localStorage.setItem('userId', response.data._id)
-//             localStorage.setItem('currentAction', response.data.currentAction)
-//             axios.defaults.headers.common['x-auth-token'] = response.data.token
-//             dispatch(authSuccess(response.data))
-//             dispatch(actions.saveAllWebsitesDataFromServer(response.data))
-//         })
-//         .catch(err => {
-//             dispatch(authFail(err.message))
-//         })
-// }
+const logoutDo = () => ({
+    type: 'AUTH_LOGOUT',
+})
 
 export const authCheckState = () => (dispatch: Object) => {
+    sessionStorage.setItem('systemRefresh', '0')
+    const tryWebsiter = cookies.get('try_websiter')
+    if (tryWebsiter) {
+        cookies.remove('try_websiter', {
+            path: '/',
+        })
+        sessionStorage.setItem('tryWebsiter', '1')
+        dispatch(
+            authSuccess({
+                _id: 'try',
+            })
+        )
+        return
+    }
     const token = cookies.get('auth_token')
     const rememberMe = cookies.get('rememberme')
     if (rememberMe) {
@@ -125,29 +115,25 @@ export const authCheckState = () => (dispatch: Object) => {
         dispatch(logout())
     } else {
         axios.defaults.headers.common['x-auth-token'] = token
+        axios.defaults.headers.post['x-auth-token'] = token
+        axios.defaults.headers.get['x-auth-token'] = token
+        axios.defaults.headers.delete['x-auth-token'] = token
+        axios.defaults.headers.put['x-auth-token'] = token
         dispatch(authStart())
         return axios
             .get('/api/users')
             .then(response => {
-                if (response.data.reload) {
-                    sessionStorage.setItem(
-                        'currentAction',
-                        response.data.currentAction
-                    )
-                    window.location.reload()
-                } else {
-                    dispatch(
-                        authSuccess({
-                            ...response.data,
-                            _id: userId._id,
-                        })
-                    )
-                    dispatch(
-                        actions.saveAllWebsitesDataFromServer(response.data)
-                    )
-                }
+                sessionStorage.removeItem('tryWebsiter')
+                dispatch(
+                    authSuccess({
+                        _id: userId._id,
+                    })
+                )
             })
             .catch(err => {
+                cookies.remove('auth_token', {
+                    path: '/',
+                })
                 dispatch(authFail(err.message))
             })
     }
@@ -159,22 +145,25 @@ export const changeBarSizeDo = (key: string, value: number) => ({
     value,
 })
 
-export const savePropertiesOnLeave = (
-    barSizes: $PropertyType<initialStateType, 'barSizes'>,
-    tooltipsOn: $PropertyType<initialStateType, 'tooltipsOn'>,
-    currentPage: $PropertyType<initialStateType, 'currentPage'>,
-    currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>
-) => (dispatch: Object) => {
-    return axios
-        .put('/api/users', { barSizes, tooltipsOn, currentPage, currentPlugin })
-        .then(response => {})
-        .catch(err => {})
+export const savePropertiesOnLeave = () => (dispatch, getState) => {
+    if (sessionStorage.getItem('tryWebsiter')) return
+    const { mD, barSizes } = getState()
+    webSocket.send(
+        JSON.stringify({
+            messageCode: 'saveSettings',
+            settings: {
+                ...mD.userObject.settings,
+                barSizes,
+            },
+        })
+    )
 }
 
-export const changeBarSize = (
-    barSizes: $PropertyType<initialStateType, 'barSizes'>,
-    initiator?: { key: string, value: number }
-) => (dispatch: Object) => {
+export const changeBarSize = (initiator?: { key: string, value: number }) => (
+    dispatch: Object,
+    getState
+) => {
+    const { barSizes } = getState()
     const width = window.innerWidth,
         height = window.innerHeight
     let value, dif, dif2, value2, value3
@@ -269,6 +258,9 @@ export const changeBarSize = (
     }
 }
 
-export const switchTooltips = () => ({
-    type: 'SWITCH_TOOLTIPS',
-})
+export const switchTooltips = () => (dispatch, getState) => {
+    const { mD } = getState()
+    const userObject = cloneDeep(mD.userObject)
+    userObject.settings.tooltipsOff = !userObject.settings.tooltipsOff
+    dispatch(actions.saveObject(userObject))
+}

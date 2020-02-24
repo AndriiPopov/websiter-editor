@@ -18,6 +18,7 @@
 .*\sortTreeMethods.js
 .*/src/containers/SiteBuilder/Frame/.*
 .*/src/containers/SiteBuilder/Menu/MenuModule/.*
+.*/coverage.*
 
 [include]
 

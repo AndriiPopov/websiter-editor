@@ -41,6 +41,7 @@ type Props = {
     didDrop: boolean,
     currentPage: $PropertyType<initialStateType, 'currentPage'>,
     currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
+    currentTemplate: $PropertyType<initialStateType, 'currentTemplate'>,
 }
 
 const ItemRenderer = (props: Props) => {
@@ -90,6 +91,13 @@ const ItemRenderer = (props: Props) => {
             'chooseMenuItem',
             'changeMenuItemProperty',
             'isSub',
+            'name',
+            'id',
+            'sourceItem',
+            'type',
+            'generatedFrom',
+            'rowDirection',
+            'currentTemplate',
         ])
 
     var handle
@@ -127,7 +135,7 @@ const ItemRenderer = (props: Props) => {
         left: -0.5 * scaffoldBlockPxWidth,
     }
 
-    const { name, id, sourceItem, type } = props.node
+    const { name, id, sourceItem, type, generatedFrom } = props.node
     const rowClasses = [classes.rst__row]
     if (isLandingPadActive) rowClasses.push(classes.rst__rowLandingPad)
     if (isLandingPadActive && !canDrop)
@@ -139,19 +147,13 @@ const ItemRenderer = (props: Props) => {
         <div
             // $FlowFixMe
             {..._extends({ style: { height: '100%' } }, otherProps)}
-            onMouseDown={() =>
-                props.chooseMenuItem(
-                    id,
-                    type === 'page' ? props.currentPage : props.currentPlugin,
-                    props.resourcesObjects
-                )
-            }
+            onMouseDown={() => props.changeBoxPropertyInValues(type, id)}
         >
             {toggleChildrenVisibility &&
                 node.children &&
                 (node.children.length > 0 ||
                     typeof node.children === 'function') && (
-                    <div>
+                    <div onMouseDown={e => e.stopPropagation()}>
                         <button
                             type="button"
                             aria-label={node.expanded ? 'Collapse' : 'Expand'}
@@ -203,20 +205,24 @@ const ItemRenderer = (props: Props) => {
                                 {sourceItem ? (
                                     name
                                 ) : (
-                                    <InspectorValue
-                                        value={name}
-                                        blur={value =>
-                                            props.changeMenuItemProperty(
-                                                'name',
-                                                value,
-                                                type === 'page'
-                                                    ? props.currentPage
-                                                    : props.currentPlugin,
-                                                props.resourcesObjects
-                                            )
-                                        }
-                                        withState
-                                    />
+                                    <>
+                                        <InspectorValue
+                                            value={name}
+                                            blur={value =>
+                                                props.changeMenuItemProperty(
+                                                    type,
+                                                    'name',
+                                                    value,
+                                                    id
+                                                )
+                                            }
+                                            withState
+                                        />
+                                        {!sourceItem &&
+                                        generatedFrom === 'variable'
+                                            ? ' (variable)'
+                                            : ''}
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -229,25 +235,24 @@ const ItemRenderer = (props: Props) => {
 
 const mapStateToProps = state => {
     return {
-        currentPage: state.currentPage,
-        currentPlugin: state.currentPlugin,
+        userId: state.userId,
         resourcesObjects: state.resourcesObjects,
     }
 }
 
 const mapDispatchToProps = (dispatch, props) => {
     return {
-        chooseMenuItem: (id, currentPage, resourcesObjects) =>
-            dispatch(actions.chooseMenuItem(id, currentPage, resourcesObjects)),
-        changeMenuItemProperty: (key, value, currentPage, resourcesObjects) =>
+        changeBoxPropertyInValues: (type, id) =>
             dispatch(
-                actions.changeMenuItemProperty(
-                    key,
-                    value,
-                    currentPage,
-                    resourcesObjects
+                actions.changeBoxPropertyInValues(
+                    type,
+                    'currentMenuItem',
+                    id,
+                    true
                 )
             ),
+        changeMenuItemProperty: (type, key, value, itemId) =>
+            dispatch(actions.changeMenuItemProperty(type, key, value, itemId)),
     }
 }
 

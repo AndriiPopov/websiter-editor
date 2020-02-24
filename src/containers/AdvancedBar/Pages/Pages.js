@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 import { connect } from 'react-redux'
 
 import * as actions from '../../../store/actions'
@@ -6,27 +6,22 @@ import * as classes from '../AdvancedBar.module.css'
 import SizeDragController from '../SizeDragController/SizeDragController'
 import ResourcesTree from '../../../components/ResourcesTree/ResourcesTree'
 import ElementsTree from '../../../components/ElementsTreeAndProperties/ElementsTree/ElementsTree'
-import Properties from '../../../components/ElementsTreeAndProperties/Properties/Properties'
+import PageProperties from '../../../components/ElementsTreeAndProperties/PageProperties/PageProperties'
+import checkUserRights from '../../../utils/checkUserRights'
 
 import type { initialStateType } from '../../../store/reducer/reducer'
 
 type Props = {
-    currentPage: $PropertyType<initialStateType, 'currentPage'>,
-    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
-    pagesStructure: $PropertyType<initialStateType, 'pagesStructure'>,
     barSizes: $PropertyType<initialStateType, 'barSizes'>,
-    changeBarSize: typeof actions.changeBarSize,
     changeBoxProperty: typeof actions.changeBoxProperty,
 }
 
 const Pages = (props: Props) => {
-    const page = props.currentPage
-        ? props.resourcesObjects[props.currentPage]
-            ? !props.resourcesObjects[props.currentPage].present.structure
-                ? props.resourcesObjects[props.currentPage].draft
-                : props.resourcesObjects[props.currentPage].present
-            : null
-        : null
+    const handleChangeBoxProperty = (key, value) => {
+        if (props.checkUserRights(['content']))
+            props.changeBoxPropertyInValues('page', key, value)
+    }
+
     return (
         <div className={classes.Content}>
             <div
@@ -35,23 +30,14 @@ const Pages = (props: Props) => {
                     flex: '0 0 ' + props.barSizes.width + 'px',
                 }}
             >
-                <ResourcesTree
-                    type="page"
-                    structure={props.pagesStructure}
-                    currentResource={props.currentPage}
-                />
+                <ResourcesTree type="page" />
                 <SizeDragController
                     addClass={classes.widthControll}
                     startValue={props.barSizes.width}
-                    changed={value =>
-                        props.changeBarSize(props.barSizes, {
-                            key: 'width',
-                            value,
-                        })
-                    }
+                    type={'width'}
                 />
             </div>
-            {page ? (
+            {props.currentPageDraftExists ? (
                 <>
                     <div
                         className={classes.Container}
@@ -59,38 +45,18 @@ const Pages = (props: Props) => {
                             flex: '0 0 ' + props.barSizes.width2 + 'px',
                         }}
                     >
-                        <ElementsTree
-                            pagesStructure={props.pagesStructure}
-                            currentResource={props.currentPage}
-                            resourcesObjects={props.resourcesObjects}
-                            resourceDraft={page}
-                            mode="page"
-                        />
+                        <ElementsTree mode="page" />
 
                         <SizeDragController
                             addClass={classes.widthControll}
                             startValue={props.barSizes.width2}
-                            changed={value =>
-                                props.changeBarSize(props.barSizes, {
-                                    key: 'width2',
-                                    value,
-                                })
-                            }
+                            type={'width2'}
                         />
                     </div>
                     <div className={classes.LastContainer}>
-                        <Properties
+                        <PageProperties
                             mode="page"
-                            currentResource={props.currentPage}
-                            resourceDraft={page}
-                            changeProperty={(key, value) =>
-                                props.changeBoxProperty(
-                                    key,
-                                    value,
-                                    props.currentPage,
-                                    page
-                                )
-                            }
+                            changeProperty={handleChangeBoxProperty}
                         />
                     </div>
                 </>
@@ -102,29 +68,19 @@ const Pages = (props: Props) => {
 const mapStateToProps = state => {
     return {
         barSizes: state.barSizes,
-        pagesStructure: state.pagesStructure,
-        currentPage: state.currentPage,
-        resourcesObjects: state.resourcesObjects,
+        currentPageDraftExists: typeof state.mD.currentPageDraft != 'undefined',
     }
 }
 
 const mapDispatchToProps = dispatch => {
     return {
-        changeBarSize: (barSizes, initiator) =>
-            dispatch(actions.changeBarSize(barSizes, initiator)),
-        changeBoxProperty: (key, value, currentResource, resourceDraft) =>
-            dispatch(
-                actions.changeBoxProperty(
-                    key,
-                    value,
-                    currentResource,
-                    resourceDraft
-                )
-            ),
+        changeBoxPropertyInValues: (type, key, value) =>
+            dispatch(actions.changeBoxPropertyInValues(type, key, value)),
+        checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }
 
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(Pages)
+)(memo(Pages))

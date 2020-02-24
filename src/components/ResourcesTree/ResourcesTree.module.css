@@ -746,11 +746,11 @@
 }
 
 .IconsContainerPage {
-    width: 80px;
+    width: 100px;
 }
 
 .IconsContainerNotPage {
-    width: 80px;
+    width: 100px;
 }
 
 .IconsContainer > div {
@@ -760,4 +760,10 @@
 
 .TreeContainer {
     flex: 1;
+}
+
+.selectContainer {
+    display: inline-block;
+    max-width: 250px;
+    width: 100%;
 }

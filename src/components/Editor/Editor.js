@@ -11,6 +11,8 @@ import 'ace-builds/src-noconflict/mode-text'
 import 'ace-builds/src-noconflict/theme-github'
 import 'ace-builds/src-min-noconflict/ext-searchbox'
 import 'ace-builds/src-min-noconflict/ext-language_tools'
+import checkUserRights from '../../utils/checkUserRights'
+
 // import beautify from 'ace-builds/src-min-noconflict/ext-beautify'
 import beautify_js, { css as beautify_css } from 'js-beautify'
 import Select from '../UI/Select/Select'
@@ -30,6 +32,7 @@ type Props = {
     elementCurrentCursor: $PropertyType<elementType, 'cursorPosition'>,
     editorMode: 'json' | 'css',
     handleChange: (value: string, cursorPosition: {}) => {},
+    readOnly?: boolean,
 }
 
 type State = {
@@ -40,6 +43,9 @@ type State = {
 
 class Editor extends Component<Props, State> {
     onChange = value => {
+        if (!this.props.checkUserRights(this.props.requiredRights)) {
+            return
+        }
         this.setState({
             value,
             updateValue: false,
@@ -161,6 +167,7 @@ class Editor extends Component<Props, State> {
                             onChange={this.handleSelectProperty}
                             options={this.props.suggestOptions}
                             isSearchable
+                            requiredRights={this.props.requiredRights}
                         />
                     </div>
                 ) : null}
@@ -168,6 +175,7 @@ class Editor extends Component<Props, State> {
                     ref="aceEditor"
                     value={this.state.value}
                     mode={this.props.editorMode}
+                    readOnly={this.props.readOnly}
                     theme="github"
                     onChange={this.onChange}
                     name={this.props.name}
@@ -223,6 +231,7 @@ const mapDispatchToProps = (dispatch, props) => {
     return {
         undoResourceVersion: () => dispatch(actions.undoResourceVersion()),
         redoResourceVersion: () => dispatch(actions.redoResourceVersion()),
+        checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }
 
@@ -232,37 +241,3 @@ export default connect(
     null,
     { forwardRef: true }
 )(Editor)
-// <ControlledEditor
-//     width="100%"
-//     height="100%"
-//     language="css"
-//     theme="vs-dark"
-//     value={state.value}
-//     // options={options}
-//     onChange={handleChange}
-//     // editorDidMount={::this.editorDidMount}
-// />
-// <CodeMirror
-//     value={state.value}
-//     options={{
-//         mode: 'css',
-//         theme: 'material',
-//         lineNumbers: true,
-//         autocorrect: true,
-//         extraKeys: {
-//             'Ctrl-Z': () => {},
-//             'Shift-Ctrl-Z': () => {},
-//         },
-//     }}
-//     onChange={(editor, data, value) => {
-//         if (data.origin) {
-//             //setState({ ...state, value })
-//             props.addResourceVersion(props.currentFile, {
-//                 value: editor.getValue(),
-//             })
-//         }
-//     }}
-//     onBeforeChange={(editor, data, value) => {
-//         setState({ ...state, value })
-//     }}
-// />

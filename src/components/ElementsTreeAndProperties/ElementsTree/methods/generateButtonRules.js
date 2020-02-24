@@ -6,11 +6,21 @@ export default (
 ) => {
     const buttonRules = {}
 
+    if (
+        currentBoxType !== 'isCMSVariable' &&
+        currentBoxType !== 'isElementFromCMSVariable'
+    )
+        buttonRules.addText = true
+
     if (currentBoxType !== 'childrenTo') buttonRules.addNext = true
 
     if (props.mode === 'plugin') buttonRules.addChildren = true
 
-    if (currentBoxType !== 'plugin' && currentBoxType !== 'children')
+    if (
+        currentBoxType !== 'plugin' &&
+        currentBoxType !== 'children' &&
+        currentBoxType !== 'isElementFromCMSVariable'
+    )
         buttonRules.addInside = true
 
     if (
@@ -30,7 +40,9 @@ export default (
     if (
         currentBoxType === 'element' ||
         currentBoxType === 'plugin' ||
-        currentBoxType === 'children'
+        currentBoxType === 'children' ||
+        currentBoxType === 'isElementFromCMSVariable' ||
+        currentBoxType === 'isCMSVariable'
     )
         buttonRules.delete = true
 

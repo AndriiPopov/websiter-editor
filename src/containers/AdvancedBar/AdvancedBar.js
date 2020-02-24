@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 import { connect } from 'react-redux'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 
@@ -8,8 +8,11 @@ import * as actions from '../../store/actions'
 import Images from './Images/Images'
 import Plugins from './Plugins/Plugins'
 import Pages from './Pages/Pages'
+import Templates from './Templates/Templates'
 import Account from './Account/Account'
 import Websites from './Websites/Websites'
+import { useBeforeunload } from 'react-beforeunload'
+import ReactResizeDetector from 'react-resize-detector'
 
 import type { initialStateType } from '../../store/reducer/reducer'
 
@@ -35,7 +38,7 @@ const AdvancedBar = (props: Props) => {
         classes.TabSelected,
     ].join(' ')
 
-    const undoRedoTabNames = ['page', 'plugin', '', '', '', '']
+    const undoRedoTabNames = ['page', 'template', 'plugin', '', '', '', '']
 
     const handleKeyDown = e => {
         if (!e.shiftKey && e.ctrlKey && (e.key === 'z' || e.key === 'Z'))
@@ -46,13 +49,25 @@ const AdvancedBar = (props: Props) => {
 
     const handleTabSelected = index => {
         props.setCurrentTopTab(undoRedoTabNames[index])
-        props.changeBarSize(props.barSizes)
+        props.changeBarSize()
         props.toggleFindMode()
     }
 
+    useBeforeunload(() => {
+        if (props.notSavedResources.length > 0) {
+            setTimeout(() => props.savePropertiesOnLeave(), 1)
+            return 'Some data is not saved.'
+        } else {
+            props.savePropertiesOnLeave()
+            return undefined
+        }
+    })
+
+    const changeBarSize = () => props.changeBarSize()
+
     return (
         <div
-            style={{ height: props.barSizes.height + 'px' }}
+            style={{ flex: '0 1 ' + props.barSizes.height + 'px' }}
             className={classes.mainContainer}
             tabIndex="0"
             onKeyDown={e => handleKeyDown(e)}
@@ -61,12 +76,7 @@ const AdvancedBar = (props: Props) => {
                 addClass={classes.heightControll}
                 vertical
                 startValue={props.barSizes.height}
-                changed={value => {
-                    props.changeBarSize(props.barSizes, {
-                        key: 'height',
-                        value,
-                    })
-                }}
+                type="height"
             />
             <Tabs
                 className={['react-tabs', classes.reactTabs].join(' ')}
@@ -76,6 +86,7 @@ const AdvancedBar = (props: Props) => {
             >
                 <TabList className={classes.TabList}>
                     <Tab className={tabClass}>Pages</Tab>
+                    <Tab className={tabClass}>Templates</Tab>
                     <Tab className={tabClass}>Plugins</Tab>
                     <Tab className={tabClass}>Media files</Tab>
                     <Tab className={tabClass}>Websites</Tab>
@@ -84,6 +95,9 @@ const AdvancedBar = (props: Props) => {
 
                 <TabPanel>
                     <Pages />
+                </TabPanel>
+                <TabPanel>
+                    <Templates />
                 </TabPanel>
                 <TabPanel>
                     <Plugins />
@@ -98,6 +112,11 @@ const AdvancedBar = (props: Props) => {
                     <Account />
                 </TabPanel>
             </Tabs>
+            <ReactResizeDetector
+                handleWidth
+                handleHeight
+                onResize={changeBarSize}
+            />
         </div>
     )
 }
@@ -106,22 +125,23 @@ const mapStateToProps = state => {
     return {
         barSizes: state.barSizes,
         loading: state.loading,
+        notSavedResources: state.notSavedResources,
     }
 }
 
 const mapDispatchToProps = dispatch => {
     return {
-        changeBarSize: (barSizes, initiator) =>
-            dispatch(actions.changeBarSize(barSizes, initiator)),
+        changeBarSize: initiator => dispatch(actions.changeBarSize(initiator)),
         setCurrentTopTab: currentTopTab =>
             dispatch(actions.setCurrentTopTab(currentTopTab)),
         undoResourceVersion: () => dispatch(actions.undoResourceVersion()),
         redoResourceVersion: () => dispatch(actions.redoResourceVersion()),
         toggleFindMode: value => dispatch(actions.toggleFindMode(value)),
+        savePropertiesOnLeave: () => dispatch(actions.savePropertiesOnLeave()),
     }
 }
 
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(AdvancedBar)
+)(memo(AdvancedBar))

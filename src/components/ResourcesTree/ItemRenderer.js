@@ -1,6 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 
 import * as actions from '../../store/actions/index'
 import * as classes from './ResourcesTree.module.css'
@@ -12,12 +12,13 @@ import {
     // $FlowFixMe
 } from '../../utils/sortTreeMethods'
 import Svg from '../Svg/Svg'
+import { structure } from '../../utils/resourceTypeIndex'
+import checkUserRights from '../../utils/checkUserRights'
+import * as wsActions from '../../websocketActions'
 
 import type { pageType, initialStateType } from '../../store/reducer/reducer'
 
 type Props = {
-    chooseWebsite: typeof actions.chooseWebsite,
-    loadedWebsite: $PropertyType<initialStateType, 'loadedWebsite'>,
     changeWebsiteProperty: typeof actions.changeWebsiteProperty,
     chooseResource: typeof actions.chooseResource,
     connectDragPreview: Function,
@@ -37,16 +38,14 @@ type Props = {
     className: string,
     style: string,
     didDrop: boolean,
-    type: 'page' | 'plugin',
+    type: 'page' | 'plugin' | 'template',
     saveResourcesStructure: typeof actions.saveResourcesStructure,
-    pagesStructure: $PropertyType<initialStateType, 'pagesStructure'>,
-    pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
-    currentPage: $PropertyType<initialStateType, 'currentPage'>,
-    currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
     notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>,
+    userId: $PropertyType<initialStateType, 'userId'>,
 }
 
 const ItemRenderer = (props: Props) => {
+    // const mD = getEssentialData(props.userId, props.resourcesObjects)
     var _this$props = props,
         scaffoldBlockPxWidth = _this$props.scaffoldBlockPxWidth,
         toggleChildrenVisibility = _this$props.toggleChildrenVisibility,
@@ -77,7 +76,7 @@ const ItemRenderer = (props: Props) => {
         left: -0.5 * scaffoldBlockPxWidth,
     }
 
-    const { name, id, url, homepage, hidden, notPublished } = props.node
+    const { name, id, url, homepage, hidden, published } = props.node
 
     const rowClasses = [classes.rst__row]
     if (isLandingPadActive) rowClasses.push(classes.rst__rowLandingPad)
@@ -88,32 +87,39 @@ const ItemRenderer = (props: Props) => {
     if (!isLandingPadActive) rowClasses.push(className)
 
     const handlePropertyChange = (key, value, id) => {
+        if (
+            !props.checkUserRights(
+                props.type === 'page' ? ['content'] : ['developer']
+            )
+        ) {
+            return
+        }
         value = value.trim()
         if (key === 'url') {
             value = value.replace(/\s+/g, '-').toLowerCase()
         }
-
-        let newStructure = []
-        if (props.type === 'page')
-            newStructure = cloneDeep(props.pagesStructure)
-        if (props.type === 'plugin')
-            newStructure = cloneDeep(props.pluginsStructure)
+        const newStructure = cloneDeep(props.structure)
         const element = newStructure.find(item => item.id === id)
         // $FlowFixMe
         if (element[key] !== value) {
             // $FlowFixMe
             element[key] = value
-            props.saveResourcesStructure(
-                props.loadedWebsite,
-                newStructure,
-                props.pagesStructure,
-                props.type
+            wsActions.sendUpdate(
+                'website',
+                {
+                    [structure[props.type]]: newStructure,
+                },
+                props.currentWebsiteId
             )
         }
     }
 
     const handleChoose = id => {
-        if (props.currentPage !== id && props.currentPlugin !== id)
+        if (
+            props.currentPageId !== id &&
+            props.currentTemplateId !== id &&
+            props.currentPluginId !== id
+        )
             props.chooseResource(id, props.type)
     }
 
@@ -126,7 +132,7 @@ const ItemRenderer = (props: Props) => {
                 node.children &&
                 (node.children.length > 0 ||
                     typeof node.children === 'function') && (
-                    <div>
+                    <div onMouseDown={e => e.stopPropagation()}>
                         <button
                             type="button"
                             aria-label={node.expanded ? 'Collapse' : 'Expand'}
@@ -183,31 +189,59 @@ const ItemRenderer = (props: Props) => {
                             }
                         >
                             <div className={classes.rst__rowLabel}>
-                                <InspectorValue
-                                    value={name}
-                                    items={[]}
-                                    blur={value =>
-                                        handlePropertyChange('name', value, id)
-                                    }
-                                    withState
-                                />
-                            </div>
-                            {props.type === 'page' ? (
-                                <div className={classes.rst__rowLabel}>
-                                    url:
+                                {props.checkUserRights(
+                                    props.type === 'page'
+                                        ? ['content']
+                                        : ['developer'],
+                                    true
+                                ) ? (
                                     <InspectorValue
-                                        value={url}
+                                        value={name}
                                         items={[]}
                                         blur={value =>
                                             handlePropertyChange(
-                                                'url',
+                                                'name',
                                                 value,
                                                 id
                                             )
                                         }
                                         withState
-                                        allowEmpty
+                                        requiredRights={
+                                            props.type === 'page'
+                                                ? ['content']
+                                                : ['developer']
+                                        }
                                     />
+                                ) : (
+                                    name
+                                )}
+                            </div>
+                            {props.type === 'page' ? (
+                                <div className={classes.rst__rowLabel}>
+                                    url:
+                                    {props.checkUserRights(
+                                        props.type === 'page'
+                                            ? ['content']
+                                            : ['developer'],
+
+                                        true
+                                    ) ? (
+                                        <InspectorValue
+                                            value={url}
+                                            items={[]}
+                                            blur={value =>
+                                                handlePropertyChange(
+                                                    'url',
+                                                    value,
+                                                    id
+                                                )
+                                            }
+                                            withState
+                                            allowEmpty
+                                        />
+                                    ) : (
+                                        url
+                                    )}
                                 </div>
                             ) : null}
                             <div
@@ -237,7 +271,7 @@ const ItemRenderer = (props: Props) => {
                                     </div>
                                 ) : null}
                                 <div>
-                                    {notPublished ? (
+                                    {!published ? (
                                         <Svg icon='<svg width="17" height="17" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"></path></svg>' />
                                     ) : (
                                         <Svg icon='<svg width="17" height="17"></svg>' />
@@ -246,6 +280,13 @@ const ItemRenderer = (props: Props) => {
                                 <div>
                                     {props.notSavedResources.includes(id) ? (
                                         <Svg icon='<svg width="17" height="17" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"></path></svg>' />
+                                    ) : (
+                                        <Svg icon='<svg width="17" height="17"></svg>' />
+                                    )}
+                                </div>
+                                <div>
+                                    {props.newVersionResources.includes(id) ? (
+                                        <Svg icon='<svg width="17" height="17" viewBox="0 0 24 24"><path d="M20,4H4C2.89,4,2.01,4.89,2.01,6L2,18c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2V6C22,4.89,21.11,4,20,4z M8.5,15H7.3 l-2.55-3.5V15H3.5V9h1.25l2.5,3.5V9H8.5V15z M13.5,10.26H11v1.12h2.5v1.26H11v1.11h2.5V15h-4V9h4V10.26z M20.5,14 c0,0.55-0.45,1-1,1h-4c-0.55,0-1-0.45-1-1V9h1.25v4.51h1.13V9.99h1.25v3.51h1.12V9h1.25V14z"></path></svg>' />
                                     ) : (
                                         <Svg icon='<svg width="17" height="17"></svg>' />
                                     )}
@@ -259,15 +300,17 @@ const ItemRenderer = (props: Props) => {
     )
 }
 
-const mapStateToProps = state => {
+const mapStateToProps = (state, props) => {
     return {
-        pagesStructure: state.pagesStructure,
-        pluginsStructure: state.pluginsStructure,
+        newVersionResources: state.newVersionResources,
         notSavedResources: state.notSavedResources,
-        loadedWebsite: state.loadedWebsite,
         resourcesObjects: state.resourcesObjects,
-        currentPage: state.currentPage,
-        currentPlugin: state.currentPlugin,
+        userId: state.userId,
+        structure: state.mD[structure[props.type]],
+        currentWebsiteId: state.mD.currentWebsiteId,
+        currentPageId: state.mD.currentPageId,
+        currentTemplateId: state.mD.currentTemplateId,
+        currentPluginId: state.mD.currentPluginId,
     }
 }
 
@@ -275,15 +318,9 @@ const mapDispatchToProps = dispatch => {
     return {
         chooseResource: (id, type) =>
             dispatch(actions.chooseResource(id, type)),
-        saveResourcesStructure: (websiteId, newStructure, oldStructure, type) =>
-            dispatch(
-                actions.saveResourcesStructure(
-                    websiteId,
-                    newStructure,
-                    oldStructure,
-                    type
-                )
-            ),
+        checkUserRights: rights => dispatch(checkUserRights(rights)),
+        sendUpdate: (type, newResource, id) =>
+            dispatch(wsActions.sendUpdate(type, newResource, id)),
     }
 }
 

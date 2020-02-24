@@ -1,8 +1,10 @@
-import React from 'react'
-import { connect } from 'react-redux'
+import React, { memo, useEffect } from 'react'
 
 import * as classes from './SizeDragController.module.css'
-import { dragStart } from '../../../utils/dragFunction'
+import { useDrag } from 'react-dnd'
+import * as actions from '../../../store/actions'
+import { connect } from 'react-redux'
+import { getEmptyImage } from 'react-dnd-html5-backend'
 
 import type { initialStateType } from '../../../store/reducer/reducer'
 
@@ -15,32 +17,28 @@ type Props = {
 }
 
 export const SizeDragController = (props: Props) => {
-    const handleDragMouseDown = e => {
-        if (props.vertical) {
-            dragStart(
-                e,
-                (difX, difY) => {
-                    let value = props.startValue - difY
-                    props.changed(value)
-                },
-                () => {}
-            )
-        } else {
-            dragStart(
-                e,
-                (difX, difY) => {
-                    let value = props.startValue + difX
-                    props.changed(value)
-                },
-                () => {}
-            )
-        }
-    }
+    const [, drag, preview] = useDrag({
+        item: {
+            id: props.type,
+            type: 'barSizes',
+            startValue: props.startValue,
+        },
+        begin: () => {
+            props.setSizeIsChanging(true)
+        },
+        end: () => {
+            props.setSizeIsChanging(false)
+        },
+    })
+
+    useEffect(() => {
+        preview(getEmptyImage(), { captureDraggingState: true })
+    }, [])
 
     return (
         <div
+            ref={drag}
             className={[classes.SectionHeight, props.addClass].join(' ')}
-            onMouseDown={handleDragMouseDown}
             data-testid="sizeDragController"
         >
             {!props.vertical ? <div className={classes.InnerDiv} /> : null}
@@ -48,10 +46,20 @@ export const SizeDragController = (props: Props) => {
     )
 }
 
-const mapStateToProps = state => {
+const mapDispatchToProps = dispatch => {
     return {
-        barSizes: state.barSizes,
+        setSizeIsChanging: value => dispatch(actions.setSizeIsChanging(value)),
     }
 }
 
-export default connect(mapStateToProps)(SizeDragController)
+export default connect(
+    null,
+    mapDispatchToProps
+)(
+    memo(
+        SizeDragController,
+        (prevProps, nextProps) =>
+            prevProps.type === nextProps.type &&
+            prevProps.startValue === nextProps.startValue
+    )
+)

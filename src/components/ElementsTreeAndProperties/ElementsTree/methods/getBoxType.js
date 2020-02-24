@@ -3,10 +3,10 @@ import { checkIfCapital } from '../../../../utils/basic'
 import type { Props } from '../ElementsTree'
 
 export default (props: Props) => {
-    const currentBox = props.resourceDraft.currentBox
+    const currentBox = props.currentBox
     let currentItemInStructure = null
     if (currentBox) {
-        currentItemInStructure = props.resourceDraft.structure.find(
+        currentItemInStructure = props.resourceDraftStructure.find(
             item => item.id === currentBox
         )
     }
@@ -29,6 +29,12 @@ export default (props: Props) => {
         }
         if (currentItemInStructure.childrenTo) {
             currentBoxType = 'childrenTo'
+        }
+        if (currentItemInStructure.isCMSVariable) {
+            currentBoxType = 'isCMSVariable'
+        }
+        if (currentItemInStructure.isElementFromCMSVariable) {
+            currentBoxType = 'isElementFromCMSVariable'
         }
     } else {
         currentBoxType = 'none'

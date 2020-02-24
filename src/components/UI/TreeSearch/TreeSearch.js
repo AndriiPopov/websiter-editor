@@ -1,9 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
 
 import * as classes from './TreeSearch.module.css'
 import SmallButton from '../Buttons/SmallButton/SmallButton'
 
-import type { initialStateType } from '../../../store/reducer/reducer'
 import type { State } from '../../ElementsTreeAndProperties/ElementsTree/ElementsTree'
 
 type Props = {

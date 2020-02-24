@@ -1,0 +1,30 @@
+.Span {
+    margin-left: 5px;
+    min-width: 155px;
+    display: inline-block;
+}
+
+.Input {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.Button {
+    display: inline-block;
+}
+
+.LocalDomain {
+    border-bottom: 1px #ccc solid;
+    padding-bottom: 20px;
+    margin-bottom: 10px;
+}
+
+.Title {
+    margin-bottom: 5px;
+    height: 18px;
+    position: relative;
+}
+.Title > span {
+    bottom: 0px;
+    position: absolute;
+}

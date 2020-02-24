@@ -1,12 +1,13 @@
 .Container {
     display: flex;
+    padding-left: 7px;
 }
 
 .Input {
     display: inline;
     margin: 0px;
     flex: 1;
-    width: 100%;
+    padding: 1px 5px;
 }
 
 .Label {

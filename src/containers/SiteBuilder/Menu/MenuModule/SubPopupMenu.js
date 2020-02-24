@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import * as React from 'react';
 import { connect } from 'mini-store';
 import KeyCode from "rc-util/es/KeyCode";

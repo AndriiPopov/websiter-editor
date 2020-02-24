@@ -1,20 +1,17 @@
-import {
-    getCurrentResourceValue,
-    checkIfCapital,
-} from '../../../../utils/basic'
-
 import type Props from '../BuilderElement'
 
 export const hoverBox = (e: SyntheticMouseEvent<>, props: Props) => {
     e.stopPropagation()
-    let Tag = props.element.tag || 'div'
+    // let Tag = props.element.tag || 'div'
 
-    Tag = Tag.length > 0 ? Tag : 'div'
+    // Tag = Tag.length > 0 ? Tag : 'div'
     // const isPlugin = checkIfCapital(Tag.charAt(0))
-    const isPlugin = true
+    // const isPlugin = true
     if (props.findMode === 'page') {
         props.hoverBox(
-            isPlugin ? props.routePlugin || props.element.id : props.element.id,
+            // isPlugin ?
+            props.routePlugin || props.element.id,
+            //  : props.element.id,
             'page',
             true
         )
@@ -37,24 +34,18 @@ export const chooseBox = (e: SyntheticMouseEvent<>, props: Props) => {
     if (props.findMode === 'page') {
         e.stopPropagation()
         props.chooseBox(
-            props.routePlugin || props.element.id,
-            props.currentResource,
-            props.resourceDraft
+            props.findMode, /// not sure
+            props.routePlugin || props.element.id
         )
     } else if (props.findMode === 'plugin') {
         e.stopPropagation()
         if (props.sourcePlugin) {
             props.chooseResource(props.sourcePlugin, 'plugin')
-            const resourceDraft = getCurrentResourceValue(
-                props.sourcePlugin,
-                props.resourcesObjects
+
+            props.chooseBox(
+                props.findMode, /// not sure
+                props.element.id
             )
-            if (resourceDraft)
-                props.chooseBox(
-                    props.element.id,
-                    props.sourcePlugin,
-                    resourceDraft
-                )
         }
     }
     props.toggleFindMode()

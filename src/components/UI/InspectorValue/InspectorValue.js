@@ -46,7 +46,9 @@ export const InspectorValue = forwardRef((props: Props, parentRef) => {
                     value={props.withState ? state.value : props.value}
                     onChange={(e, value) => {
                         setState({ ...state, value: value })
-                        if (props.changed) props.changed(value)
+                        if (props.changed) {
+                            props.changed(value)
+                        }
                     }}
                     onSelect={value => {
                         setState({ ...state, value: value, active: false })
@@ -107,7 +109,10 @@ export const InspectorValue = forwardRef((props: Props, parentRef) => {
                                         if (parentPropsBlur) {
                                             parentPropsBlur(e.target.value)
                                         }
-                                        setState({ ...state, active: false })
+                                        setState({
+                                            ...state,
+                                            active: false,
+                                        })
                                     }}
                                     onFocus={e => {
                                         props.onBlur(e)

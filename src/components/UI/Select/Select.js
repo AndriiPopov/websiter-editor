@@ -1,7 +1,11 @@
 import React from 'react'
 import SelectComponent from 'react-select'
+import { connect } from 'react-redux'
 
 import classes from './Select.module.css'
+import checkUserRights from '../../../utils/checkUserRights'
+
+import type { initialStateType } from '../../../store/reducer/reducer'
 
 type Props = {
     startValue?: any,
@@ -17,9 +21,21 @@ type Props = {
     isSearchable?: boolean,
     isClearable?: boolean,
     placeholder?: String,
+    requiredRights?: Array<string>,
+    tryWebsiter: $PropertyType<initialStateType, 'tryWebsiter'>,
+    websites: $PropertyType<initialStateType, 'websites'>,
+    loadedWebsite: $PropertyType<initialStateType, 'loadedWebsite'>,
+    userId: $PropertyType<initialStateType, 'userId'>,
 }
 
 const Select = (props: Props) => {
+    const handleChange = option => {
+        if (!props.checkUserRights(props.requiredRights || [])) {
+            return
+        }
+        props.onChange(option)
+    }
+
     const customStyles = {
         menu: (provided: {}, state: {}) => ({
             ...provided,
@@ -47,28 +63,15 @@ const Select = (props: Props) => {
         }),
     }
 
-    let startValue
-    if (props.startValue) {
-        startValue = props.options.filter(
-            option => option.value === props.startValue
-        )
-        startValue = startValue.length === 1 ? startValue[0] : null
-    }
-
     return (
         <div className={classes.Div}>
             {props.title}
             <SelectComponent
-                // className={classes.Select}
-                styles={
-                    customStyles
-                    // ...props.styles,
-                }
-                //value={startValue || props.options[props.default]}
+                styles={customStyles}
                 value={props.options[props.default] || 0}
                 isClearable={props.isClearable}
                 isSearchable={props.isSearchable}
-                onChange={props.onChange}
+                onChange={handleChange}
                 options={props.options}
                 placeholder={props.placeholder}
             />
@@ -80,4 +83,13 @@ Select.defaultProps = {
     default: 0,
 }
 
-export default Select
+const mapDispatchToProps = dispatch => {
+    return {
+        checkUserRights: rights => dispatch(checkUserRights(rights)),
+    }
+}
+
+export default connect(
+    null,
+    mapDispatchToProps
+)(Select)

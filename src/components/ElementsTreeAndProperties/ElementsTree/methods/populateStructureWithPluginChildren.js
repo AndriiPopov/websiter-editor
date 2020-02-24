@@ -1,6 +1,6 @@
 import {
     checkIfCapital,
-    getCurrentResourceValue,
+    // getCurrentResourceValue,
 } from '../../../../utils/basic'
 
 import type { Props } from '../ElementsTree'
@@ -8,6 +8,7 @@ import type { resourceType } from '../../../../store/reducer/reducer'
 
 export default (
     structure: $PropertyType<resourceType, 'structure'>,
+    currentResource,
     props: Props
 ) => {
     let result = []
@@ -16,17 +17,17 @@ export default (
         if (!item.childrenTo && !excludeItems.includes(item.id)) {
             result.push(item)
         }
+
         if (checkIfCapital(item.tag.charAt(0))) {
             const pluginItem = props.pluginsStructure.find(
                 element => element.name === item.tag
             )
             if (pluginItem) {
-                const pluginElement = getCurrentResourceValue(
-                    pluginItem.id,
-                    props.resourcesObjects
-                )
-                if (pluginElement) {
-                    const neededChildren = pluginElement.structure.filter(
+                const pluginElementStructure =
+                    props.pluginElementsStructures[pluginItem.id]
+
+                if (pluginElementStructure) {
+                    const neededChildren = pluginElementStructure.filter(
                         element => element.isChildren
                     )
                     const currentChildren = structure.filter(element =>
@@ -52,7 +53,7 @@ export default (
                                 ),
                             ]
                         } else {
-                            result.push({
+                            const newElement = {
                                 id: `${item.id}_forPlugin_${
                                     pluginItem.id
                                 }_childrenTo_${child.id}`,
@@ -60,16 +61,17 @@ export default (
                                 forPlugin: pluginItem.id,
                                 sourcePlugin:
                                     props.mode === 'plugin'
-                                        ? props.currentResource
+                                        ? currentResource
                                         : '',
                                 path: [...item.path, item.id],
                                 text: false,
-                                textContent: '',
+                                // textContent: '',
                                 isChildren: false,
                                 forChildren: true,
-                                properties: {},
+                                // properties: {},
                                 tag: `Children for ${child.tag}`,
-                            })
+                            }
+                            result.push(newElement)
                         }
                     })
                 }

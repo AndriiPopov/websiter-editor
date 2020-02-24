@@ -1,28 +1,34 @@
-'use strict';
+/* eslint-disable */
+'use strict'
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.FrameContextConsumer = exports.FrameContextProvider = exports.FrameContext = undefined;
+Object.defineProperty(exports, '__esModule', {
+    value: true,
+})
+exports.FrameContextConsumer = exports.FrameContextProvider = exports.FrameContext = undefined
 
-var _react = require('react');
+var _react = require('react')
 
-var _react2 = _interopRequireDefault(_react);
+var _react2 = _interopRequireDefault(_react)
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { default: obj }
+}
 
-var doc = void 0;
-var win = void 0;
+var doc = void 0
+var win = void 0
 if (typeof document !== 'undefined') {
-  doc = document;
+    doc = document
 }
 if (typeof window !== 'undefined') {
-  win = window;
+    win = window
 }
 
-var FrameContext = exports.FrameContext = _react2.default.createContext({ document: doc, window: win });
+var FrameContext = (exports.FrameContext = _react2.default.createContext({
+    document: doc,
+    window: win,
+}))
 
 var FrameContextProvider = FrameContext.Provider,
-    FrameContextConsumer = FrameContext.Consumer;
-exports.FrameContextProvider = FrameContextProvider;
-exports.FrameContextConsumer = FrameContextConsumer;
+    FrameContextConsumer = FrameContext.Consumer
+exports.FrameContextProvider = FrameContextProvider
+exports.FrameContextConsumer = FrameContextConsumer

@@ -1,9 +1,10 @@
-import React from 'react'
+import React  from 'react'
 import ReactTooltip from 'react-tooltip'
 import { connect } from 'react-redux'
 
 import classes from './SmallButton.module.css'
 import Svg from '../../../Svg/Svg'
+import checkUserRights from '../../../../utils/checkUserRights'
 
 type Props = {
     title?: string,
@@ -12,12 +13,21 @@ type Props = {
     icon?: string,
     inline?: boolean,
     tooltip?: string,
-    tooltipsOn: boolean,
     disabled?: boolean,
+    requiredRights?: Array<string>,
 }
 
 export const SmallButton = (props: Props) => {
     const width = window.innerWidth
+    const handleButtonClick = () => {
+        if (props.buttonClicked) {
+            if (props.requiredRights)
+                if (!props.checkUserRights(props.requiredRights || [])) {
+                    return
+                }
+            if (props.buttonClicked) props.buttonClicked()
+        }
+    }
     return (
         <>
             <button
@@ -26,9 +36,10 @@ export const SmallButton = (props: Props) => {
                 className={`${
                     props.disabled ? classes.ButtonDisabled : classes.Button
                 } ${props.inline ? classes.Inline : ''}`}
-                onClick={props.buttonClicked}
+                onClick={handleButtonClick}
                 onMouseDown={props.mouseDown}
                 disabled={props.disabled}
+                style={props.style}
             >
                 <table className={classes.Table}>
                     <tbody>
@@ -46,7 +57,7 @@ export const SmallButton = (props: Props) => {
                     </tbody>
                 </table>
             </button>
-            {props.tooltipsOn ? (
+            {!props.tooltipsOff && props.tooltip ? (
                 <ReactTooltip
                     effect="solid"
                     multiline={true}
@@ -105,8 +116,17 @@ export const SmallButton = (props: Props) => {
 
 const mapStateToProps = state => {
     return {
-        tooltipsOn: state.tooltipsOn,
+        tooltipsOff: state.mD.tooltipsOff,
     }
 }
 
-export default connect(mapStateToProps)(SmallButton)
+const mapDispatchToProps = dispatch => {
+    return {
+        checkUserRights: rights => dispatch(checkUserRights(rights)),
+    }
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(SmallButton)

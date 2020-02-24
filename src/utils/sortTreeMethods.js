@@ -1,3 +1,4 @@
+/* eslint-disable */
 export function _extends() {
     _extends =
         Object.assign ||

@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash'
+import isEmpty from 'lodash/isEmpty'
 
 export const checkIfCapital = (char: string) => {
     if (char === char.toUpperCase() && char !== char.toLowerCase()) {
@@ -21,15 +21,19 @@ function _objectSpread(target) {
         var ownKeys = Object.keys(source)
         if (typeof Object.getOwnPropertySymbols === 'function') {
             ownKeys = ownKeys.concat(
+                //eslint-disable-next-line
                 Object.getOwnPropertySymbols(source).filter(function(sym) {
                     return Object.getOwnPropertyDescriptor(
                         source,
                         sym
+                        // $FlowFixMe
                     ).enumerable
                 })
             )
         }
+        //eslint-disable-next-line
         ownKeys.forEach(function(key) {
+            // $FlowFixMe
             _defineProperty(target, key, source[key])
         })
     }
@@ -37,6 +41,7 @@ function _objectSpread(target) {
 }
 
 function _defineProperty(obj, key, value) {
+    // $FlowFixMe
     if (key in obj) {
         Object.defineProperty(obj, key, {
             value: value,
@@ -45,6 +50,7 @@ function _defineProperty(obj, key, value) {
             writable: true,
         })
     } else {
+        // $FlowFixMe
         obj[key] = value
     }
     return obj
@@ -61,6 +67,7 @@ function _objectWithoutProperties(source, excluded) {
             if (excluded.indexOf(key) >= 0) continue
             if (!Object.prototype.propertyIsEnumerable.call(source, key))
                 continue
+            // $FlowFixMe
             target[key] = source[key]
         }
     }
@@ -79,12 +86,12 @@ function _objectWithoutPropertiesLoose(source, excluded) {
     }
     return target
 }
-
+// $FlowFixMe
 export function buildTree(items) {
     var buildItem = function buildItem(item) {
-        var path = item.path,
-            data = _objectWithoutProperties(item, ['path'])
-
+        // var path = item.path,
+        var data = _objectWithoutProperties(item, ['path'])
+        // $FlowFixMe
         return _objectSpread({}, data, {
             children: items
                 .filter(function(child) {

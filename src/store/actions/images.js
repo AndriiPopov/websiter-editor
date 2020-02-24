@@ -1,6 +1,5 @@
 import axios from 'axios'
-
-import type { initialStateType } from '../../store/reducer/reducer'
+import { webSocket } from '../../components/ReserveWebsite/ReserveWebsite'
 
 const actionStartImageUpload = () => ({
     type: 'ACTION_START_IMAGE_UPLOAD',
@@ -15,45 +14,52 @@ const actionFailImageUpload = (error: string) => ({
     error,
 })
 
-const getSignedRequest = (
-    file,
-    images: $PropertyType<initialStateType, 'images'>,
-    storage: $PropertyType<initialStateType, 'storage'>,
-    userId: $PropertyType<initialStateType, 'userId'>
-) => (dispatch: Object) => {
-    if (!userId) return
-    let name = userId + '/' + file.name.replace(/([^a-zA-Z0-9\\.\\-])/g, '_')
+const getSignedRequest = file => (dispatch: Object, getState) => {
+    if (sessionStorage.getItem('tryWebsiter'))
+        return alert(
+            'This function is not available in test mode. Please create your free account at https://my.websiter.dev/login'
+        )
+    const { mD } = getState()
+    if (!mD.currentWebsiteId) return
+    let name =
+        mD.currentWebsiteId +
+        '/' +
+        file.name.replace(/([^a-zA-Z0-9\\.\\-])/g, '_')
 
     let namePrefix = ''
     let k = 0
 
     const checkName = () =>
-        images.findIndex(image => name + namePrefix === image.name)
+        mD.currentWebsiteObject.images.findIndex(
+            image => name + namePrefix === image.name
+        )
     while (checkName() >= 0) {
         k++
         namePrefix = '_' + k
     }
 
     const fileDetails = {
-        file,
+        size: file.size,
         name: name + namePrefix,
         label: file.name + namePrefix,
-        storage,
-        images,
+        type: file.type,
+        file,
     }
 
     return axios
-        .get(
-            `/api/sign-s3?file-name=${name}${namePrefix}&file-type=${
-                file.type
-            }&file-size=${file.size}`
-        )
+        .post('/api/sign-s3', {
+            fileName: fileDetails.name,
+            fileType: file.type,
+            fileSize: fileDetails.size,
+            websiteId: mD.currentWebsiteId,
+        })
         .then(response => {
             dispatch(
                 uploadFile(
                     fileDetails,
                     response.data.signedRequest,
-                    response.data.url
+                    response.data.url,
+                    mD.currentWebsiteId
                 )
             )
         })
@@ -63,7 +69,13 @@ const getSignedRequest = (
         })
 }
 
-const uploadFile = (fileDetails, signedRequest, url) => (dispatch: Object) => {
+const uploadFile = (fileDetails, signedRequest, url, websiteId) => (
+    dispatch: Object
+) => {
+    if (sessionStorage.getItem('tryWebsiter'))
+        return alert(
+            'This function is not available in test mode. Please create your free account at https://my.websiter.dev/login'
+        )
     return axios
         .put(signedRequest, fileDetails.file, {
             headers: {
@@ -71,100 +83,23 @@ const uploadFile = (fileDetails, signedRequest, url) => (dispatch: Object) => {
             },
         })
         .then(response => {
-            dispatch(saveImageUrlAndSize(fileDetails, url))
-        })
-        .catch(err => {
-            dispatch(actionFailImageUpload(err.message))
-        })
-}
-
-const saveImageUrlAndSize = (fileDetails, url) => (dispatch: Object) => {
-    const fileSize = parseFloat(fileDetails.file.size)
-    const newStorage = fileDetails.storage + fileSize
-    const newImages = [
-        {
-            url,
-            name: fileDetails.name,
-            size: fileSize,
-            label: fileDetails.label,
-        },
-        ...fileDetails.images,
-    ]
-
-    return axios
-        .put('/api/users', { storage: newStorage, images: newImages })
-        .then(response => {
-            dispatch(saveImageUrlAndSizeInRedux(newStorage, newImages))
+            if (webSocket)
+                webSocket.send(
+                    JSON.stringify({
+                        messageCode: 'addImage',
+                        _id: websiteId,
+                        size: fileDetails.size,
+                        name: fileDetails.name,
+                        label: fileDetails.label,
+                        type: fileDetails.type,
+                        url,
+                    })
+                )
             dispatch(actionSuccessImageUpload())
         })
         .catch(err => {
             dispatch(actionFailImageUpload(err.message))
-            //delete from aws?
         })
-}
-
-const saveImageUrlAndSizeInRedux = (storage, images) => ({
-    type: 'SAVE_IMAGE_AND_SIZE_IN_REDUX',
-    storage,
-    images,
-})
-
-export const deleteImage = (url: string) => (dispatch: Object) => {
-    if (
-        window.confirm(
-            'Are you sure you want to delete this image? The image will be unavailable after the deletion and will not be visible in all elements and on all pages of your websites.'
-        )
-    ) {
-        dispatch(actionStartImageUpload())
-        return axios
-            .post(
-                `/api/awsImage/deleteimage`,
-                JSON.stringify({
-                    url,
-                })
-            )
-            .then(response => {
-                dispatch(
-                    saveImageUrlAndSizeInRedux(
-                        response.data.storage,
-                        response.data.images
-                    )
-                )
-                dispatch(actionSuccessImageUpload())
-            })
-            .catch(err => {
-                dispatch(actionFailImageUpload(err.message))
-            })
-    } else {
-        return
-    }
-}
-
-export const renameImage = (url: string) => (dispatch: Object) => {
-    const label = window.prompt('Type a new name for the image.')
-    if (label !== null) {
-        dispatch(actionStartImageUpload())
-
-        return axios
-            .post(
-                `/api/awsImage/renameimage`,
-                JSON.stringify({
-                    url,
-                    label,
-                })
-            )
-            .then(response => {
-                dispatch(
-                    saveImageUrlAndSizeInRedux(false, response.data.images)
-                )
-                dispatch(actionSuccessImageUpload())
-            })
-            .catch(err => {
-                dispatch(actionFailImageUpload(err.message))
-            })
-    } else {
-        return
-    }
 }
 
 export const chooseImage = (image: string) => ({
@@ -173,12 +108,10 @@ export const chooseImage = (image: string) => ({
 })
 
 export const imageUpload = (
-    files: Array<{ type: string, size: number, name: string }>,
-    images: $PropertyType<initialStateType, 'images'>,
-    storage: $PropertyType<initialStateType, 'storage'>,
-    userId: $PropertyType<initialStateType, 'userId'>
+    files: Array<{ type: string, size: number, name: string }>
 ) => (dispatch: Object) => {
     const file = files[0]
+
     if (file == null) {
         return alert('No file selected.')
     }
@@ -186,5 +119,5 @@ export const imageUpload = (
         return alert('File is not an image.')
     }
     dispatch(actionStartImageUpload())
-    dispatch(getSignedRequest(file, images, storage, userId))
+    dispatch(getSignedRequest(file))
 }

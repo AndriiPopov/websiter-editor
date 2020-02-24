@@ -6,18 +6,23 @@ import * as classes from '../../ResourcesTree/ResourcesTree.module.css'
 import InspectorValue from '../../UI/InspectorValue/InspectorValue'
 import {
     _extends,
-    _objectWithoutProperties,
     isDescendant,
     _objectSpread,
     // $FlowFixMe
 } from '../../../utils/sortTreeMethods'
 import tagItems from '../../../utils/tagItems'
+import checkUserRights from '../../../utils/checkUserRights'
 
 import type {
     initialStateType,
     elementType,
     resourceType,
 } from '../../../store/reducer/reducer'
+
+import {
+    current as currentIndex,
+    resourceDraftIndex,
+} from '../../../utils/resourceTypeIndex'
 
 type Props = {
     changeBoxProperty: typeof actions.changeBoxProperty,
@@ -51,7 +56,12 @@ type Props = {
     className: string,
     style: string,
     didDrop: boolean,
-    type: 'page' | 'plugin',
+    type: 'page' | 'plugin' | 'template',
+    tryWebsiter: $PropertyType<initialStateType, 'tryWebsiter'>,
+    websites: $PropertyType<initialStateType, 'websites'>,
+    loadedWebsite: $PropertyType<initialStateType, 'loadedWebsite'>,
+    userId: $PropertyType<initialStateType, 'userId'>,
+    mode: string,
 }
 
 const ItemRenderer = (props: Props) => {
@@ -69,48 +79,51 @@ const ItemRenderer = (props: Props) => {
         treeIndex = _this$props.treeIndex,
         isSearchMatch = _this$props.isSearchMatch,
         isSearchFocus = _this$props.isSearchFocus,
-        className = _this$props.className,
-        style = _this$props.style,
-        didDrop = _this$props.didDrop,
-        otherProps = _objectWithoutProperties(_this$props, [
-            'scaffoldBlockPxWidth',
-            'toggleChildrenVisibility',
-            'connectDragPreview',
-            'connectDragSource',
-            'isDragging',
-            'canDrop',
-            'canDrag',
-            'node',
-            'title',
-            'subtitle',
-            'draggedNode',
-            'path',
-            'treeIndex',
-            'isSearchMatch',
-            'isSearchFocus',
-            'buttons',
-            'className',
-            'style',
-            'didDrop',
-            'treeId',
-            'isOver',
-            'parentNode',
-            'chooseBox',
-            'hoverBox',
-            'unhoverBox',
-            'changeBoxProperty',
-            'resourceDraft',
-            'currentResource',
-            'pluginsStructure',
-            'properties',
-            'mode',
-            'itemPath',
-            'text',
-            'isChildren',
-            'forChildren',
-            'textContent',
-            'rowDirection',
-        ])
+        didDrop = _this$props.didDrop
+    // otherProps = _objectWithoutProperties(_this$props, [
+    //     'scaffoldBlockPxWidth',
+    //     'toggleChildrenVisibility',
+    //     'connectDragPreview',
+    //     'connectDragSource',
+    //     'isDragging',
+    //     'canDrop',
+    //     'canDrag',
+    //     'node',
+    //     'title',
+    //     'subtitle',
+    //     'draggedNode',
+    //     'path',
+    //     'treeIndex',
+    //     'isSearchMatch',
+    //     'isSearchFocus',
+    //     'buttons',
+    //     'className',
+    //     'style',
+    //     'didDrop',
+    //     'treeId',
+    //     'isOver',
+    //     'parentNode',
+    //     'chooseBox',
+    //     'hoverBox',
+    //     'unhoverBox',
+    //     'changeBoxProperty',
+    //     'resourceDraft',
+    //     'currentResource',
+    //     'pluginsStructure',
+    //     'properties',
+    //     'mode',
+    //     'itemPath',
+    //     'text',
+    //     'isChildren',
+    //     'isElementFromCMSVariable',
+    //     'forChildren',
+    //     'textContent',
+    //     'rowDirection',
+    //     'tryWebsiter',
+    //     'userId',
+    //     'loadedWebsite',
+    //     'resourcesObjects',
+    // ])
 
     var handle
 
@@ -124,20 +137,24 @@ const ItemRenderer = (props: Props) => {
         left: -0.5 * scaffoldBlockPxWidth,
     }
 
+    const { id, mode, itemPath } = props.node
+
     const {
-        tag,
-        id,
-        text,
-        textContent,
-        isChildren,
-        resourceDraft,
         currentResource,
         pluginsStructure,
-        properties,
-        mode,
-        itemPath,
+        currentNodeValues,
+        isCurrentBox,
+    } = props
+
+    const { textContent, properties } = currentNodeValues
+
+    const {
+        tag,
+        text,
+        isChildren,
+        isElementFromCMSVariable,
         childrenTo,
-    } = props.node
+    } = props.currentNode
 
     const rowClasses = [classes.rst__row]
     if (isLandingPadActive) rowClasses.push(classes.rst__rowLandingPad)
@@ -145,9 +162,23 @@ const ItemRenderer = (props: Props) => {
         rowClasses.push(classes.rst__rowCancelPad)
     if (isSearchMatch) rowClasses.push(classes.rst__rowSearchMatch)
     if (isSearchFocus) rowClasses.push(classes.rst__rowSearchFocus)
-    if (!isLandingPadActive) rowClasses.push(className)
+    if (!isLandingPadActive)
+        rowClasses.push(
+            isCurrentBox
+                ? [classes.Chosen]
+                : id === props.hoveredElementId
+                ? [classes.Hovered]
+                : null
+        )
 
     const handleRename = value => {
+        if (
+            !props.checkUserRights(
+                props.mode === 'page' ? ['content'] : ['developer']
+            )
+        ) {
+            return
+        }
         if (value !== tag) {
             if (mode === 'plugin') {
                 const currentPlugin = pluginsStructure.find(
@@ -159,29 +190,23 @@ const ItemRenderer = (props: Props) => {
                     return
                 }
             }
-            props.changeBoxProperty(
-                'tag',
-                value,
-                currentResource,
-                resourceDraft
-            )
+            props.changeBoxPropertyInStructure(mode, 'tag', value, false, id)
         }
     }
     return (
         <div
-            {..._extends({ style: { height: '100%' } }, otherProps)}
-            onMouseDown={() =>
-                props.chooseBox(id, currentResource, resourceDraft)
-            }
-            onMouseEnter={() => props.hoverBox(id, mode)}
-            onMouseMove={() => props.hoverBox(id, mode)}
-            onMouseLeave={() => props.unhoverBox()}
+            // {..._extends({ style: { height: '100%' } }, otherProps)}
+            {..._extends({ style: { height: '100%' } }, {})}
+            onMouseDown={() => props.chooseBox(mode, id)}
+            // onMouseEnter={() => props.hoverBox(id, mode)}
+            // onMouseMove={() => props.hoverBox(id, mode)}
+            // onMouseLeave={() => props.unhoverBox()}
         >
             {toggleChildrenVisibility &&
                 node.children &&
                 (node.children.length > 0 ||
                     typeof node.children === 'function') && (
-                    <div>
+                    <div onMouseDown={e => e.stopPropagation()}>
                         <button
                             type="button"
                             aria-label={node.expanded ? 'Collapse' : 'Expand'}
@@ -211,12 +236,9 @@ const ItemRenderer = (props: Props) => {
                 {connectDragPreview(
                     <div
                         className={rowClasses.join(' ')}
-                        style={_objectSpread(
-                            {
-                                opacity: isDraggedDescendant ? 0.5 : 1,
-                            },
-                            style
-                        )}
+                        style={_objectSpread({
+                            opacity: isDraggedDescendant ? 0.5 : 1,
+                        })}
                     >
                         {handle}
                         <div
@@ -242,23 +264,40 @@ const ItemRenderer = (props: Props) => {
                                         : '')
                                 ) : (
                                     <>
-                                        {!isChildren ? '<' : ''}
+                                        {!isChildren &&
+                                        !isElementFromCMSVariable
+                                            ? '<'
+                                            : isElementFromCMSVariable
+                                            ? 'From CMS variable - '
+                                            : ''}
                                         {(mode === 'plugin' &&
                                             itemPath.length > 0) ||
-                                        (mode === 'page' &&
-                                            itemPath.length > 1) ? (
-                                            <InspectorValue
-                                                readonly={childrenTo}
-                                                value={tag}
-                                                items={tagItems.map(item => {
-                                                    return {
-                                                        abbr: item,
-                                                        name: item,
-                                                    }
-                                                })}
-                                                blur={handleRename}
-                                                withState
-                                            />
+                                        ((mode === 'template' &&
+                                            itemPath.length > 1) ||
+                                            itemPath[0] === 'element_02') ? (
+                                            props.checkUserRights(
+                                                mode === 'page'
+                                                    ? ['content']
+                                                    : ['developer'],
+                                                true
+                                            ) ? (
+                                                <InspectorValue
+                                                    readonly={childrenTo}
+                                                    value={tag}
+                                                    items={tagItems.map(
+                                                        item => {
+                                                            return {
+                                                                abbr: item,
+                                                                name: item,
+                                                            }
+                                                        }
+                                                    )}
+                                                    blur={handleRename}
+                                                    withState
+                                                />
+                                            ) : (
+                                                tag
+                                            )
                                         ) : (
                                             tag
                                         )}
@@ -268,8 +307,11 @@ const ItemRenderer = (props: Props) => {
                                         {properties.class
                                             ? ` class="${properties.class}"`
                                             : ''}
-                                        {!isChildren
+                                        {!isChildren &&
+                                        !isElementFromCMSVariable
                                             ? ' >'
+                                            : isElementFromCMSVariable
+                                            ? ''
                                             : ' (inherited children)'}
                                     </>
                                 )}
@@ -282,25 +324,44 @@ const ItemRenderer = (props: Props) => {
     )
 }
 
-const mapStateToProps = state => {
-    return {}
+const mapStateToProps = (state, props) => {
+    const currentNode =
+        state.mD[resourceDraftIndex[props.mode]].structure[props.itemIndex]
+    return {
+        isCurrentBox:
+            state.mD[resourceDraftIndex[props.mode]].currentBox ===
+            currentNode.id,
+        currentNode,
+        currentNodeValues:
+            state.mD[resourceDraftIndex[props.mode]].values[currentNode.id],
+        currentResource: state.mD[currentIndex[props.mode]],
+        pluginsStructure: state.mD.pluginsStructure,
+        hoveredElementId: -100,
+    }
 }
 
 const mapDispatchToProps = (dispatch, props) => {
     return {
-        chooseBox: (id, currentResource, resourceDraft) =>
-            dispatch(actions.chooseBox(id, currentResource, resourceDraft)),
-        changeBoxProperty: (key, value, currentResource, resourceDraft) =>
+        chooseBox: (type, id) => dispatch(actions.chooseBox(type, id)),
+        changeBoxPropertyInStructure: (
+            type,
+            key,
+            value,
+            notForHistory,
+            boxId
+        ) =>
             dispatch(
-                actions.changeBoxProperty(
+                actions.changeBoxPropertyInStructure(
+                    type,
                     key,
                     value,
-                    currentResource,
-                    resourceDraft
+                    false,
+                    boxId
                 )
             ),
         hoverBox: (id, mode) => dispatch(actions.hoverBox(id, mode)),
         unhoverBox: () => dispatch(actions.unhoverBox()),
+        checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }
 

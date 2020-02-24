@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
-import SortableTree from 'react-sortable-tree'
+import { SortableTreeWithoutDndContext as SortableTree } from 'react-sortable-tree'
+// import SortableTree from 'react-sortable-tree'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 
-import * as actions from '../../../../store/actions/index'
 import * as classes from '../../../ResourcesTree/ResourcesTree.module.css'
 import * as classesAdvancedBar from '../../../../containers/AdvancedBar/AdvancedBar.module.css'
-//import * as classes from './MenuItems.module.css'
-// import SmallButton from '../../UI/Buttons/SmallButton/SmallButton'
 import { buildItems } from '../../../../utils/pagesStructure'
-import withDragDropContext from '../../../../hoc/withDragDropContext'
-// import OtherProperties from '../OtherProperties/OtherProperties'
+// import withDragDropContext from '../../../../hoc/withDragDropContext'
 import ItemRenderer from './ItemRenderer'
 import { buildTree } from '../../../../utils/basic'
 import { SizeDragController } from '../../../../containers/AdvancedBar/SizeDragController/SizeDragController'
@@ -33,8 +30,9 @@ const MenuItems = props => {
                 sourceItem: true,
                 name: 'Link',
                 properties: {
-                    url: 'http://www.logision.com/',
+                    // url: 'http://www.logision.com/',
                 },
+                propertiesString: '',
             },
             {
                 path: [],
@@ -45,6 +43,17 @@ const MenuItems = props => {
                 name: 'All pages',
             },
         ]
+        if (props.mode !== 'page' && !props.element.isCMSVariable) {
+            pagesStructureWithAll.push({
+                path: [],
+                all: false,
+                id: 'variable',
+                generatedFrom: 'variable',
+                sourceItem: true,
+                name: 'Variable',
+                properties: {},
+            })
+        }
         props.pagesStructure.forEach(element => {
             pagesStructureWithAll.push({
                 ...element,
@@ -63,14 +72,33 @@ const MenuItems = props => {
                 name: 'All in ' + element.name,
             })
         })
+        // props.pagesStructure.forEach(element => {
+        //     pagesStructureWithAll.push({
+        //         ...element,
+        //         sourceItem: true,
+        //         all: false,
+        //         id: element.id,
+        //         generatedFrom: element.id,
+        //         path: ['all', ...element.path],
+        //     })
+        //     pagesStructureWithAll.push({
+        //         path: ['all', ...element.path, element.id],
+        //         all: true,
+        //         id: element.id + '_all',
+        //         generatedFrom: element.id,
+        //         sourceItem: true,
+        //         name: 'All in ' + element.name,
+        //     })
+        // })
         const treeDataSource = buildTree(pagesStructureWithAll).map(item => ({
             ...item,
             type: props.mode,
         }))
         setState({ ...state, treeDataSource })
-    }, [props.pagesStructure])
+    }, [props.pagesStructure, props.templatesStructure])
 
-    let menuItems = props.element.menuItems || []
+    let menuItems = props.elementValues[props.attrName] || []
+
     menuItems = menuItems.map(item => ({
         ...item,
         type: props.mode,
@@ -92,60 +120,63 @@ const MenuItems = props => {
         let newCurrentMenuId = null
         if (newItem) {
             newItem.children = []
-            newItem.id = 'item_' + (props.element.currentMenuId || 0)
+            newItem.id = 'item_' + (props.elementValues.currentMenuId || 0)
             newItem.sourceItem = false
-            newCurrentMenuId = props.element.currentMenuId
-                ? props.element.currentMenuId + 1
+            newCurrentMenuId = props.elementValues.currentMenuId
+                ? props.elementValues.currentMenuId + 1
                 : 1
         }
 
         const saveItems = []
         buildItems(newItems, [], saveItems)
-        const result = { menuItems: saveItems, currentMenuId: -1 }
+        const result = { [props.attrName]: saveItems, currentMenuId: -1 }
         if (newCurrentMenuId) result.currentMenuId = newCurrentMenuId
         props.changeProperty(result, '')
     }
 
     const menuItem =
-        props.element.currentMenuItem && props.element.menuItems
-            ? props.element.menuItems.find(
-                  item => item.id === props.element.currentMenuItem
+        props.elementValues.currentMenuItem &&
+        props.elementValues[props.attrName]
+            ? props.elementValues[props.attrName].find(
+                  item => item.id === props.elementValues.currentMenuItem
               )
             : null
     const hanglePropertiesChange = (value, cursorPosition) => {
-        if (value && props.element.currentMenuItem) {
+        if (value && props.elementValues.currentMenuItem) {
             let obj
             try {
                 obj = JSON.parse(value)
             } catch (e) {
                 obj = null
             }
-            const newMenuItems = props.element.menuItems.map(item => {
-                if (item.id === props.element.currentMenuItem) {
-                    const newItem = cloneDeep(item)
-                    newItem.propertiesString = value
-                    if (obj) {
-                        newItem.properties = obj
+            const newMenuItems = props.elementValues[props.attrName].map(
+                item => {
+                    if (item.id === props.elementValues.currentMenuItem) {
+                        const newItem = cloneDeep(item)
+                        newItem.propertiesString = value
+                        if (obj) {
+                            newItem.properties = obj
+                        }
+                        return newItem
+                    } else {
+                        return item
                     }
-                    return newItem
-                } else {
-                    return item
                 }
-            })
-            props.changeProperty('menuItems', newMenuItems, cursorPosition)
+            )
+            props.changeProperty(props.attrName, newMenuItems, cursorPosition)
         }
     }
 
     const handleDeleteItem = () => {
-        if (props.element.currentMenuItem) {
-            const newMenuItems = props.element.menuItems.filter(
-                item => item.id !== props.element.currentMenuItem
+        if (props.elementValues.currentMenuItem) {
+            const newMenuItems = props.elementValues[props.attrName].filter(
+                item => item.id !== props.elementValues.currentMenuItem
             )
-            props.changeProperty('menuItems', newMenuItems)
+            props.changeProperty(props.attrName, newMenuItems)
         }
     }
 
-    return props.element ? (
+    return props.element && props.elementValues ? (
         <div className={classesAdvancedBar.Content}>
             <div
                 className={classesAdvancedBar.Container}
@@ -159,6 +190,9 @@ const MenuItems = props => {
                         buttonClicked={handleDeleteItem}
                         icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>'
                         tooltip="Delete menu item"
+                        requiredRights={
+                            props.mode === 'page' ? ['content'] : ['developer']
+                        }
                     />
                 </div>
                 <div className={classes.TreeContainer}>
@@ -180,7 +214,7 @@ const MenuItems = props => {
                         nodeContentRenderer={ItemRenderer}
                         generateNodeProps={({ node }) => ({
                             className:
-                                node.id === props.element.currentMenuItem
+                                node.id === props.elementValues.currentMenuItem
                                     ? [classes.Chosen]
                                     : null,
                         })}
@@ -198,18 +232,21 @@ const MenuItems = props => {
                         rowHeight={20}
                         scaffoldBlockPxWidth={22}
                         className={classes.Tree}
-                        dndType={'menuItems'}
+                        dndType={props.attrName}
+                        canDrop={({ nextParent }) => {
+                            if (!nextParent) return true
+
+                            return (
+                                nextParent.generatedFrom !== 'variable' &&
+                                !nextParent.all
+                            )
+                        }}
                     />
                 </div>
                 <SizeDragController
                     addClass={classesAdvancedBar.widthControll}
                     startValue={props.barSizes.width3 || 50}
-                    changed={value =>
-                        props.changeBarSize(props.barSizes, {
-                            key: 'width3',
-                            value,
-                        })
-                    }
+                    type="width3"
                 />
             </div>
             <div className={classesAdvancedBar.LastContainer}>
@@ -264,7 +301,7 @@ const MenuItems = props => {
                             scaffoldBlockPxWidth={22}
                             canDrop={() => false}
                             shouldCopyOnOutsideDrop={true}
-                            dndType={'menuItems'}
+                            dndType={props.attrName}
                             onChange={treeData =>
                                 setState({ ...state, treeDataSource: treeData })
                             }
@@ -278,10 +315,12 @@ const MenuItems = props => {
                             ].join(' ')}
                         >
                             <Editor
-                                currentElement={props.element.currentMenuItem}
+                                currentElement={
+                                    props.elementValues.currentMenuItem
+                                }
                                 elementValue={menuItem.propertiesString}
                                 elementCurrentCursor={
-                                    props.element.cursorPosition
+                                    props.elementValues.cursorPosition
                                 }
                                 editorMode="json"
                                 handleChange={hanglePropertiesChange}
@@ -297,21 +336,10 @@ const MenuItems = props => {
 
 const mapStateToProps = state => {
     return {
-        pagesStructure: state.pagesStructure,
         barSizes: state.barSizes,
+        pagesStructure: state.mD.pagesStructure,
+        templatesStructure: state.mD.templatesStructure,
     }
 }
 
-const mapDispatchToProps = (dispatch, props) => {
-    return {
-        changeBarSize: (barSizes, initiator) =>
-            dispatch(actions.changeBarSize(barSizes, initiator)),
-    }
-}
-
-export default withDragDropContext(
-    connect(
-        mapStateToProps,
-        mapDispatchToProps
-    )(MenuItems)
-)
+export default connect(mapStateToProps)(MenuItems)

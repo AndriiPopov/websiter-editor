@@ -1,7 +1,7 @@
-.Overlay {
+.Content {
     width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0px;
-    left: 0px;
+    padding-top: 0px;
+    overflow: hidden;
+    position: relative;
+    flex: 1 0;
 }

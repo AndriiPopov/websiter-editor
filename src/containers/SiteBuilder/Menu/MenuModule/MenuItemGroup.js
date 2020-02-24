@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as React from 'react'
 import { menuAllProps } from './util'
 function _typeof(obj) {

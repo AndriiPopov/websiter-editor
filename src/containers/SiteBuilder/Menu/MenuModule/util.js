@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as React from 'react'
 import isMobile from './utils/isMobile'
 function _typeof(obj) {
