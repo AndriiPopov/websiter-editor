@@ -139,6 +139,13 @@ const _BuilderElement = (props: Props) => {
                 ),
                 ...(props.childrenForPlugin ? props.childrenForPlugin : []),
             ]
+            if (
+                props.pluginsPathArray.find(
+                    item => item.plugin === props.plugin.id
+                )
+            ) {
+                return null
+            }
             return (
                 <PluginElement
                     pluginsStructure={props.pluginsStructure}
@@ -155,7 +162,7 @@ const _BuilderElement = (props: Props) => {
                     ]}
                     parentPluginProps={refinedProperties}
                     childrenForPlugin={childrenForPlugin}
-                    currentResource={props.currentResource}
+                    currentResource={plugin.id}
                 />
             )
         }
@@ -320,29 +327,20 @@ const PluginElementRaw = props => {
                     )[0].id,
                 ])
             )
-            .map(itemInn => {
-                if (
-                    props.pluginsPathArray.find(
-                        item => item.plugin === props.plugin.id
-                    )
-                ) {
-                    return null
-                }
-                return (
-                    <BuilderElement
-                        key={itemInn.id}
-                        structure={props.pluginStructure}
-                        element={itemInn}
-                        document={props.document}
-                        sourcePlugin={props.plugin.id}
-                        routePlugin={props.routePlugin}
-                        pluginsPathArray={props.pluginsPathArray}
-                        parentPluginProps={props.parentPluginProps}
-                        childrenForPlugin={props.childrenForPlugin}
-                        currentResource={props.currentResource}
-                    />
-                )
-            })
+            .map(itemInn => (
+                <BuilderElement
+                    key={itemInn.id}
+                    structure={props.pluginStructure}
+                    element={itemInn}
+                    document={props.document}
+                    sourcePlugin={props.plugin.id}
+                    routePlugin={props.routePlugin}
+                    pluginsPathArray={props.pluginsPathArray}
+                    parentPluginProps={props.parentPluginProps}
+                    childrenForPlugin={props.childrenForPlugin}
+                    currentResource={props.currentResource}
+                />
+            ))
     }
 
     return null
@@ -358,8 +356,4 @@ const mapStateToPropsPlugin = (state, props) => {
     }
 }
 //props.mD.resourcesObjects[plugin.id]
-const PluginElement = connect(mapStateToPropsPlugin)(
-    memo(PluginElementRaw, (prevProps, nextProps) =>
-        isEqual(prevProps.elementValues, nextProps.elementValues)
-    )
-)
+const PluginElement = connect(mapStateToPropsPlugin)(PluginElementRaw)

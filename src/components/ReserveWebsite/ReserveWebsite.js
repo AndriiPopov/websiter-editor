@@ -72,6 +72,7 @@ class ReserveWebsiteInn extends Component<Props, State> {
                     webSocket.send(
                         JSON.stringify({
                             messageCode: 'auth',
+                            noRequest: true,
                             user: axios.defaults.headers.common['x-auth-token'],
                             tryWebsiter: sessionStorage.getItem('tryWebsiter'),
                         })

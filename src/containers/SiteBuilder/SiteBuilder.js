@@ -51,32 +51,32 @@ class SiteBuilder extends Component<Props, State> {
     // }
     head = ''
 
-    shouldComponentUpdate(nextProps) {
-        if (nextProps.zoom !== this.props.zoom) return true
-        if (nextProps.isRefreshing !== this.props.isRefreshing) return true
-        if (nextProps.isRefreshing !== this.props.isRefreshing) return true
-        if (nextProps.shouldRefresh !== this.props.shouldRefresh) return true
-        if (nextProps.pageTemplateId !== this.props.pageTemplateId) return true
-        if (!isEqual(nextProps.pagesStructure, this.props.pagesStructure))
-            return true
-        if (
-            !isEqual(
-                nextProps.currentPageDraftStructure,
-                this.props.currentPageDraftStructure
-            )
-        )
-            return true
-        if (
-            !isEqual(
-                nextProps.pageTemplateDraftStructure,
-                this.props.pageTemplateDraftStructure
-            )
-        )
-            return true
-        if (!isEqual(nextProps.refinedProperties, this.props.refinedProperties))
-            return true
-        return false
-    }
+    // shouldComponentUpdate(nextProps) {
+    //     if (nextProps.zoom !== this.props.zoom) return true
+    //     if (nextProps.isRefreshing !== this.props.isRefreshing) return true
+    //     if (nextProps.isRefreshing !== this.props.isRefreshing) return true
+    //     if (nextProps.shouldRefresh !== this.props.shouldRefresh) return true
+    //     if (nextProps.pageTemplateId !== this.props.pageTemplateId) return true
+    //     if (!isEqual(nextProps.pagesStructure, this.props.pagesStructure))
+    //         return true
+    //     if (
+    //         !isEqual(
+    //             nextProps.currentPageDraftStructure,
+    //             this.props.currentPageDraftStructure
+    //         )
+    //     )
+    //         return true
+    //     if (
+    //         !isEqual(
+    //             nextProps.pageTemplateDraftStructure,
+    //             this.props.pageTemplateDraftStructure
+    //         )
+    //     )
+    //         return true
+    //     if (!isEqual(nextProps.refinedProperties, this.props.refinedProperties))
+    //         return true
+    //     return false
+    // }
 
     componentWillReceiveProps(newProps: Props) {
         if (newProps.pagesStructure) {
@@ -88,7 +88,7 @@ class SiteBuilder extends Component<Props, State> {
                     newProps.currentPageDraftStructure,
                     newProps.pageTemplateDraftStructure
                 )
-                console.log(newStructure)
+                // console.log(newStructure)
                 if (
                     !isEqual(newStructure, newProps.currentPageDraftStructure)
                 ) {
@@ -125,6 +125,9 @@ class SiteBuilder extends Component<Props, State> {
                         renderToString(
                             <Provider store={store}>{newHead}</Provider>
                         ) || ''
+                    // console.log('newHeadString')
+                    // console.log(newHeadString)
+                    // console.log(this.state.headValue)
                     if (
                         newHeadString !== this.state.headValue ||
                         newProps.shouldRefresh

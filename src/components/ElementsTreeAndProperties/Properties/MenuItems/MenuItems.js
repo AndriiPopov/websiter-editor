@@ -11,7 +11,7 @@ import { buildItems } from '../../../../utils/pagesStructure'
 // import withDragDropContext from '../../../../hoc/withDragDropContext'
 import ItemRenderer from './ItemRenderer'
 import { buildTree } from '../../../../utils/basic'
-import { SizeDragController } from '../../../../containers/AdvancedBar/SizeDragController/SizeDragController'
+import SizeDragController from '../../../../containers/AdvancedBar/SizeDragController/SizeDragController'
 import Editor from '../../../Editor/Editor'
 import SmallButton from '../../../UI/Buttons/SmallButton/SmallButton'
 
@@ -246,7 +246,7 @@ const MenuItems = props => {
                 <SizeDragController
                     addClass={classesAdvancedBar.widthControll}
                     startValue={props.barSizes.width3 || 50}
-                    type="width3"
+                    type={'width3'}
                 />
             </div>
             <div className={classesAdvancedBar.LastContainer}>

@@ -772,20 +772,27 @@ export const mergeBoxToPlugin = (
                 id: 'element_0',
                 path: [],
                 tag: 'Main element',
-                properties: {},
-                propertiesString: '',
                 textMode: '',
             },
             ...resourceDataStructure,
         ],
-        values: resourceDataValues,
+        values: {
+            ...resourceDataValues,
+            element_0: {
+                properties: {},
+                propertiesString: '',
+                textContent: '',
+            },
+        },
         currentId,
     }
 
     const newPluginName =
         prompt('Name the new plugin', 'New plugin') || 'New plugin'
 
-    wsActions.addResource(mD, 'plugin', false, newPluginName, resourceData)
+    dispatch(
+        wsActions.addResource('plugin', false, newPluginName, resourceData)
+    )
 
     const draft = {
         ...resourceDraft,
@@ -804,8 +811,6 @@ export const mergeBoxToPlugin = (
                 ],
                 tag: newPluginName,
                 text: false,
-                textContent: '',
-                properties: {},
                 id: oldResourcesIds[1],
             },
             ...resourceDraft.structure.slice(
@@ -814,7 +819,11 @@ export const mergeBoxToPlugin = (
         ],
         values: {
             ...resourceDraft.values,
-            [oldResourcesIds[1]]: {},
+            [oldResourcesIds[1]]: {
+                textContent: '',
+                propertiesString: '',
+                properties: {},
+            },
         },
     }
     for (let i = 2; i < oldResourcesIds.length; i++) {
