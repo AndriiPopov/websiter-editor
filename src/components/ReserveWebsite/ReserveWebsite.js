@@ -82,7 +82,6 @@ class ReserveWebsiteInn extends Component<Props, State> {
         }
         webSocket.onmessage = event => {
             const data = JSON.parse(event.data)
-            console.log(data.messageCode)
 
             switch (data.messageCode) {
                 case 'heartbeat':

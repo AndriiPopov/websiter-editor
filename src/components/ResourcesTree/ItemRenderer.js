@@ -104,7 +104,7 @@ const ItemRenderer = (props: Props) => {
         if (element[key] !== value) {
             // $FlowFixMe
             element[key] = value
-            wsActions.sendUpdate(
+            props.sendUpdate(
                 'website',
                 {
                     [structure[props.type]]: newStructure,
