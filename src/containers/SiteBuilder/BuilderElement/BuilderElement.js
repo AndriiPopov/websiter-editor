@@ -65,6 +65,8 @@ const _BuilderElement = (props: Props) => {
         }
     })
 
+    if (!props.elementValues) return null
+
     const refinedProperties = refineProperties(props)
 
     const currentPath = [...props.element.path, props.element.id]
