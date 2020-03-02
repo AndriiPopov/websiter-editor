@@ -196,31 +196,31 @@ class Editor extends Component<Props, State> {
                         tabSize: 2,
                         useWorker: false,
                     }}
-                    commands={[
-                        {
-                            name: 'undo',
-                            bindKey: { win: 'Ctrl-z', mac: 'Command-z' },
-                            exec: () => {
-                                this.setState({
-                                    updateValue: true,
-                                })
-                                this.props.undoResourceVersion()
-                            },
-                        },
-                        {
-                            name: 'redo',
-                            bindKey: {
-                                win: 'Ctrl-Shift-z',
-                                mac: 'Command-Shift-z',
-                            },
-                            exec: () => {
-                                this.setState({
-                                    updateValue: true,
-                                })
-                                this.props.redoResourceVersion()
-                            },
-                        },
-                    ]}
+                    // commands={[
+                    //     {
+                    //         name: 'undo',
+                    //         bindKey: { win: 'Ctrl-z', mac: 'Command-z' },
+                    //         exec: () => {
+                    //             this.setState({
+                    //                 updateValue: true,
+                    //             })
+                    //             this.props.undoResourceVersion()
+                    //         },
+                    //     },
+                    //     {
+                    //         name: 'redo',
+                    //         bindKey: {
+                    //             win: 'Ctrl-Shift-z',
+                    //             mac: 'Command-Shift-z',
+                    //         },
+                    //         exec: () => {
+                    //             this.setState({
+                    //                 updateValue: true,
+                    //             })
+                    //             this.props.redoResourceVersion()
+                    //         },
+                    //     },
+                    // ]}
                 />
             </>
         )

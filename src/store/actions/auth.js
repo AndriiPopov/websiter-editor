@@ -164,7 +164,7 @@ export const changeBarSize = (initiator?: { key: string, value: number }) => (
     getState
 ) => {
     const { barSizes } = getState()
-    const width = window.innerWidth,
+    const width = Math.max(window.innerWidth, 700),
         height = window.innerHeight
     let value, dif, dif2, value2, value3
 

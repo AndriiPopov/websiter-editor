@@ -226,10 +226,15 @@ const Properties = (props: Props) => {
             result = (
                 <HTMLEditor
                     value={elementValues.textContent}
-                    handleChange={(e, editor) => {
-                        props.changeProperty('textContent', editor.getContent())
+                    handleChange={(e, editor, id) => {
+                        props.changeProperty(
+                            'textContent',
+                            editor.getContent(),
+                            id
+                        )
                     }}
                     requiredRights={['developer']}
+                    currentBox={currentBox}
                 />
             )
         } else if (element.tag === 'parseHTML') {

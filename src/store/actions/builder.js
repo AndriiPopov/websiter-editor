@@ -79,7 +79,7 @@ export const saveElementsStructureFromBuilder = (
             itemInn => itemInn.id === item.id
         )
         let newItem = { ...item }
-        if (oldItem) newItem = { ...newItem, ...oldItem }
+        if (oldItem) newItem = { ...newItem, expanded: oldItem.expanded }
 
         newValues[item.id] = {
             ...pageTemplateDraft.values[item.id],
@@ -91,8 +91,6 @@ export const saveElementsStructureFromBuilder = (
 
             ...(resourceDraft.values[item.id] || {}),
         }
-        // console.log(newValues)
-        // console.log(pageTemplateDraft.values[item.id])
 
         return { ...newItem, path: item.path }
     })
@@ -696,7 +694,6 @@ export const changeMenuItemProperty = (
             return item
         }
     })
-    console.log(newMenuItems)
     if (!isEqual(newMenuItems, resource.values[elementId].menuItems)) {
         dispatch(changeBoxPropertyInValues(type, 'menuItems', newMenuItems))
     }
@@ -814,7 +811,9 @@ export const mergeBoxToPlugin = (
                 id: oldResourcesIds[1],
             },
             ...resourceDraft.structure.slice(
-                elementIndex + resourceDataStructure.length
+                elementIndex +
+                    (onlyChildren ? 1 : 0) +
+                    resourceDataStructure.length
             ),
         ],
         values: {

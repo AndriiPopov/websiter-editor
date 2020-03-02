@@ -23,10 +23,14 @@ export const SizeDragController = (props: Props) => {
             type: 'barSizes',
             startValue: props.startValue,
         },
-        begin: () => {
+        begin: item => {
+            console.log('start')
+            console.log(item)
             props.setSizeIsChanging(true)
         },
-        end: () => {
+        end: item => {
+            console.log('end')
+            console.log(item)
             props.setSizeIsChanging(false)
         },
     })

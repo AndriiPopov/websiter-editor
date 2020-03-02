@@ -3,13 +3,14 @@ import {
     // getCurrentResourceValue,
 } from '../../../../utils/basic'
 
-import type { Props } from '../ElementsTree'
 import type { resourceType } from '../../../../store/reducer/reducer'
 
 export default (
     structure: $PropertyType<resourceType, 'structure'>,
     currentResource,
-    props: Props
+    pluginElementsStructures,
+    pluginsStructure,
+    mode
 ) => {
     let result = []
     let excludeItems = []
@@ -19,12 +20,12 @@ export default (
         }
 
         if (checkIfCapital(item.tag.charAt(0))) {
-            const pluginItem = props.pluginsStructure.find(
+            const pluginItem = pluginsStructure.find(
                 element => element.name === item.tag
             )
             if (pluginItem) {
                 const pluginElementStructure =
-                    props.pluginElementsStructures[pluginItem.id]
+                    pluginElementsStructures[pluginItem.id]
 
                 if (pluginElementStructure) {
                     const neededChildren = pluginElementStructure.filter(
@@ -60,9 +61,7 @@ export default (
                                 childrenTo: child.id,
                                 forPlugin: pluginItem.id,
                                 sourcePlugin:
-                                    props.mode === 'plugin'
-                                        ? currentResource
-                                        : '',
+                                    mode === 'plugin' ? currentResource : '',
                                 path: [...item.path, item.id],
                                 text: false,
                                 // textContent: '',

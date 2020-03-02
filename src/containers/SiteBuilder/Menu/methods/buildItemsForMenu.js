@@ -4,7 +4,6 @@ import type { Props } from '../Menu'
 
 export default (props: Props) => {
     const buildMenuItems = menuItems => {
-        // console.log(menuItems)
         let structureAfterVariables = []
         const structure = []
         if (menuItems) {

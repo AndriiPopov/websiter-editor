@@ -150,12 +150,6 @@ export const addResourceVersion = (state: Object, action: Object) => {
                     newDraft
                 )
             ) {
-                console.log(
-                    resource.present.structure
-                        ? resource.present
-                        : resource.draft
-                )
-                console.log(newDraft)
                 if (!state.notSavedResources.includes(currentResourceId))
                     state.notSavedResources.push(currentResourceId)
             }

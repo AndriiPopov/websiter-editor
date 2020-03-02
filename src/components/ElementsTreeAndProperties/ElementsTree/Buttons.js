@@ -96,7 +96,7 @@ const Buttons = (props: Props) => {
                             buttonClicked={() =>
                                 props.addBox(props.mode, 'inside')
                             }
-                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>'
+                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M21.6,13.4H13.4v8.2H10.6V13.4H2.4V10.6h8.2V2.4h2.8v8.2h8.2Zm-2.4,2.8h-.1l-.9.9,1.5,1.4H16.2V15.1H15.1v4.4h4.6l-1.5,1.4.9.9,2.6-2.7h.1Z"></path></svg>'
                             tooltip="Add a new element inside the chosen element"
                             requiredRights={['developer']}
                         />
@@ -120,7 +120,7 @@ const Buttons = (props: Props) => {
                                 props.addBox(props.mode, 'text')
                             }
                             title="Text"
-                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>'
+                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M21.6,13.4H13.4v8.2H10.7V13.4H2.4V10.7h8.2V2.4h2.7v8.2h8.2v2.8Zm0,1.7H15.1v2h2.2v4.7h2.2V17.1h2.2v-2Z"></path></svg>'
                             tooltip="Add a new text element"
                             requiredRights={['developer']}
                         />
@@ -154,7 +154,7 @@ const Buttons = (props: Props) => {
                             buttonClicked={() =>
                                 props.mergeBoxToPlugin(props.mode)
                             }
-                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6z"></path></svg>'
+                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M14,2H10V5H7l5,5,5-5H14ZM2,14H5v3l5-5L5,7v3H2Zm12-2,5,5V14h3V10H19V7ZM10,22h4V19h3l-5-5L7,19h3Z"></path></svg>'
                             tooltip="Merge element and children elements into a new plugin"
                             requiredRights={['developer']}
                         />
@@ -165,7 +165,7 @@ const Buttons = (props: Props) => {
                             buttonClicked={() =>
                                 props.mergeBoxToPlugin(props.mode, true)
                             }
-                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6z"></path></svg>'
+                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M11.4,4.1H8.6V6.3H6.5L10,9.8l3.5-3.5H11.4ZM2.2,13.4H4.3v2.1l3.6-3.6L4.3,8.4v2.1H2.2Zm9.9-1.5,3.6,3.6V13.4h2.1V10.5H15.7V8.4ZM8.6,19.7h2.8V17.6h2.1L10,14.1,6.5,17.6H8.6Zm9.2-3.8h4V21h-4Zm0-6.5h3.9v5.1H17.8Zm0-6.4h4V8.1h-4Z"></path></svg>'
                             tooltip="Merge children elements into a new plugin"
                             requiredRights={['developer']}
                         />
@@ -176,7 +176,7 @@ const Buttons = (props: Props) => {
                             buttonClicked={() =>
                                 props.dissolvePluginToBox(props.mode)
                             }
-                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"></path></svg>'
+                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M10,9h4V6h3L12,1,7,6h3Zm5,5h3v3l5-5L18,7v3H15ZM1,12l5,5V14H9V10H6V7Zm13,3H10v3H7l5,5,5-5H14Z"></path></svg>'
                             tooltip="Dissolve the plugin into elements"
                             requiredRights={['developer']}
                         />

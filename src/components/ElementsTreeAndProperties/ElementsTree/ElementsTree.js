@@ -70,21 +70,15 @@ export type Props = {
 }
 
 const ElementsTree = (props: Props) => {
-    const { currentResource, resourceDraftStructure } = props
+    const { resourceDraftStructure, structureWithPluginChildren } = props
 
     if (!resourceDraftStructure) return null
-
-    const structureWithPluginChildren = populateStructureWithPluginChildren(
-        resourceDraftStructure,
-        currentResource,
-        props
-    )
     let treeData = buildTree(
         structureWithPluginChildren.map((item, index) => ({
             ...item,
             itemPath: item.path,
             mode: props.mode,
-            itemIndex: index,
+            // itemIndex: index,
         }))
     )
 
@@ -154,7 +148,7 @@ const ElementsTree = (props: Props) => {
 
     const generateNodePropsHandle = ({ node }) => ({
         mode: props.mode,
-        itemIndex: node.itemIndex,
+        // itemIndex: node.itemIndex,
     })
 
     const onMoveNodeHandle = ({ node, treeIndex, path }) => {
@@ -190,6 +184,26 @@ const ElementsTree = (props: Props) => {
     useEffect(() => {
         searchOnHover(props, state, setState)
     }, [props.hoveredElementId, props.findMode])
+
+    const [structureIds, saveStructureIds] = useState(
+        props.structureWithPluginChildren.map(item => item.id)
+    )
+
+    useEffect(() => {
+        const newStructureIds = props.structureWithPluginChildren.map(
+            item => item.id
+        )
+        const structuresAreEqual = isEqual(newStructureIds, structureIds)
+
+        if (!structuresAreEqual) {
+            props.saveElementsStructure(
+                props.mode,
+                props.structureWithPluginChildren,
+                props.resourceDraftStructure
+            )
+            saveStructureIds(newStructureIds)
+        }
+    }, [props.structureWithPluginChildren])
 
     return (
         <>
@@ -227,17 +241,30 @@ const mapStateToProps = (state, props) => {
         let draft = getCurrentResourceValue(item.id, state.resourcesObjects)
         pluginElementsStructures[item.id] = draft ? draft.structure : []
     }
+    const resourceDraftStructure = state.mD[resourceDraftIndex[props.mode]]
+        ? state.mD[resourceDraftIndex[props.mode]].structure
+        : null
+
+    const currentResource = state.mD[currentIndex[props.mode]]
+    const pluginsStructure = state.mD.pluginsStructure
+    const structureWithPluginChildren = populateStructureWithPluginChildren(
+        resourceDraftStructure,
+        currentResource,
+        pluginElementsStructures,
+        pluginsStructure,
+        props.mode
+    )
+
     return {
         hoveredElementId: -100,
         findMode: state.findMode,
         fromFrame: state.fromFrame,
         // structure: state.mD[structureIndex[props.mode]].structure,
-        currentResource: state.mD[currentIndex[props.mode]],
-        resourceDraftStructure: state.mD[resourceDraftIndex[props.mode]]
-            ? state.mD[resourceDraftIndex[props.mode]].structure
-            : null,
-        pluginsStructure: state.mD.pluginsStructure,
+        currentResource,
+        resourceDraftStructure,
+        pluginsStructure,
         pluginElementsStructures,
+        structureWithPluginChildren,
     }
 }
 
@@ -268,8 +295,8 @@ export default connect(
                     nextProps.pluginElementsStructures
                 ) &&
                 isEqual(
-                    prevProps.resourceDraftStructure,
-                    nextProps.resourceDraftStructure
+                    prevProps.structureWithPluginChildren,
+                    nextProps.structureWithPluginChildren
                 ) &&
                 isEqual(prevProps.currentResource, nextProps.currentResource)
             )

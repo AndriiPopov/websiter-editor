@@ -17,9 +17,9 @@ type Props = {
 }
 
 const Templates = (props: Props) => {
-    const handleChangeBoxProperty = (key, value) => {
+    const handleChangeBoxProperty = (key, value, id) => {
         if (props.checkUserRights(['content']))
-            props.changeBoxPropertyInValues('template', key, value)
+            props.changeBoxPropertyInValues('template', key, value, id)
     }
 
     return (
@@ -75,8 +75,10 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
-        changeBoxPropertyInValues: (type, key, value) =>
-            dispatch(actions.changeBoxPropertyInValues(type, key, value)),
+        changeBoxPropertyInValues: (type, key, value, id) =>
+            dispatch(
+                actions.changeBoxPropertyInValues(type, key, value, false, id)
+            ),
         checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }

@@ -36,6 +36,8 @@ export const deleteResource = (type: 'page' | 'plugin' | 'template') => (
         return alert(
             'This function is not available in test mode. Please create your free account at https://my.websiter.dev/login'
         )
+    if (!window.confirm('Are you sure you want to delete this resource?'))
+        return
     const { mD } = getState()
     if (webSocket && webSocket.readyState !== 3) {
         webSocket.send(

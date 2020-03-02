@@ -65,6 +65,7 @@ type Props = {
 }
 
 const ItemRenderer = (props: Props) => {
+    if (!props.currentNode) return null
     var _this$props = props,
         scaffoldBlockPxWidth = _this$props.scaffoldBlockPxWidth,
         toggleChildrenVisibility = _this$props.toggleChildrenVisibility,
@@ -146,8 +147,6 @@ const ItemRenderer = (props: Props) => {
         isCurrentBox,
     } = props
 
-    const { textContent, properties } = currentNodeValues
-
     const {
         tag,
         text,
@@ -155,6 +154,11 @@ const ItemRenderer = (props: Props) => {
         isElementFromCMSVariable,
         childrenTo,
     } = props.currentNode
+    if (
+        id ===
+        'element_21_forPlugin_5e552539a8244072b62fceaf_childrenTo_element_3'
+    )
+        console.log(tag)
 
     const rowClasses = [classes.rst__row]
     if (isLandingPadActive) rowClasses.push(classes.rst__rowLandingPad)
@@ -252,12 +256,16 @@ const ItemRenderer = (props: Props) => {
                             }
                         >
                             <div className={classes.rst__rowLabel}>
-                                {text ? (
+                                {text && currentNodeValues ? (
                                     'text' +
-                                    (textContent
+                                    (currentNodeValues.textContent
                                         ? ' - "' +
-                                          textContent.substr(0, 25) +
-                                          (textContent.length > 25
+                                          currentNodeValues.textContent.substr(
+                                              0,
+                                              25
+                                          ) +
+                                          (currentNodeValues.textContent
+                                              .length > 25
                                               ? '...'
                                               : '') +
                                           '"'
@@ -301,12 +309,31 @@ const ItemRenderer = (props: Props) => {
                                         ) : (
                                             tag
                                         )}
-                                        {properties.id
-                                            ? ` id="${properties.id}"`
-                                            : ''}
-                                        {properties.class
-                                            ? ` class="${properties.class}"`
-                                            : ''}
+                                        {currentNodeValues ? (
+                                            currentNodeValues.properties ? (
+                                                <>
+                                                    {currentNodeValues
+                                                        .properties.id
+                                                        ? ` id="${
+                                                              currentNodeValues
+                                                                  .properties.id
+                                                          }"`
+                                                        : ''}
+                                                    {currentNodeValues
+                                                        .properties.class
+                                                        ? ` class="${
+                                                              currentNodeValues
+                                                                  .properties
+                                                                  .class
+                                                          }"`
+                                                        : ''}
+                                                </>
+                                            ) : (
+                                                ''
+                                            )
+                                        ) : (
+                                            ''
+                                        )}
                                         {!isChildren &&
                                         !isElementFromCMSVariable
                                             ? ' >'
@@ -325,8 +352,12 @@ const ItemRenderer = (props: Props) => {
 }
 
 const mapStateToProps = (state, props) => {
-    const currentNode =
-        state.mD[resourceDraftIndex[props.mode]].structure[props.itemIndex]
+    const currentNode = state.mD[resourceDraftIndex[props.mode]].structure.find(
+        item => item.id === props.node.id
+    )
+    if (!currentNode) {
+        return {}
+    }
     return {
         isCurrentBox:
             state.mD[resourceDraftIndex[props.mode]].currentBox ===

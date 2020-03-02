@@ -35,7 +35,7 @@ const Auth = (props: Props) => {
     const agreeWithCookies = () => {
         cookies.set('cookies_consent', 'true', {
             path: '/',
-            maxAge: 31530000000,
+            maxAge: 31530000,
         })
         checkCookieConsent()
     }

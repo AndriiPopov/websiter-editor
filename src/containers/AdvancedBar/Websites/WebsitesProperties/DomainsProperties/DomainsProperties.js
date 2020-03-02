@@ -184,28 +184,41 @@ const DomainsProperties = (props: Props) => {
                 <SmallButton
                     icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>'
                     buttonClicked={() =>
-                        props.changeWebsiteProperty(
-                            'customDomain',
-                            '__delete__'
-                        )
+                        props.saveDomainName('__delete__', 'customDomain')
                     }
                     tooltip="Delete custom domain"
                     inline
                     requiredRights={['admin', 'developer']}
                 />
                 {website ? (
-                    website.customDomain &&
-                    website.cname &&
-                    website.verifyCode ? (
+                    website.customDomain && website.cname ? (
                         <div>
-                            `In order to use your custom domain you need to
-                            create the following CNAME DNS record <br /> $
-                            {website.cname}
-                            <br /> If you want to verify your domain ownership
-                            and make sure that nobody else could connect this
-                            domain to other website add the following TXT DNS
-                            record and press verify button:
-                            <br />${website.verifyCode}`
+                            <p>
+                                In order to use your custom domain you need to
+                                create the following CNAME DNS record:
+                            </p>
+                            <p>
+                                <span style={{ userSelect: 'all' }}>
+                                    {website.cname}
+                                </span>
+                            </p>
+
+                            <p>
+                                Usually it takes 1-3 hours to connect a new
+                                domain. Please, allow this time and check the
+                                status.
+                            </p>
+                            <p>
+                                If you want to verify your domain ownership and
+                                make sure that nobody else could connect this
+                                domain to other website add the following TXT
+                                DNS record and press verify button:
+                            </p>
+                            <p>
+                                <span style={{ userSelect: 'all' }}>
+                                    {website._id}
+                                </span>
+                            </p>
                         </div>
                     ) : null
                 ) : null}

@@ -13,20 +13,22 @@ export default (props: Props) => {
         result[attribute] = inheritedPropertyName
             ? props.parentPluginProps[inheritedPropertyName]
             : props.elementValues.properties[attribute]
-        result[attribute] = JSON.parse(
-            JSON.stringify(result[attribute]).replace(
-                // /\$[^:;\$\s]*\$/g,
-                /\$[A-Za-z0-9]*\$/g,
-                match => {
-                    const inheritedPropertyName = getInheritedPropertyName(
-                        match
-                    )
-                    return inheritedPropertyName
-                        ? props.parentPluginProps[inheritedPropertyName] || ''
-                        : ''
-                }
+        if (result[attribute])
+            result[attribute] = JSON.parse(
+                JSON.stringify(result[attribute]).replace(
+                    // /\$[^:;\$\s]*\$/g,
+                    /\$[A-Za-z0-9]*\$/g,
+                    match => {
+                        const inheritedPropertyName = getInheritedPropertyName(
+                            match
+                        )
+                        return inheritedPropertyName
+                            ? props.parentPluginProps[inheritedPropertyName] ||
+                                  ''
+                            : ''
+                    }
+                )
             )
-        )
         if (attribute === 'src') {
             let url = result[attribute] || ''
             const path = url.split('/')

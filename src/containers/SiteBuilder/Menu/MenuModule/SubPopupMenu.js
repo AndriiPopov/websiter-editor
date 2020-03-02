@@ -1,5 +1,5 @@
 /* eslint-disable */
-
+import isEqual from 'lodash/isEqual'
 import * as React from 'react';
 import { connect } from 'mini-store';
 import KeyCode from "rc-util/es/KeyCode";
@@ -322,7 +322,7 @@ function (_React$Component) {
     key: "shouldComponentUpdate",
     value: function shouldComponentUpdate(nextProps) {
         var props = this.props
-      return this.props.visible || nextProps.visible || !shallowEqual([this.props.className, props.store.getState().topMenuBlockClasses,    props.store.getState().topMenuItemClasses,    props.store.getState().topMenuItemActiveClasses,    props.store.getState().popupMenuBlockClasses,    props.store.getState().popupMenuItemClasses,    props.store.getState().popupMenuItemActiveClasses], [nextProps.className, nextProps.topMenuBlockClasses,    nextProps.topMenuItemClasses,    nextProps.topMenuItemActiveClasses,    nextProps.popupMenuBlockClasses,    nextProps.popupMenuItemClasses,    nextProps.popupMenuItemActiveClasses]) || !shallowEqual(this.props.style, nextProps.style);
+      return this.props.visible || nextProps.visible || !isEqual([this.props.className, props.store.getState().topMenuBlockClasses,    props.store.getState().topMenuItemClasses,    props.store.getState().topMenuItemActiveClasses,    props.store.getState().popupMenuBlockClasses,    props.store.getState().popupMenuItemClasses,    props.store.getState().popupMenuItemActiveClasses], [nextProps.className, nextProps.topMenuBlockClasses,    nextProps.topMenuItemClasses,    nextProps.topMenuItemActiveClasses,    nextProps.popupMenuBlockClasses,    nextProps.popupMenuItemClasses,    nextProps.popupMenuItemActiveClasses]) || !shallowEqual(this.props.style, nextProps.style);
     }
   }, {
     key: "componentDidUpdate",
@@ -352,7 +352,6 @@ function (_React$Component) {
 
       this.instanceArray = [];
       var className = classNames(props.prefixCls, props.className, "".concat(props.prefixCls, "-").concat(props.mode));
-      
       var domProps = {
         className: [className, props.level < 2 ? props.store.getState().topMenuBlockClasses : props.store.getState().popupMenuBlockClasses].join(' '),
         // role could be 'select' and by default set to menu

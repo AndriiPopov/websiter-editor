@@ -19,10 +19,8 @@ export default (
                 if (item.path[0] === 'element_02') return true
             return false
         })
-        .map((item, index) => {
-            return {
-                ...item,
-                path: item.path.slice(1),
-            }
-        })
+        .map((item, index) => ({
+            ...item,
+            path: item.path.slice(1),
+        }))
 }

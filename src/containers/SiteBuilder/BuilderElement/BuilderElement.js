@@ -65,7 +65,9 @@ const _BuilderElement = (props: Props) => {
         }
     })
 
-    if (!props.elementValues) return null
+    if (!props.elementValues) {
+        return null
+    }
 
     const refinedProperties = refineProperties(props)
 
@@ -111,7 +113,8 @@ const _BuilderElement = (props: Props) => {
                         routePlugin={props.routePlugin}
                         parentPluginProps={props.parentPluginProps}
                         childrenForPlugin={props.childrenForPlugin}
-                        currentResource={props.currentResource}
+                        currentResource={item.fromResource}
+                        isHead={props.isHead}
                     />
                 ))
         }
@@ -136,15 +139,16 @@ const _BuilderElement = (props: Props) => {
         const plugin = props.pluginsStructure.find(item => item.name === Tag)
         if (plugin) {
             const childrenForPlugin = [
-                ...props.structure.filter(itemInn =>
-                    itemInn.path.includes(props.element.id)
-                ),
+                ...props.structure
+                    .filter(itemInn => itemInn.path.includes(props.element.id))
+                    .map(itemInn => ({
+                        ...itemInn,
+                        fromResource: props.currentResource,
+                    })),
                 ...(props.childrenForPlugin ? props.childrenForPlugin : []),
             ]
             if (
-                props.pluginsPathArray.find(
-                    item => item.plugin === props.plugin.id
-                )
+                props.pluginsPathArray.find(item => item.plugin === plugin.id)
             ) {
                 return null
             }
@@ -165,6 +169,7 @@ const _BuilderElement = (props: Props) => {
                     parentPluginProps={refinedProperties}
                     childrenForPlugin={childrenForPlugin}
                     currentResource={plugin.id}
+                    isHead={props.isHead}
                 />
             )
         }
@@ -273,12 +278,18 @@ const _BuilderElement = (props: Props) => {
 }
 
 const mapStateToProps = (state, props) => {
+    const sourceResource = props.sourcePlugin || props.currentResource
+
+    let elementValues
+    if (sourceResource)
+        elementValues = getCurrentResourceValue(
+            sourceResource,
+            state.resourcesObjects
+        ).values[props.element.id]
+
     return {
         findMode: state.findMode,
-        elementValues: getCurrentResourceValue(
-            props.sourcePlugin || props.currentResource,
-            state.resourcesObjects
-        ).values[props.element.id],
+        elementValues,
         pluginsStructure: state.mD.pluginsStructure,
     }
 }
@@ -305,10 +316,10 @@ const BuilderElement = connect(
     // debounceRender(
     memo(
         _BuilderElement,
-        (prevProps, nextProps) =>
-            isEqual(prevProps.elementValues, nextProps.elementValues) &&
-            isEqual(prevProps.structure, nextProps.structure) &&
-            isEqual(prevProps.parentPluginProps, nextProps.parentPluginProps)
+        (prevProps, nextProps) => isEqual(prevProps, nextProps)
+        //  &&
+        // isEqual(prevProps.structure, nextProps.structure) &&
+        // isEqual(prevProps.parentPluginProps, nextProps.parentPluginProps)
     )
     // ,
     //     300
@@ -341,6 +352,7 @@ const PluginElementRaw = props => {
                     parentPluginProps={props.parentPluginProps}
                     childrenForPlugin={props.childrenForPlugin}
                     currentResource={props.currentResource}
+                    isHead={props.isHead}
                 />
             ))
     }

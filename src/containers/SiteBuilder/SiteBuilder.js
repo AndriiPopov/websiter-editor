@@ -1,6 +1,7 @@
 import React, { Component, useRef, useEffect } from 'react'
 import { connect } from 'react-redux'
 import isEqual from 'lodash/isEqual'
+import omit from 'lodash/omit'
 import cloneDeep from 'lodash/cloneDeep'
 
 import * as classes from './SiteBuilder.module.css'
@@ -13,7 +14,9 @@ import { systemClassMenu } from './systemClasses'
 import { Provider } from 'react-redux'
 import { renderToString } from 'react-dom/server'
 import { store } from '../../index'
-import { refinePropertiesFromCMS } from './BuilderElement/methods/refineProperties'
+import refineProperties, {
+    refinePropertiesFromCMS,
+} from './BuilderElement/methods/refineProperties'
 import refreshPageStructure from './methods/refreshPageStructure'
 import Overlay from '../../components/UI/Overlay/Overlay'
 
@@ -88,54 +91,63 @@ class SiteBuilder extends Component<Props, State> {
                     newProps.currentPageDraftStructure,
                     newProps.pageTemplateDraftStructure
                 )
-                // console.log(newStructure)
                 if (
-                    !isEqual(newStructure, newProps.currentPageDraftStructure)
+                    !isEqual(
+                        newStructure.map(item =>
+                            omit(item, [
+                                'expanded',
+                                'children',
+                                'itemPath',
+                                'itemIndex',
+                            ])
+                        ),
+                        newProps.currentPageDraftStructure.map(item =>
+                            omit(item, [
+                                'expanded',
+                                'children',
+                                'itemPath',
+                                'itemIndex',
+                            ])
+                        )
+                    )
                 ) {
                     this.props.saveElementsStructureFromBuilder(
                         'page',
                         newStructure
                     )
-                } else {
-                    const newHead = newProps.pageTemplateDraftStructure
-                        .filter(itemInn =>
-                            isEqual(itemInn.path, ['element_01', 'element_0'])
+                    return
+                }
+                const newHead = newProps.pageTemplateDraftStructure
+                    .filter(itemInn =>
+                        isEqual(itemInn.path, ['element_01', 'element_0'])
+                    )
+                    .map(itemInn => {
+                        return (
+                            <BuilderElement
+                                key={itemInn.id}
+                                structure={newProps.pageTemplateDraftStructure}
+                                element={itemInn}
+                                hoveredElementId={newProps.hoveredElementId}
+                                document={document}
+                                pluginsPathArray={[]}
+                                parentPluginProps={newProps.refinedProperties}
+                                isHead
+                                currentResource={newProps.pageTemplateId}
+                            />
                         )
-                        .map(itemInn => {
-                            return (
-                                <BuilderElement
-                                    key={itemInn.id}
-                                    structure={
-                                        newProps.pageTemplateDraftStructure
-                                    }
-                                    element={itemInn}
-                                    hoveredElementId={newProps.hoveredElementId}
-                                    document={document}
-                                    pluginsPathArray={[]}
-                                    parentPluginProps={
-                                        newProps.refinedProperties
-                                    }
-                                    isHead
-                                    currentResource={newProps.pageTemplateId}
-                                />
-                            )
-                        })
+                    })
 
-                    const newHeadString =
-                        renderToString(
-                            <Provider store={store}>{newHead}</Provider>
-                        ) || ''
-                    // console.log('newHeadString')
-                    // console.log(newHeadString)
-                    // console.log(this.state.headValue)
-                    if (
-                        newHeadString !== this.state.headValue ||
-                        newProps.shouldRefresh
-                    ) {
-                        this.props.markRefreshing(true)
-                        this.props.markShouldRefreshing()
-                        this.setState({ headValue: newHeadString })
-                    }
+                const newHeadString =
+                    renderToString(
+                        <Provider store={store}>{newHead}</Provider>
+                    ) || ''
+                if (
+                    newHeadString !== this.state.headValue ||
+                    newProps.shouldRefresh
+                ) {
+                    this.props.markRefreshing(true)
+                    this.props.markShouldRefreshing()
+                    this.setState({ headValue: newHeadString })
                 }
             }
         }
@@ -153,18 +165,12 @@ class SiteBuilder extends Component<Props, State> {
             const size = 100 / zoom + '%'
             const structure = props.pageTemplateDraftStructure
 
-            const bodyElement = structure.filter(
-                item => item.path.length === 1
-            )[1]
-            const bodyProps = cloneDeep(bodyElement.properties)
-            const bodyStyle = bodyElement.style
+            const bodyProps = cloneDeep(props.bodyValues.properties)
+            const bodyStyle = props.bodyValues.style
             if (bodyStyle) bodyProps.style = bodyStyle
 
-            const htmlElement = structure.filter(
-                item => item.path.length === 0
-            )[0]
-            const htmlProps = cloneDeep(htmlElement.properties)
-            const htmlStyle = htmlElement.style
+            const htmlProps = cloneDeep(props.htmlValues.properties)
+            const htmlStyle = props.htmlValues.style
             if (htmlStyle) htmlProps.style = htmlStyle
 
             frame = this.props.isRefreshing ? (
@@ -191,10 +197,9 @@ class SiteBuilder extends Component<Props, State> {
                         bodyProps={bodyProps}
                         htmlProps={htmlProps}
                         initialContent={
-                            systemClassMenu +
-                            ' ' +
-                            this.state.headValue +
-                            ' <script src="src/tinymce_5.1.5.zip"></script>'
+                            systemClassMenu + ' ' + this.state.headValue
+                            // +
+                            // ' <script src="src/tinymce_5.1.5.zip"></script>'
                         }
                     >
                         <FrameContextConsumer>
@@ -248,6 +253,38 @@ class SiteBuilder extends Component<Props, State> {
 
 const mapStateToProps = state => {
     const refinedProperties = refinePropertiesFromCMS(state.mD)
+
+    let bodyRawValues = {
+        properties: {},
+        style: '',
+    }
+
+    let htmlRawValues = {
+        properties: {},
+        style: '',
+    }
+
+    if (state.mD.currentTemplateDraft) {
+        bodyRawValues = state.mD.currentTemplateDraft.values.element_1
+        htmlRawValues = state.mD.currentTemplateDraft.values.element_01
+    }
+
+    const bodyValues = {
+        properties: refineProperties({
+            parentPluginProps: refinedProperties,
+            elementValues: bodyRawValues,
+        }),
+        style: bodyRawValues.style,
+    }
+
+    const htmlValues = {
+        properties: refineProperties({
+            parentPluginProps: refinedProperties,
+            elementValues: htmlRawValues,
+        }),
+        style: htmlRawValues.style,
+    }
+
     return {
         zoom: state.pageZoom,
         isRefreshing: state.isRefreshing,
@@ -260,6 +297,8 @@ const mapStateToProps = state => {
             ? state.mD.pageTemplateDraft.structure
             : null,
         refinedProperties,
+        bodyValues,
+        htmlValues,
         pageTemplateId: state.mD.pageTemplateId,
     }
 }

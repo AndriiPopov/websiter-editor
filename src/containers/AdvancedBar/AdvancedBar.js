@@ -72,51 +72,53 @@ const AdvancedBar = (props: Props) => {
             tabIndex="0"
             onKeyDown={e => handleKeyDown(e)}
         >
-            <SizeDragController
-                addClass={classes.heightControll}
-                vertical
-                startValue={props.barSizes.height}
-                type="height"
-            />
-            <Tabs
-                className={['react-tabs', classes.reactTabs].join(' ')}
-                onSelect={index => handleTabSelected(index)}
-                selectedTabClassName={tabClassSelected}
-                selectedTabPanelClassName={pannelClass}
-            >
-                <TabList className={classes.TabList}>
-                    <Tab className={tabClass}>Pages</Tab>
-                    <Tab className={tabClass}>Templates</Tab>
-                    <Tab className={tabClass}>Plugins</Tab>
-                    <Tab className={tabClass}>Media files</Tab>
-                    <Tab className={tabClass}>Websites</Tab>
-                    <Tab className={tabClass}>Account</Tab>
-                </TabList>
+            <div>
+                <SizeDragController
+                    addClass={classes.heightControll}
+                    vertical
+                    startValue={props.barSizes.height}
+                    type="height"
+                />
+                <Tabs
+                    className={['react-tabs', classes.reactTabs].join(' ')}
+                    onSelect={index => handleTabSelected(index)}
+                    selectedTabClassName={tabClassSelected}
+                    selectedTabPanelClassName={pannelClass}
+                >
+                    <TabList className={classes.TabList}>
+                        <Tab className={tabClass}>Pages</Tab>
+                        <Tab className={tabClass}>Templates</Tab>
+                        <Tab className={tabClass}>Plugins</Tab>
+                        <Tab className={tabClass}>Media files</Tab>
+                        <Tab className={tabClass}>Websites</Tab>
+                        <Tab className={tabClass}>Account</Tab>
+                    </TabList>
 
-                <TabPanel>
-                    <Pages />
-                </TabPanel>
-                <TabPanel>
-                    <Templates />
-                </TabPanel>
-                <TabPanel>
-                    <Plugins />
-                </TabPanel>
-                <TabPanel>
-                    <Images />
-                </TabPanel>
-                <TabPanel>
-                    <Websites />
-                </TabPanel>
-                <TabPanel>
-                    <Account />
-                </TabPanel>
-            </Tabs>
-            <ReactResizeDetector
-                handleWidth
-                handleHeight
-                onResize={changeBarSize}
-            />
+                    <TabPanel>
+                        <Pages />
+                    </TabPanel>
+                    <TabPanel>
+                        <Templates />
+                    </TabPanel>
+                    <TabPanel>
+                        <Plugins />
+                    </TabPanel>
+                    <TabPanel>
+                        <Images />
+                    </TabPanel>
+                    <TabPanel>
+                        <Websites />
+                    </TabPanel>
+                    <TabPanel>
+                        <Account />
+                    </TabPanel>
+                </Tabs>
+                <ReactResizeDetector
+                    handleWidth
+                    handleHeight
+                    onResize={changeBarSize}
+                />
+            </div>
         </div>
     )
 }
