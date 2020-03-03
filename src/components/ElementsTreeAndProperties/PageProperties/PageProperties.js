@@ -69,6 +69,7 @@ const Properties = (props: Props) => {
                         }
                         name="editorPageValue"
                         requiredRights={['content']}
+                        currentResource={props.currentResource}
                     />
                 )}
             </TabPanel>
@@ -86,6 +87,7 @@ const Properties = (props: Props) => {
                     readOnly
                     name="editorPageCMSDescription"
                     requiredRights={['content']}
+                    currentResource={props.currentResource}
                 />
             </TabPanel>
             <TabPanel>
@@ -122,6 +124,7 @@ const Properties = (props: Props) => {
                         readOnly
                         name="editorPageCMSDefaultValue"
                         requiredRights={['content']}
+                        currentResource={props.currentResource}
                     />
                 )}
             </TabPanel>
@@ -152,6 +155,7 @@ const mapStateToProps = (state, props) => {
         elementValues,
         templateCMSElementValues,
         currentBox: resourceDraft.currentBox,
+        currentResource: state.mD.currentPageId,
     }
 }
 

@@ -124,6 +124,7 @@ class Editor extends Component<Props, State> {
         } else {
             if (
                 props.currentElement !== prevProps.currentElement ||
+                props.currentResource !== prevProps.currentResource ||
                 this.state.updateValue ||
                 props.editorMode !== prevProps.editorMode
             ) {

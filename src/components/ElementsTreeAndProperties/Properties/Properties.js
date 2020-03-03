@@ -146,6 +146,7 @@ const Properties = (props: Props) => {
                             }
                             name="editorCMSName"
                             requiredRights={['developer']}
+                            currentResource={currentResource}
                         />
                     </TabPanel>
                     <TabPanel>
@@ -162,6 +163,7 @@ const Properties = (props: Props) => {
                             }
                             name="editorCMSDescription"
                             requiredRights={['developer']}
+                            currentResource={currentResource}
                         />
                     </TabPanel>
                     <TabPanel>
@@ -206,6 +208,7 @@ const Properties = (props: Props) => {
                                 }
                                 name="editorCMSDefaultValue"
                                 requiredRights={['developer']}
+                                currentResource={currentResource}
                             />
                         )}
                     </TabPanel>
@@ -276,6 +279,7 @@ const Properties = (props: Props) => {
                                 handleChange={handleStyleChange}
                                 name="editorStyle"
                                 requiredRights={['developer']}
+                                currentResource={currentResource}
                             />
                         </TabPanel>
                     ) : null}
@@ -299,6 +303,7 @@ const Properties = (props: Props) => {
                             handleChange={hanglePropertiesChange}
                             name="editorProperties"
                             requiredRights={['developer']}
+                            currentResource={currentResource}
                         />
                     </TabPanel>
                     {element.tag === 'websiterMenu' ? (
