@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { noop } from './util';
 import { SelectEventHandler, HoverEventHandler, DestroyEventHandler, RenderIconType, MenuHoverEventHandler, MenuClickEventHandler, MenuMode, LegacyFunctionRef } from './interface';
 export interface MenuItemProps {
@@ -29,6 +29,7 @@ export interface MenuItemProps {
     mode?: MenuMode;
     inlineIndent?: number;
     level?: number;
+    direction?: 'ltr' | 'rtl';
 }
 export declare class MenuItem extends React.Component<MenuItemProps> {
     static isMenuItem: boolean;

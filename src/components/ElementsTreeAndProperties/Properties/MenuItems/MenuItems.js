@@ -14,6 +14,7 @@ import { buildTree } from '../../../../utils/basic'
 import SizeDragController from '../../../../containers/AdvancedBar/SizeDragController/SizeDragController'
 import Editor from '../../../Editor/Editor'
 import SmallButton from '../../../UI/Buttons/SmallButton/SmallButton'
+import OverlayOnSizeIsChanging from '../../../UI/OverlayOnSizeIsChanging/OverlayOnSizeIsChanging'
 
 const MenuItems = props => {
     const [state, setState] = useState({
@@ -90,10 +91,12 @@ const MenuItems = props => {
         //         name: 'All in ' + element.name,
         //     })
         // })
-        const treeDataSource = buildTree(pagesStructureWithAll).map(item => ({
-            ...item,
-            type: props.mode,
-        }))
+        const treeDataSource = buildTree(pagesStructureWithAll)
+            .filter(item => !item.generalSettings)
+            .map(item => ({
+                ...item,
+                type: props.mode,
+            }))
         setState({ ...state, treeDataSource })
     }, [props.pagesStructure, props.templatesStructure])
 
@@ -241,7 +244,13 @@ const MenuItems = props => {
                                 !nextParent.all
                             )
                         }}
+                        style={{
+                            flex: '1 1',
+                            height: 'auto !important',
+                            overflow: 'auto',
+                        }}
                     />
+                    <OverlayOnSizeIsChanging />
                 </div>
                 <SizeDragController
                     addClass={classesAdvancedBar.widthControll}
@@ -305,7 +314,13 @@ const MenuItems = props => {
                             onChange={treeData =>
                                 setState({ ...state, treeDataSource: treeData })
                             }
+                            style={{
+                                flex: '1 1',
+                                height: 'auto !important',
+                                overflow: 'auto',
+                            }}
                         />
+                        <OverlayOnSizeIsChanging />
                     </TabPanel>
                     {menuItem ? (
                         <TabPanel

@@ -137,5 +137,6 @@ export default [
     'video',
     'wbr',
     'websiterMenu',
+    'websiterGallery',
     'xmp',
 ]

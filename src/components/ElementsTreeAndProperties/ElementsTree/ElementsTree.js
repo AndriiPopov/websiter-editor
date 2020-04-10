@@ -9,7 +9,7 @@ import * as classes from '../../ResourcesTree/ResourcesTree.module.css'
 import { buildItems } from '../../../utils/pagesStructure'
 import ItemRenderer from './ItemRenderer'
 import { TreeSearch } from '../../UI/TreeSearch/TreeSearch'
-import populateStructureWithPluginChildren from './methods/populateStructureWithPluginChildren'
+import populateStructureWithPluginChildrenAndPropagating from './methods/populateStructureWithPluginChildrenAndPropagating'
 import { searchOnHover, searchMethod, searchMethod2 } from './methods/search'
 import isEqual from 'lodash/isEqual'
 import omit from 'lodash/omit'
@@ -17,14 +17,18 @@ import checkUserRights from '../../../utils/checkUserRights'
 import {
     current as currentIndex,
     resourceDraftIndex,
+    resourceItemIndex,
 } from '../../../utils/resourceTypeIndex'
 import Buttons from './Buttons'
-
+import OverlayOnSizeIsChanging from '../../UI/OverlayOnSizeIsChanging/OverlayOnSizeIsChanging'
 import type {
     resourceType,
     initialStateType,
     elementType,
 } from '../../../store/reducer/reducer'
+import getBoxType from '../../../utils/getBoxType'
+import generateButtonRules from './methods/generateButtonRules'
+import { allModules } from '../../../utils/modulesIndex'
 
 export type State = {
     searchString: string,
@@ -74,11 +78,10 @@ const ElementsTree = (props: Props) => {
 
     if (!resourceDraftStructure) return null
     let treeData = buildTree(
-        structureWithPluginChildren.map((item, index) => ({
+        structureWithPluginChildren.map(item => ({
             ...item,
             itemPath: item.path,
             mode: props.mode,
-            // itemIndex: index,
         }))
     )
 
@@ -112,35 +115,62 @@ const ElementsTree = (props: Props) => {
         }
     }
 
-    const canDropHandle = ({ nextParent, nextPath, prevPath }) => {
+    const canDropHandle = ({ node, nextParent, prevParent }) => {
         if (!nextParent) return false
-        if (nextParent.mode === 'page') return false
+        if (!nextParent.itemPath) return false
+        if (nextParent.mode === 'page')
+            return (
+                nextParent.CMSVariableType &&
+                (nextParent.CMSVariableType.indexOf('propagating_') >= 0 ||
+                    nextParent.CMSVariableType === 'array')
+            )
         if (nextParent.text) return false
-        if (nextParent.mode === 'template' && nextPath[0] !== prevPath[0])
-            return false
-        if (
-            nextParent.mode === 'template' &&
-            (nextPath[0] === 'element_02' || nextParent.id === 'element_02')
-        )
-            return true
         if (nextParent.isElementFromCMSVariable) return false
-        return (
-            (!checkIfCapital(nextParent.tag.charAt(0)) ||
-                nextParent.itemPath.length === 0 ||
-                nextParent.forChildren) &&
-            nextParent.tag !== 'menu' &&
-            ((nextParent.mode === 'template' &&
-                nextParent.itemPath.length > 0) ||
-                nextParent.mode === 'plugin') &&
-            !nextParent.isChildren
-        )
+        if (nextParent.isCMSVariable || nextParent.id === 'element_02')
+            return node.isCMSVariable
+
+        // if (nextParent.mode === 'template' && nextPath[0] !== prevPath[0])
+        //     return false
+        // || nextParent.id === 'element_02'
+
+        switch (nextParent.itemPath[0]) {
+            case 'trash':
+                if (nextParent.id === 'trash') return true
+                return false
+            case 'element_02':
+                return node.isCMSVariable
+            default:
+                if (node.isCMSVariable) return false
+                if (prevParent.itemPath[0] === 'element_02') return false
+                if (nextParent.isChildren) return false
+                if (allModules.includes(nextParent.tag)) return false
+                if (
+                    checkIfCapital(nextParent.tag.charAt(0)) &&
+                    nextParent.itemPath.length !== 0 &&
+                    !nextParent.forChildren
+                )
+                    return false
+                if (
+                    nextParent.mode === 'template' &&
+                    nextParent.itemPath.length === 0
+                )
+                    return false
+                return true
+        }
     }
 
     const canDragHandle = ({ node }) => {
-        if (node.mode === 'page') return false
+        if (node.mode === 'page') {
+            if (node.isPropagatingItem) return true
+            return false
+        }
+        if (node.itemPath[0] === 'trash' && node.itemPath.length > 1)
+            return false
         return (
             node.itemPath.length >
-                (node.mode === 'template' && node.itemPath[0] !== 'element_02'
+                (node.mode === 'template' &&
+                node.itemPath[0] !== 'element_02' &&
+                node.itemPath[0] !== 'trash'
                     ? 1
                     : 0) && !node.childrenTo
         )
@@ -205,10 +235,195 @@ const ElementsTree = (props: Props) => {
         }
     }, [props.structureWithPluginChildren])
 
+    const currentBoxType = getBoxType(props)
+
+    const buttonRules = generateButtonRules(props, currentBoxType)
+
+    const setActiveAndKeyDown = e => {
+        if (e === 'blur') {
+            props.unsetActiveContainer(props.mode + 'elements')
+        } else {
+            props.setActiveContainer(props.mode + 'elements')
+            if (e) {
+                const code = e.code
+
+                if (!props.checkUserRights(['developer'])) return
+                if (props.mode === 'page') {
+                    switch (code) {
+                        case 'KeyA':
+                            if (e.ctrlKey) {
+                                e.preventDefault()
+                                props.addBox(props.mode, 'page')
+                            }
+                            break
+                        case 'KeyD':
+                            if (e.ctrlKey) {
+                                e.preventDefault()
+                                props.duplicateBox(props.mode, 'page')
+                            }
+                            break
+                        case 'KeyF':
+                            if (e.ctrlKey) {
+                                e.preventDefault()
+                                setState({
+                                    ...state,
+                                    searchOpen: !state.searchOpen,
+                                })
+                            }
+                            break
+                        case 'KeyR':
+                            if (e.ctrlKey) {
+                                e.preventDefault()
+                                props.markShouldRefreshing(true)
+                            }
+                            break
+                        case 'KeyC':
+                            if (e.ctrlKey) {
+                                e.preventDefault()
+                                props.copyBox(props.mode, 'page')
+                            }
+                            break
+                        case 'KeyX':
+                            if (e.ctrlKey) {
+                                e.preventDefault()
+                                props.cutBox(props.mode, 'page')
+                            }
+                            break
+                        case 'KeyV':
+                            if (e.ctrlKey) {
+                                e.preventDefault()
+                                props.pasteBox(props.mode, 'page')
+                            }
+                            break
+                        case 'Delete':
+                            props.deleteBox(props.mode, 'page')
+                            break
+                        default:
+                            break
+                    }
+                } else {
+                    switch (code) {
+                        case 'KeyA':
+                            if (
+                                e.ctrlKey &&
+                                e.shiftKey &&
+                                buttonRules.addInside
+                            ) {
+                                e.preventDefault()
+                                props.addBox(props.mode, 'inside')
+                            } else if (e.ctrlKey && buttonRules.addNext) {
+                                e.preventDefault()
+                                props.addBox(props.mode)
+                            }
+                            break
+                        case 'KeyQ':
+                            if (e.ctrlKey && buttonRules.addText) {
+                                e.preventDefault()
+                                props.addBox(props.mode, 'text')
+                            }
+                            break
+                        case 'KeyD':
+                            if (buttonRules.duplicate) {
+                                if (e.ctrlKey && e.shiftKey) {
+                                    e.preventDefault()
+                                    props.duplicateBox(props.mode, true)
+                                } else if (e.ctrlKey) {
+                                    e.preventDefault()
+                                    props.duplicateBox(props.mode)
+                                }
+                            }
+                            break
+                        case 'KeyF':
+                            if (e.ctrlKey) {
+                                e.preventDefault()
+                                setState({
+                                    ...state,
+                                    searchOpen: !state.searchOpen,
+                                })
+                            }
+                            break
+                        case 'KeyR':
+                            if (e.ctrlKey) {
+                                e.preventDefault()
+                                props.markShouldRefreshing(true)
+                            }
+                            break
+                        case 'KeyC':
+                            if (e.ctrlKey && e.shiftKey) {
+                                e.preventDefault()
+                                props.copyBox(props.mode, true)
+                            } else if (e.ctrlKey) {
+                                e.preventDefault()
+                                props.copyBox(props.mode)
+                            }
+                            break
+                        case 'KeyX':
+                            if (e.ctrlKey && e.shiftKey) {
+                                e.preventDefault()
+                                props.cutBox(props.mode, true)
+                            } else if (e.ctrlKey) {
+                                e.preventDefault()
+                                props.cutBox(props.mode)
+                            }
+                            break
+                        case 'KeyV':
+                            if (e.ctrlKey && e.shiftKey) {
+                                e.preventDefault()
+                                props.pasteBox(props.mode, true)
+                            } else if (e.ctrlKey) {
+                                e.preventDefault()
+                                props.pasteBox(props.mode)
+                            }
+                            break
+                        case 'Delete':
+                            if (buttonRules.delete) {
+                                e.preventDefault()
+                                if (e.shiftKey)
+                                    props.deleteBox(props.mode, true)
+                                else props.deleteBox(props.mode)
+                            }
+                            break
+                        default:
+                            break
+                    }
+                }
+            }
+        }
+    }
     return (
-        <>
+        <div
+            className={classes.Container}
+            tabIndex="0"
+            onKeyDown={e => {
+                setActiveAndKeyDown(e.nativeEvent)
+            }}
+            onMouseDown={() => {
+                setActiveAndKeyDown()
+            }}
+            onTouchStart={() => {
+                setActiveAndKeyDown()
+            }}
+            onFocus={() => {
+                setActiveAndKeyDown()
+            }}
+            onBlur={() => {
+                setActiveAndKeyDown('blur')
+            }}
+        >
             <div>
-                <Buttons state={state} setState={setState} mode={props.mode} />
+                <Buttons
+                    state={state}
+                    setState={setState}
+                    mode={props.mode}
+                    addBox={props.addBox}
+                    duplicateBox={props.duplicateBox}
+                    mergeBoxToPlugin={props.mergeBoxToPlugin}
+                    dissolvePluginToBox={props.dissolvePluginToBox}
+                    deleteBox={props.deleteBox}
+                    toggleFindMode={props.toggleFindMode}
+                    markShouldRefreshing={props.markShouldRefreshing}
+                    buttonRules={buttonRules}
+                />
             </div>
             <div className={classes.TreeContainer}>
                 <SortableTree
@@ -226,12 +441,18 @@ const ElementsTree = (props: Props) => {
                     searchFocusOffset={state.searchFocusIndex}
                     searchFinishCallback={searchFinishCallbackHandle}
                     searchMethod={props.findMode ? searchMethod2 : searchMethod}
+                    style={{
+                        flex: '1 1',
+                        height: 'auto !important',
+                        overflow: 'auto',
+                    }}
                 />
             </div>
             {state.searchOpen ? (
                 <TreeSearch state={state} setState={setState} />
             ) : null}
-        </>
+            <OverlayOnSizeIsChanging />
+        </div>
     )
 }
 
@@ -247,12 +468,13 @@ const mapStateToProps = (state, props) => {
 
     const currentResource = state.mD[currentIndex[props.mode]]
     const pluginsStructure = state.mD.pluginsStructure
-    const structureWithPluginChildren = populateStructureWithPluginChildren(
+    let structureWithPluginChildren = populateStructureWithPluginChildrenAndPropagating(
         resourceDraftStructure,
         currentResource,
         pluginElementsStructures,
         pluginsStructure,
-        props.mode
+        props.mode,
+        state.mD[resourceItemIndex[props.mode]]
     )
 
     return {
@@ -265,6 +487,7 @@ const mapStateToProps = (state, props) => {
         pluginsStructure,
         pluginElementsStructures,
         structureWithPluginChildren,
+        currentBox: state.mD[resourceDraftIndex[props.mode]].currentBox,
     }
 }
 
@@ -279,47 +502,46 @@ const mapDispatchToProps = (dispatch, props) => {
                 )
             ),
         checkUserRights: rights => dispatch(checkUserRights(rights)),
+        setActiveContainer: container =>
+            dispatch(actions.setActiveContainer(container)),
+        unsetActiveContainer: container =>
+            dispatch(actions.unsetActiveContainer(container)),
+        copyBox: (mode, withChildren) =>
+            dispatch(actions.copyBox(mode, false, withChildren)),
+        cutBox: (mode, withChildren) =>
+            dispatch(actions.copyBox(mode, true, withChildren)),
+        pasteBox: (mode, inside) => dispatch(actions.pasteBox(mode, inside)),
+        addBox: (mode, type) => dispatch(actions.addBox(mode, type)),
+        duplicateBox: (mode, withChildren) =>
+            dispatch(actions.duplicateBox(mode, withChildren)),
+        mergeBoxToPlugin: (type, onlyChildren) =>
+            dispatch(actions.mergeBoxToPlugin(type, onlyChildren)),
+        dissolvePluginToBox: type =>
+            dispatch(actions.dissolvePluginToBox(type)),
+        deleteBox: (mode, withChildren) =>
+            dispatch(actions.deleteBox(mode, withChildren)),
+        toggleFindMode: value => dispatch(actions.toggleFindMode(value)),
+        markShouldRefreshing: value =>
+            dispatch(actions.markShouldRefreshing(value)),
     }
 }
-// let prevVal
+
 export default connect(
     mapStateToProps,
     mapDispatchToProps
 )(
-    memo(
-        ElementsTree,
-        (prevProps, nextProps) => {
-            return (
-                isEqual(
-                    prevProps.pluginElementsStructures,
-                    nextProps.pluginElementsStructures
-                ) &&
-                isEqual(
-                    prevProps.structureWithPluginChildren,
-                    nextProps.structureWithPluginChildren
-                ) &&
-                isEqual(prevProps.currentResource, nextProps.currentResource)
-            )
-        }
-        // , (prevProps, nextProps) => {
-        //     const getData = props => {
-        //         const { currentResource, resourceDraft } = props
-        //         if (!resourceDraft) return null
-        //         return populateStructureWithPluginChildren(
-        //             resourceDraft.structure,
-        //             currentResource,
-        //             props
-        //         )
-        //     }
-        //     // const prev = getData(prevProps)
-        //     const next = getData(nextProps)
-        //     if (!prevVal) {
-        //         prevVal = next
-        //         return false
-        //     }
-        //     const equal = isEqual(prevVal.pluginsElements, next.pluginsElements)
-        //     prevVal = next
-        //     return equal
-        // }
-    )
+    memo(ElementsTree, (prevProps, nextProps) => {
+        return (
+            isEqual(
+                prevProps.pluginElementsStructures,
+                nextProps.pluginElementsStructures
+            ) &&
+            isEqual(
+                prevProps.structureWithPluginChildren,
+                nextProps.structureWithPluginChildren
+            ) &&
+            isEqual(prevProps.currentResource, nextProps.currentResource) &&
+            isEqual(prevProps.currentBox, nextProps.currentBox)
+        )
+    })
 )

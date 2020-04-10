@@ -1,9 +1,9 @@
 .Content {
-    width: 100%;
+    /* width: 100%; */
     padding-top: 0px;
     overflow: hidden;
     position: relative;
-    flex: 1 0;
+    flex: 1;
 }
 
 .Overlay {

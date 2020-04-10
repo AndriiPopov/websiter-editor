@@ -18,5 +18,3 @@ export {
     transferWebsite,
     saveDomainName,
 } from './websites'
-
-export { renameImage, deleteImage } from './images'

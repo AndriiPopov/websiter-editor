@@ -38,6 +38,7 @@ export const deleteWebsite = () => (dispatch, getState) => {
         return alert(
             'This function is not available in test mode. Please create your free account at https://my.websiter.dev/login'
         )
+    if (!window.confirm('Are you sure you want to delete this website?')) return
     const { mD } = getState()
     if (webSocket && webSocket.readyState !== 3) {
         webSocket.send(
@@ -128,6 +129,12 @@ export const deleteUserInWebsiteSharing = userId => (dispatch, getState) => {
         return alert(
             'This function is not available in test mode. Please create your free account at https://my.websiter.dev/login'
         )
+    if (
+        !window.confirm(
+            'Are you sure you want to delete this user from sharing?'
+        )
+    )
+        return
     const { mD } = getState()
     if (userId && userId !== mD.userId) {
         if (

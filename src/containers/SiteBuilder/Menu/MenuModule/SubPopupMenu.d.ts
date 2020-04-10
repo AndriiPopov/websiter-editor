@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { noop } from './util';
 import { SelectEventHandler, OpenEventHandler, DestroyEventHandler, MiniStore, MenuMode, LegacyFunctionRef, RenderIconType, HoverEventHandler, BuiltinPlacements, MenuClickEventHandler, TriggerSubMenuAction, MotionType } from './interface';
 import { MenuItem, MenuItemProps } from './MenuItem';
@@ -46,6 +46,7 @@ export interface SubPopupMenuProps {
     overflowedIndicator?: React.ReactNode;
     theme?: string;
     motion?: MotionType;
+    direction?: 'ltr' | 'rtl';
 }
 export declare class SubPopupMenu extends React.Component<SubPopupMenuProps> {
     static defaultProps: {

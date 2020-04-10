@@ -8,6 +8,7 @@ import 'ace-builds/src-noconflict/mode-css'
 import 'ace-builds/src-noconflict/mode-json'
 import 'ace-builds/src-noconflict/mode-javascript'
 import 'ace-builds/src-noconflict/mode-text'
+import 'ace-builds/src-noconflict/mode-html'
 import 'ace-builds/src-noconflict/theme-github'
 import 'ace-builds/src-min-noconflict/ext-searchbox'
 import 'ace-builds/src-min-noconflict/ext-language_tools'
@@ -146,6 +147,9 @@ class Editor extends Component<Props, State> {
     editor
     componentDidMount() {
         this.editor = this.refs.aceEditor.editor
+        setInterval(() => {
+            this.editor.resize()
+        }, 1000)
         this.setState({
             value: this.props.elementValue,
             updateValue: false,
@@ -184,8 +188,7 @@ class Editor extends Component<Props, State> {
                     showPrintMargin={true}
                     showGutter={true}
                     highlightActiveLine={true}
-                    width="100%"
-                    height="100%"
+                    style={{ flex: '1', width: 'auto', height: 'auto' }}
                     placeholder="Put your code here"
                     setOptions={{
                         enableBasicAutocompletion:
@@ -196,6 +199,7 @@ class Editor extends Component<Props, State> {
                         showLineNumbers: this.props.editorMode !== 'text',
                         tabSize: 2,
                         useWorker: false,
+                        // setAutoScrollEditorIntoView: true,
                     }}
                     // commands={[
                     //     {
@@ -230,8 +234,8 @@ class Editor extends Component<Props, State> {
 
 const mapDispatchToProps = (dispatch, props) => {
     return {
-        undoResourceVersion: () => dispatch(actions.undoResourceVersion()),
-        redoResourceVersion: () => dispatch(actions.redoResourceVersion()),
+        // undoResourceVersion: () => dispatch(actions.undoResourceVersion()),
+        // redoResourceVersion: () => dispatch(actions.redoResourceVersion()),
         checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }

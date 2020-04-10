@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 
 var Divider = function Divider(_ref) {
   var className = _ref.className,

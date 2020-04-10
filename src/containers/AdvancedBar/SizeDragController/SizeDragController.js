@@ -24,13 +24,9 @@ export const SizeDragController = (props: Props) => {
             startValue: props.startValue,
         },
         begin: item => {
-            console.log('start')
-            console.log(item)
             props.setSizeIsChanging(true)
         },
         end: item => {
-            console.log('end')
-            console.log(item)
             props.setSizeIsChanging(false)
         },
     })
@@ -45,7 +41,11 @@ export const SizeDragController = (props: Props) => {
             className={[classes.SectionHeight, props.addClass].join(' ')}
             data-testid="sizeDragController"
         >
-            {!props.vertical ? <div className={classes.InnerDiv} /> : null}
+            {!props.vertical ? (
+                <div className={classes.InnerDiv}>
+                    {/* <div className={classes.touchDrag} /> */}
+                </div>
+            ) : null}
         </div>
     )
 }

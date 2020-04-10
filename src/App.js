@@ -7,7 +7,6 @@ import asyncComponent from './hoc/asyncComponent'
 import * as actions from './store/actions/index'
 import Auth from './containers/Auth/Auth'
 import Spinner from './components/UI/Spinner/Spinner'
-
 import { initialState } from './store/reducer/reducer'
 
 const asyncSiteBuilderLayout = asyncComponent(() => {

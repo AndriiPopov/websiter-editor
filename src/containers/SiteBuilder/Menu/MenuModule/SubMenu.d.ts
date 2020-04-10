@@ -1,4 +1,5 @@
-import * as React from 'react';
+import React from 'react';
+import { SubPopupMenuProps } from './SubPopupMenu';
 import { noop } from './util';
 import { MiniStore, RenderIconType, LegacyFunctionRef, MenuMode, OpenEventHandler, SelectEventHandler, DestroyEventHandler, MenuHoverEventHandler, MenuClickEventHandler, MenuInfo, BuiltinPlacements, TriggerSubMenuAction, HoverEventHandler, MotionType } from './interface';
 import { MenuItem } from './MenuItem';
@@ -47,6 +48,7 @@ export interface SubMenuProps {
     className?: string;
     popupClassName?: string;
     motion?: MotionType;
+    direction?: 'ltr' | 'rtl';
 }
 export declare class SubMenu extends React.Component<SubMenuProps> {
     static defaultProps: {
@@ -89,7 +91,7 @@ export declare class SubMenu extends React.Component<SubMenuProps> {
     onMouseLeave: React.MouseEventHandler<HTMLElement>;
     onTitleMouseEnter: React.MouseEventHandler<HTMLElement>;
     onTitleMouseLeave: React.MouseEventHandler<HTMLElement>;
-    onTitleClick: (e: React.KeyboardEvent<HTMLElement> | React.MouseEvent<HTMLElement, MouseEvent>) => void;
+    onTitleClick: (e: React.MouseEvent<HTMLElement, MouseEvent> | React.KeyboardEvent<HTMLElement>) => void;
     onSubMenuClick: (info: MenuInfo) => void;
     onSelect: SelectEventHandler;
     onDeselect: SelectEventHandler;
@@ -110,6 +112,8 @@ export declare class SubMenu extends React.Component<SubMenuProps> {
     isOpen: () => boolean;
     adjustWidth: () => void;
     saveSubMenuTitle: (subMenuTitle: HTMLElement) => void;
+    getBaseProps: () => SubPopupMenuProps;
+    getMotion: (mode: MenuMode, visible: boolean) => MotionType;
     renderChildren(children: React.ReactNode): JSX.Element;
     render(): JSX.Element;
 }

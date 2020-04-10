@@ -1,11 +1,10 @@
-/* eslint-disable */
-import * as React from 'react'
+import React from 'react'
 import { Provider, create } from 'mini-store'
 import SubPopupMenu, { getActiveKey } from './SubPopupMenu'
 import { noop } from './util'
 import { getMotion } from './utils/legacyUtil'
-
 function _typeof(obj) {
+    '@babel/helpers - typeof'
     if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
         _typeof = function _typeof(obj) {
             return typeof obj
@@ -40,7 +39,7 @@ function _objectSpread(target) {
     for (var i = 1; i < arguments.length; i++) {
         var source = arguments[i] != null ? arguments[i] : {}
         if (i % 2) {
-            ownKeys(source, true).forEach(function(key) {
+            ownKeys(Object(source), true).forEach(function(key) {
                 _defineProperty(target, key, source[key])
             })
         } else if (Object.getOwnPropertyDescriptors) {
@@ -49,7 +48,7 @@ function _objectSpread(target) {
                 Object.getOwnPropertyDescriptors(source)
             )
         } else {
-            ownKeys(source).forEach(function(key) {
+            ownKeys(Object(source)).forEach(function(key) {
                 Object.defineProperty(
                     target,
                     key,
@@ -347,7 +346,6 @@ var Menu =
                             openKeys: this.props.openKeys || [],
                         })
                     }
-
                     this.updateClassesInMiniStore()
                 },
             },
@@ -410,6 +408,11 @@ var Menu =
                     var props = _objectSpread({}, this.props)
 
                     props.className += ' '.concat(props.prefixCls, '-root')
+
+                    if (props.direction === 'rtl') {
+                        props.className += ' '.concat(props.prefixCls, '-rtl')
+                    }
+
                     props = _objectSpread({}, props, {
                         onClick: this.onClick,
                         onOpenChange: this.onOpenChange,

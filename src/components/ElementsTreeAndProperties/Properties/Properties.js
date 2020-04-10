@@ -7,16 +7,18 @@ import { connect } from 'react-redux'
 import * as classes from './Properties.module.css'
 import TextProperty from './TextProperty/TextProperty'
 import ParseProperty from './ParseProperty/ParseProperty'
-import MenuItems from './MenuItems/MenuItems'
-import Editor from '../../Editor/Editor'
 import { checkIfCapital } from '../../../utils/basic'
 import propertiesSuggestedList from './propertiesSuggestedList'
 import Select from '../../UI/Select/Select'
+import MenuItems from './MenuItems/MenuItems'
+import Editor from '../../Editor/Editor'
 import HTMLEditor from '../../HTMLEditor/HTMLEditor'
 import {
     current as currentIndex,
     resourceDraftIndex,
 } from '../../../utils/resourceTypeIndex'
+import { getCurrentResourceValue } from '../../../utils/basic'
+import CMSPannels from './Property pannels/CMSPannels'
 import type { resourceType, elementType } from '../../../store/reducer/reducer'
 
 type Props = {
@@ -34,7 +36,7 @@ const Properties = (props: Props) => {
         classes.reactTabsTabPanelSelected,
     ].join(' ')
 
-    const hanglePropertiesChange = (value, cursorPosition) => {
+    const handlePropertiesChange = (value, cursorPosition) => {
         if (value) {
             const changes: elementType = {}
             changes.cursorPosition = cursorPosition
@@ -54,9 +56,9 @@ const Properties = (props: Props) => {
     }
 
     const handleStyleChange = (value, cursorPosition) => {
-        if (value) {
+        if (typeof value === 'string') {
             value = value.trim()
-            if (value.length < 6) {
+            if (value.length < 3) {
                 value = ''
             } else {
                 if (value.charAt(0) === '{') {
@@ -76,21 +78,6 @@ const Properties = (props: Props) => {
     }
     const isPlugin = element ? checkIfCapital(element.tag.charAt(0)) : false
 
-    const variableOptions = [
-        {
-            label: 'Plain text',
-            value: 'text',
-        },
-        {
-            label: 'HTML',
-            value: 'html',
-        },
-        {
-            label: 'Menu tems',
-            value: 'menuItems',
-        },
-    ]
-
     let result = null
 
     if (element && elementValues && !element.isElementFromCMSVariable) {
@@ -106,113 +93,19 @@ const Properties = (props: Props) => {
             )
         } else if (element.isCMSVariable) {
             result = (
-                <Tabs
-                    className={['react-tabs', classes.reactTabs].join(' ')}
-                    selectedTabPanelClassName={pannelClass}
-                >
-                    <TabList>
-                        <Tab className={tabClass}>Type</Tab>
-                        <Tab className={tabClass}>System name</Tab>
-                        <Tab className={tabClass}>Desription</Tab>
-                        <Tab className={tabClass}>Default value</Tab>
-                    </TabList>
-                    <TabPanel>
-                        <Select
-                            onChange={option =>
-                                props.changeProperty(
-                                    'CMSVariableType',
-                                    option.value
-                                )
-                            }
-                            options={variableOptions}
-                            default={variableOptions.findIndex(
-                                item =>
-                                    item.value === elementValues.CMSVariableType
-                            )}
-                            requiredRights={['developer']}
-                        />
-                    </TabPanel>
-                    <TabPanel>
-                        <Editor
-                            currentElement={currentBox}
-                            elementValue={elementValues.CMSVariableSystemName}
-                            elementCurrentCursor={elementValues.cursorPosition}
-                            editorMode="text"
-                            handleChange={value =>
-                                props.changeProperty(
-                                    'CMSVariableSystemName',
-                                    value
-                                )
-                            }
-                            name="editorCMSName"
-                            requiredRights={['developer']}
-                            currentResource={currentResource}
-                        />
-                    </TabPanel>
-                    <TabPanel>
-                        <Editor
-                            currentElement={currentBox}
-                            elementValue={elementValues.CMSVariableDescription}
-                            elementCurrentCursor={elementValues.cursorPosition}
-                            editorMode="text"
-                            handleChange={value =>
-                                props.changeProperty(
-                                    'CMSVariableDescription',
-                                    value
-                                )
-                            }
-                            name="editorCMSDescription"
-                            requiredRights={['developer']}
-                            currentResource={currentResource}
-                        />
-                    </TabPanel>
-                    <TabPanel>
-                        {elementValues.CMSVariableType === 'html' ? (
-                            <HTMLEditor
-                                value={elementValues.CMSVariableDefaultValue}
-                                handleChange={(e, editor) => {
-                                    props.changeProperty(
-                                        'CMSVariableDefaultValue',
-                                        editor.getContent()
-                                    )
-                                }}
-                                requiredRights={['developer']}
-                            />
-                        ) : elementValues.CMSVariableType === 'menuItems' ? (
-                            <MenuItems
-                                elementValues={elementValues}
-                                element={element}
-                                changeProperty={props.changeProperty}
-                                mode={props.mode}
-                                attrName={
-                                    element.isCMSVariable
-                                        ? 'defaultMenuItems'
-                                        : 'menuItems'
-                                }
-                            />
-                        ) : (
-                            <Editor
-                                currentElement={currentBox}
-                                elementValue={
-                                    elementValues.CMSVariableDefaultValue
-                                }
-                                elementCurrentCursor={
-                                    elementValues.cursorPosition
-                                }
-                                editorMode="text"
-                                handleChange={value =>
-                                    props.changeProperty(
-                                        'CMSVariableDefaultValue',
-                                        value
-                                    )
-                                }
-                                name="editorCMSDefaultValue"
-                                requiredRights={['developer']}
-                                currentResource={currentResource}
-                            />
-                        )}
-                    </TabPanel>
-                </Tabs>
+                <CMSPannels
+                    tabClass={tabClass}
+                    pannelClass={pannelClass}
+                    propagatingPlugins={props.propagatingPlugins}
+                    elementValues={elementValues}
+                    currentBox={currentBox}
+                    currentResource={currentResource}
+                    element={element}
+                    propertiesSuggestedList={propertiesSuggestedList}
+                    handlePropertiesChange={handlePropertiesChange}
+                    changeProperty={props.changeProperty}
+                    mode={props.mode}
+                />
             )
         } else if (element.text && !isPlugin) {
             result = (
@@ -300,7 +193,7 @@ const Properties = (props: Props) => {
                             }
                             elementCurrentCursor={elementValues.cursorPosition}
                             editorMode="json"
-                            handleChange={hanglePropertiesChange}
+                            handleChange={handlePropertiesChange}
                             name="editorProperties"
                             requiredRights={['developer']}
                             currentResource={currentResource}
@@ -337,11 +230,20 @@ const mapStateToProps = (state, props) => {
         }
     }
 
+    const propagatingPlugins = state.mD.pluginsStructure
+        .filter(plugin => plugin.propagating)
+        .map(plugin => ({
+            label: plugin.name + ' (for propagating plugin)',
+            value: 'propagating_' + plugin.id,
+        }))
+
     return {
         element,
         elementValues,
+
         currentBox: resourceDraft.currentBox,
         currentResource: state.mD[currentIndex[props.mode]],
+        propagatingPlugins,
     }
 }
 

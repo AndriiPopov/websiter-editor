@@ -5,7 +5,7 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import * as classes from './AdvancedBar.module.css'
 import SizeDragController from './SizeDragController/SizeDragController'
 import * as actions from '../../store/actions'
-import Images from './Images/Images'
+import Files from './Files/Files'
 import Plugins from './Plugins/Plugins'
 import Pages from './Pages/Pages'
 import Templates from './Templates/Templates'
@@ -17,9 +17,9 @@ import ReactResizeDetector from 'react-resize-detector'
 import type { initialStateType } from '../../store/reducer/reducer'
 
 type Props = {
-    undoResourceVersion: typeof actions.undoResourceVersion,
-    redoResourceVersion: typeof actions.redoResourceVersion,
-    setCurrentTopTab: typeof actions.setCurrentTopTab,
+    // undoResourceVersion: typeof actions.undoResourceVersion,
+    // redoResourceVersion: typeof actions.redoResourceVersion,
+    // setCurrentTopTab: typeof actions.setCurrentTopTab,
     changeBarSize: typeof actions.changeBarSize,
     toggleFindMode: typeof actions.toggleFindMode,
     barSizes: $PropertyType<initialStateType, 'barSizes'>,
@@ -38,20 +38,20 @@ const AdvancedBar = (props: Props) => {
         classes.TabSelected,
     ].join(' ')
 
-    const undoRedoTabNames = ['page', 'template', 'plugin', '', '', '', '']
+    // const undoRedoTabNames = ['page', 'template', 'plugin', '', '', '', '']
 
-    const handleKeyDown = e => {
-        if (!e.shiftKey && e.ctrlKey && (e.key === 'z' || e.key === 'Z'))
-            props.undoResourceVersion()
-        if (e.shiftKey && e.ctrlKey && (e.key === 'z' || e.key === 'Z'))
-            props.redoResourceVersion()
-    }
+    // const handleKeyDown = e => {
+    //     if (!e.shiftKey && e.ctrlKey && (e.key === 'z' || e.key === 'Z'))
+    //         props.undoResourceVersion()
+    //     if (e.shiftKey && e.ctrlKey && (e.key === 'z' || e.key === 'Z'))
+    //         props.redoResourceVersion()
+    // }
 
-    const handleTabSelected = index => {
-        props.setCurrentTopTab(undoRedoTabNames[index])
-        props.changeBarSize()
-        props.toggleFindMode()
-    }
+    // const handleTabSelected = index => {
+    //     props.setCurrentTopTab(undoRedoTabNames[index])
+    //     props.changeBarSize()
+    //     props.toggleFindMode()
+    // }
 
     useBeforeunload(() => {
         if (props.notSavedResources.length > 0) {
@@ -67,10 +67,10 @@ const AdvancedBar = (props: Props) => {
 
     return (
         <div
-            style={{ flex: '0 1 ' + props.barSizes.height + 'px' }}
+            style={{ flex: '0 0 ' + props.barSizes.height + 'px' }}
             className={classes.mainContainer}
             tabIndex="0"
-            onKeyDown={e => handleKeyDown(e)}
+            // onKeyDown={e => handleKeyDown(e)}
         >
             <div>
                 <SizeDragController
@@ -81,7 +81,7 @@ const AdvancedBar = (props: Props) => {
                 />
                 <Tabs
                     className={['react-tabs', classes.reactTabs].join(' ')}
-                    onSelect={index => handleTabSelected(index)}
+                    // onSelect={index => handleTabSelected(index)}
                     selectedTabClassName={tabClassSelected}
                     selectedTabPanelClassName={pannelClass}
                 >
@@ -89,7 +89,7 @@ const AdvancedBar = (props: Props) => {
                         <Tab className={tabClass}>Pages</Tab>
                         <Tab className={tabClass}>Templates</Tab>
                         <Tab className={tabClass}>Plugins</Tab>
-                        <Tab className={tabClass}>Media files</Tab>
+                        <Tab className={tabClass}>Files</Tab>
                         <Tab className={tabClass}>Websites</Tab>
                         <Tab className={tabClass}>Account</Tab>
                     </TabList>
@@ -104,7 +104,7 @@ const AdvancedBar = (props: Props) => {
                         <Plugins />
                     </TabPanel>
                     <TabPanel>
-                        <Images />
+                        <Files />
                     </TabPanel>
                     <TabPanel>
                         <Websites />
@@ -134,10 +134,10 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
     return {
         changeBarSize: initiator => dispatch(actions.changeBarSize(initiator)),
-        setCurrentTopTab: currentTopTab =>
-            dispatch(actions.setCurrentTopTab(currentTopTab)),
-        undoResourceVersion: () => dispatch(actions.undoResourceVersion()),
-        redoResourceVersion: () => dispatch(actions.redoResourceVersion()),
+        // setCurrentTopTab: currentTopTab =>
+        //     dispatch(actions.setCurrentTopTab(currentTopTab)),
+        // undoResourceVersion: () => dispatch(actions.undoResourceVersion()),
+        // redoResourceVersion: () => dispatch(actions.redoResourceVersion()),
         toggleFindMode: value => dispatch(actions.toggleFindMode(value)),
         savePropertiesOnLeave: () => dispatch(actions.savePropertiesOnLeave()),
     }

@@ -98,7 +98,9 @@ export const saveResourceInState = (state: Object, action: Object) => {
 
 export const addResourceVersion = (state: Object, action: Object) => {
     const resource = cloneDeep(
-        action.mD[resourceObjectIndex[action.resourceType]]
+        action.globalSettings
+            ? action.mD.globalSettingsPageObject
+            : action.mD[resourceObjectIndex[action.resourceType]]
     )
     if (!isEqual(resource.present, action.draft)) {
         if (action.isNotForHistory) {
@@ -141,7 +143,9 @@ export const addResourceVersion = (state: Object, action: Object) => {
                 //     resource.connectedResources = connectedResources
                 // }
             }
-            const currentResourceId = action.mD[current[action.resourceType]]
+            const currentResourceId = action.globalSettings
+                ? action.mD.globalSettingsPageId
+                : action.mD[current[action.resourceType]]
             if (
                 !resourcesAreEqual(
                     resource.present.structure
@@ -153,8 +157,8 @@ export const addResourceVersion = (state: Object, action: Object) => {
                 if (!state.notSavedResources.includes(currentResourceId))
                     state.notSavedResources.push(currentResourceId)
             }
-            if (resource.past.length > 100) resource.past.shift()
-            resource.past.push(diffpatcher.diff(resource.present, newDraft))
+            // if (resource.past.length > 5) resource.past.shift()
+            // resource.past.push(diffpatcher.diff(resource.present, newDraft))
             resource.present = newDraft
             resource.future = []
             state.resourcesObjects[resource._id] = resource
@@ -162,49 +166,49 @@ export const addResourceVersion = (state: Object, action: Object) => {
     }
 }
 
-export const undoResourceVersion = (state: Object, action: Object) => {
-    const currentResource = state[current[state.currentTopTab]]
-    const resource = state.resourcesObjects[currentResource]
-    if (resource) {
-        if (resource.past.length > 0) {
-            if (
-                !isEqual(
-                    resource.present,
-                    resource.past[resource.past.length - 1]
-                )
-            ) {
-                if (!state.notSavedResources.includes(action.currentResource))
-                    state.notSavedResources.push(action.currentResource)
-            } else {
-                state.notSavedResources = state.notSavedResources.filter(
-                    item => item !== action.currentResource
-                )
-            }
+// export const undoResourceVersion = (state: Object, action: Object) => {
+//     const currentResource = state[current[state.currentTopTab]]
+//     const resource = state.resourcesObjects[currentResource]
+//     if (resource) {
+//         if (resource.past.length > 0) {
+//             if (
+//                 !isEqual(
+//                     resource.present,
+//                     resource.past[resource.past.length - 1]
+//                 )
+//             ) {
+//                 if (!state.notSavedResources.includes(action.currentResource))
+//                     state.notSavedResources.push(action.currentResource)
+//             } else {
+//                 state.notSavedResources = state.notSavedResources.filter(
+//                     item => item !== action.currentResource
+//                 )
+//             }
 
-            const delta = resource.past.pop()
-            resource.future.unshift(delta)
-            resource.present = diffpatcher.unpatch(resource.present, delta)
-        }
-    }
-}
+//             const delta = resource.past.pop()
+//             resource.future.unshift(delta)
+//             resource.present = diffpatcher.unpatch(resource.present, delta)
+//         }
+//     }
+// }
 
-export const redoResourceVersion = (state: Object, action: Object) => {
-    const currentResource = state[current[state.currentTopTab]]
-    const resource = state.resourcesObjects[currentResource]
-    if (resource) {
-        if (resource.future.length > 0) {
-            if (!isEqual(resource.present, resource.future[0])) {
-                if (!state.notSavedResources.includes(action.currentResource))
-                    state.notSavedResources.push(action.currentResource)
-            } else {
-                state.notSavedResources = state.notSavedResources.filter(
-                    item => item !== action.currentResource
-                )
-            }
+// export const redoResourceVersion = (state: Object, action: Object) => {
+//     const currentResource = state[current[state.currentTopTab]]
+//     const resource = state.resourcesObjects[currentResource]
+//     if (resource) {
+//         if (resource.future.length > 0) {
+//             if (!isEqual(resource.present, resource.future[0])) {
+//                 if (!state.notSavedResources.includes(action.currentResource))
+//                     state.notSavedResources.push(action.currentResource)
+//             } else {
+//                 state.notSavedResources = state.notSavedResources.filter(
+//                     item => item !== action.currentResource
+//                 )
+//             }
 
-            const delta = resource.future.shift()
-            resource.past.push(delta)
-            resource.present = diffpatcher.patch(resource.present, delta)
-        }
-    }
-}
+//             const delta = resource.future.shift()
+//             resource.past.push(delta)
+//             resource.present = diffpatcher.patch(resource.present, delta)
+//         }
+//     }
+// }

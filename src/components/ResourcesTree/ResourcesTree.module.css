@@ -63,6 +63,13 @@
     background-color: black;
 }
 
+:global(.rst__lineHalfHorizontalRight::before),
+:global(.rst__lineFullVertical::after),
+:global(.rst__lineHalfVerticalTop::after),
+:global(.rst__lineHalfVerticalBottom::after) {
+    opacity: 0.2;
+}
+
 /**
  * +-----+
  * |     |
@@ -360,7 +367,7 @@
     height: 100%;
     border: solid #e3e3e3 1px;
     border-left: none;
-    padding: 0 25px 0 10px;
+    padding: 0 10px 0 10px;
     border-radius: 2px;
     min-width: 250px;
     flex: 1 0 auto;
@@ -402,14 +409,17 @@
 .rst__loadingHandle {
     height: 100%;
     width: 22px;
-    background: #d9d9d9
-        url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MiIgaGVpZ2h0PSI0MiI+PGcgc3Ryb2tlPSIjRkZGIiBzdHJva2Utd2lkdGg9IjIuOSIgPjxwYXRoIGQ9Ik0xNCAxNS43aDE0LjQiLz48cGF0aCBkPSJNMTQgMjEuNGgxNC40Ii8+PHBhdGggZD0iTTE0IDI3LjFoMTQuNCIvPjwvZz4KPC9zdmc+')
-        no-repeat center;
-    border: solid #aaa 1px;
+    color: rgba(0, 0, 0, 0.55);
+    border: solid #e3e3e3 1px;
+    border-right: none;
     box-shadow: 0 2px 2px -2px;
     cursor: move;
     border-radius: 1px;
     z-index: 1;
+}
+
+.rst__moveHandle > i {
+    font-size: 19px !important;
 }
 
 .rst__loadingHandle {
@@ -550,7 +560,7 @@
     border: none;
     position: absolute;
     border-radius: 100%;
-    box-shadow: 0 0 0 1px #000;
+
     width: 16px;
     height: 16px;
     padding: 0;
@@ -565,7 +575,6 @@
 .rst__collapseButton:focus,
 .rst__expandButton:focus {
     outline: none;
-    box-shadow: 0 0 0 1px #000, 0 0 1px 3px #83bef9;
 }
 .rst__collapseButton:hover:not(:active),
 .rst__expandButton:hover:not(:active) {
@@ -738,11 +747,22 @@
     background: #bfefff;
 }
 
+.ChosenBlur {
+    background: #eee;
+}
+
+.ChosenGreen,
+.ChosenGreen:hover {
+    background: #f0fff1;
+}
+
 .IconsContainer {
-    position: absolute;
+    position: relative;
     right: 0px;
     top: 0px;
     text-align: right;
+    display: inline-block;
+    margin-right: 20px;
 }
 
 .IconsContainerPage {
@@ -760,10 +780,19 @@
 
 .TreeContainer {
     flex: 1;
+    display: flex;
+    margin-top: 8px;
 }
 
 .selectContainer {
     display: inline-block;
     max-width: 250px;
     width: 100%;
+}
+
+.Container {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    outline: none;
 }

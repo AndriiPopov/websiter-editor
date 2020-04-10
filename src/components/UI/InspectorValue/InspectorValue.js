@@ -11,6 +11,8 @@ type Props = {
     focus?: Function,
     allowEmpty?: boolean,
     withState?: boolean,
+    maxLength?: number,
+    maxWidth?: string,
 }
 
 // $FlowFixMe
@@ -34,11 +36,30 @@ export const InspectorValue = forwardRef((props: Props, parentRef) => {
 
     const parentPropsBlur = props.blur
     const parentPropsFocus = props.focus
+    const parentPropsMaxLength = props.maxLength
+    const parentPropsMaxWidth = props.maxWidth
+    const parentPropsValue = props.value
+    const parentPropsWithState = props.withState
 
     return (
         <div className={classes.InspectorDiv}>
             {props.readonly ? (
-                <span>{props.value}</span>
+                <span
+                    {...(props.value && props.maxLength
+                        ? props.value.length > props.maxLength
+                            ? { title: props.value }
+                            : {}
+                        : {})}
+                >
+                    {props.maxLength
+                        ? props.value
+                            ? props.value.substr(0, props.maxLength) +
+                              (props.value.length > props.maxLength
+                                  ? '...'
+                                  : '')
+                            : ''
+                        : props.value}
+                </span>
             ) : (
                 <Autocomplete
                     ref={input}
@@ -85,11 +106,18 @@ export const InspectorValue = forwardRef((props: Props, parentRef) => {
                         )
                     }}
                     renderInput={(props, inputEl) => {
+                        const maxLength = parentPropsMaxLength
+
+                        const maxWidth = parentPropsMaxWidth
+                        const withState = parentPropsWithState
+                        const value = withState ? state.value : parentPropsValue
+
                         return (
                             <>
                                 <span
                                     ref={parentRef}
                                     className={classes.Span}
+                                    style={maxWidth ? { maxWidth } : {}}
                                     onClick={() =>
                                         setState({ ...state, active: true })
                                     }
@@ -97,11 +125,23 @@ export const InspectorValue = forwardRef((props: Props, parentRef) => {
                                         setState({ ...state, active: true })
                                     }
                                 >
-                                    {props.withState
-                                        ? state.value
-                                        : props.value}
+                                    {state.active
+                                        ? value
+                                        : maxLength
+                                        ? value
+                                            ? value.substr(0, maxLength) +
+                                              (value.length > maxLength
+                                                  ? '...'
+                                                  : '')
+                                            : ''
+                                        : value}
                                 </span>
                                 <input
+                                    {...(value && maxLength
+                                        ? value.length > maxLength
+                                            ? { title: value }
+                                            : {}
+                                        : {})}
                                     {...props}
                                     onBlur={e => {
                                         props.onBlur(e)
@@ -131,11 +171,26 @@ export const InspectorValue = forwardRef((props: Props, parentRef) => {
                                                   classes.InputHidden,
                                               ].join(' ')
                                     }
+                                    style={maxWidth ? { maxWidth } : {}}
                                     value={
-                                        props.withState
-                                            ? state.value
-                                            : props.value
+                                        state.active
+                                            ? value
+                                            : maxLength
+                                            ? value
+                                                ? value.substr(0, maxLength) +
+                                                  (value.length > maxLength
+                                                      ? '...'
+                                                      : '')
+                                                : ''
+                                            : value
                                     }
+                                    onKeyDown={e => {
+                                        if (
+                                            (e.ctrlKey && e.key === 'z') ||
+                                            (e.ctrlKey && e.key === 'Z')
+                                        )
+                                            e.preventDefault()
+                                    }}
                                 />
                             </>
                         )

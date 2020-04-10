@@ -11,12 +11,22 @@ import MultiBackend from 'react-dnd-multi-backend'
 import HTML5toTouch from 'react-dnd-multi-backend/dist/esm/HTML5toTouch'
 import { useDragLayer } from 'react-dnd'
 import throttle from 'lodash/throttle'
+import { Helmet } from 'react-helmet'
 
 type Props = {}
 
 const SiteBuilderLayout = (props: Props) => {
+    const prod = process.env.NODE_ENV !== 'development'
+
     return (
         <DndProvider backend={MultiBackend} options={HTML5toTouch}>
+            <Helmet>
+                <base
+                    href={`http${prod ? 's' : ''}://live.websiter.dev${
+                        prod ? '' : ':5000'
+                    }`}
+                />
+            </Helmet>
             {props.userObject ? (
                 <div
                     style={{

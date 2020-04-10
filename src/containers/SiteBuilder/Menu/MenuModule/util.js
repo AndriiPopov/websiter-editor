@@ -1,7 +1,7 @@
-/* eslint-disable */
-import * as React from 'react'
+import React from 'react'
 import isMobile from './utils/isMobile'
 function _typeof(obj) {
+    '@babel/helpers - typeof'
     if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
         _typeof = function _typeof(obj) {
             return typeof obj
@@ -18,7 +18,6 @@ function _typeof(obj) {
     }
     return _typeof(obj)
 }
-
 export function noop() {}
 export function getKeyFromChildrenIndex(child, menuEventKey, index) {
     var prefix = menuEventKey || ''
@@ -144,6 +143,13 @@ export var getWidth = function getWidth(elem) {
     }
 
     return width || 0
+}
+export var getPosition = function getPosition(elem) {
+    var rect =
+        elem &&
+        typeof elem.getBoundingClientRect === 'function' &&
+        elem.getBoundingClientRect()
+    return { left: rect.left, right: rect.right }
 }
 export var setStyle = function setStyle(elem, styleProperty, value) {
     if (elem && _typeof(elem.style) === 'object') {

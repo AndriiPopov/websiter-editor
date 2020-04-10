@@ -20,6 +20,8 @@ export {
     markShouldRefreshing,
     setCurrentSiteBuilderMode,
     parseHTML,
+    copyBox,
+    pasteBox,
 } from './builder'
 
 export {
@@ -35,20 +37,23 @@ export {
 export {
     setSizeIsChanging,
     chooseWebsite,
-    setCurrentTopTab,
+    // setCurrentTopTab,
     chooseUserInWebsiteSharing,
     saveObject,
     saveMainData,
 } from './website'
 
-export { imageUpload, chooseImage } from './images'
+export { uploadFile, deleteFile } from './files'
 
 export {
     chooseResource,
     addResourceVersion,
-    undoResourceVersion,
-    redoResourceVersion,
+    // undoResourceVersion,
+    // redoResourceVersion,
     removeResourceFromUnsaved,
+    removeResourceFromNewVersions,
+    setActiveContainer,
+    unsetActiveContainer,
 } from './resources'
 
 export {

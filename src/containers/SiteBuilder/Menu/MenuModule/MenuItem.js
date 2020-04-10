@@ -1,12 +1,12 @@
-/* eslint-disable */
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
+import React from 'react'
+import ReactDOM from 'react-dom'
 import KeyCode from 'rc-util/es/KeyCode'
 import classNames from 'classnames'
-import scrollIntoView from 'dom-scroll-into-view'
+import scrollIntoView from 'scroll-into-view-if-needed'
 import { connect } from 'mini-store'
 import { noop, menuAllProps } from './util'
 function _typeof(obj) {
+    '@babel/helpers - typeof'
     if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
         _typeof = function _typeof(obj) {
             return typeof obj
@@ -41,7 +41,7 @@ function _objectSpread(target) {
     for (var i = 1; i < arguments.length; i++) {
         var source = arguments[i] != null ? arguments[i] : {}
         if (i % 2) {
-            ownKeys(source, true).forEach(function(key) {
+            ownKeys(Object(source), true).forEach(function(key) {
                 _defineProperty(target, key, source[key])
             })
         } else if (Object.getOwnPropertyDescriptors) {
@@ -50,7 +50,7 @@ function _objectSpread(target) {
                 Object.getOwnPropertyDescriptors(source)
             )
         } else {
-            ownKeys(source).forEach(function(key) {
+            ownKeys(Object(source)).forEach(function(key) {
                 Object.defineProperty(
                     target,
                     key,
@@ -260,13 +260,12 @@ export var MenuItem =
                             !parentMenu['scrolled-'.concat(eventKey)])
                     ) {
                         if (this.node) {
-                            scrollIntoView(
-                                this.node,
-                                ReactDOM.findDOMNode(parentMenu),
-                                {
-                                    onlyScrollIfNeeded: true,
-                                }
-                            )
+                            scrollIntoView(this.node, {
+                                scrollMode: 'if-needed',
+                                // eslint-disable-next-line react/no-find-dom-node
+                                boundary: ReactDOM.findDOMNode(parentMenu),
+                                block: 'nearest',
+                            })
                             parentMenu['scrolled-'.concat(eventKey)] = true
                         }
                     } else if (
@@ -327,6 +326,7 @@ export var MenuItem =
                     var _classNames
 
                     var props = _objectSpread({}, this.props)
+
                     var className = classNames(
                         this.getPrefixCls(),
                         props.className,
@@ -351,15 +351,18 @@ export var MenuItem =
 
                     var attrs = _objectSpread({}, props.attribute, {
                         title: props.title,
+                        // className: className,
                         className: [
                             className,
-                            ...(props.isSub
+                            ...(props.isSub ||
+                            props.mode.indexOf('vertical') > -1
                                 ? props.store.getState().popupMenuItemClasses
                                 : props.store.getState().topMenuItemClasses),
                             ...(props.store
                                 .getState()
                                 .activeKeys.includes(this.props.eventKey)
-                                ? props.isSub
+                                ? props.isSub ||
+                                  props.mode.indexOf('vertical') > -1
                                     ? props.store.getState()
                                           .popupMenuItemActiveClasses
                                     : props.store.getState()
@@ -395,12 +398,18 @@ export var MenuItem =
                     var style = _objectSpread({}, props.style)
 
                     if (props.mode === 'inline') {
-                        style.paddingLeft = props.inlineIndent * props.level
+                        if (props.direction === 'rtl') {
+                            style.paddingRight =
+                                props.inlineIndent * props.level
+                        } else {
+                            style.paddingLeft = props.inlineIndent * props.level
+                        }
                     }
 
                     menuAllProps.forEach(function(key) {
                         return delete props[key]
                     })
+                    delete props.direction
                     var icon = this.props.itemIcon
 
                     if (typeof this.props.itemIcon === 'function') {
@@ -411,6 +420,7 @@ export var MenuItem =
                         )
                     }
                     delete props.isSub
+
                     return React.createElement(
                         'li',
                         Object.assign({}, props, attrs, mouseEvent, {

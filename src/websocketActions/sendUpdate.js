@@ -3,6 +3,7 @@ import {
     resourceItemIndex,
     resourceDraftIndex,
 } from '../utils/resourceTypeIndex'
+import * as actions from '../store/actions'
 
 const diffpatcher = require('jsondiffpatch/dist/jsondiffpatch.umd.js').create({
     objectHash: obj => obj.id,
@@ -51,6 +52,9 @@ export const sendUpdate = (
                         })
                     )
                 }
+            } else {
+                actions.removeResourceFromUnsaved({ _id: id })
+                actions.removeResourceFromNewVersions({ _id: id })
             }
         }
     }

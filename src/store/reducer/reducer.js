@@ -188,7 +188,7 @@ export type initialStateType = {
     isRefreshing: boolean,
     userId: null | string,
     barSizes: { height: number, width: number, width2: number, width3: number },
-    currentTopTab: string,
+    // currentTopTab: string,
     findMode: null | string,
     hoverMode: string,
     fromFrame: boolean,
@@ -227,7 +227,7 @@ export const initialState: initialStateType = {
         width2: 200,
         width3: 200,
     },
-    currentTopTab: 'page',
+    // currentTopTab: 'page',
     findMode: null,
     hoverMode: '',
     fromFrame: false,
@@ -237,6 +237,8 @@ export const initialState: initialStateType = {
     currentUserInWebsiteSharing: '',
     // currentSiteBuilderMode: '',
     mD: {},
+    activeContainer: '',
+    clipboard: {},
 }
 
 const saveHoveredElementRect = (state, action) => {
@@ -298,6 +300,8 @@ const toggleFindMode = (state, action) => {
 const reducer = createReducer(initialState, {
     REMOVE_RESOURCE_FROM_UNSAVED: (state, action) =>
         resources.removeResourceFromUnsaved(state, action),
+    REMOVE_RESOURCE_FROM_NEW_VERSIONS: (state, action) =>
+        resources.removeResourceFromNewVersions(state, action),
     ACTION_START_IMAGE_UPLOAD: (state, action) =>
         images.actionStartImageUpload(state),
     ACTION_FAIL_IMAGE_UPLOAD: (state, action) =>
@@ -324,19 +328,19 @@ const reducer = createReducer(initialState, {
 
     ADD_RESOURCE_VERSION: (state, action) =>
         resources.addResourceVersion(state, action),
-    UNDO_RESOURCE_VERSION: (state, action) =>
-        resources.undoResourceVersion(state, action),
-    REDO_RESOURCE_VERSION: (state, action) =>
-        resources.redoResourceVersion(state, action),
+    // UNDO_RESOURCE_VERSION: (state, action) =>
+    //     resources.undoResourceVersion(state, action),
+    // REDO_RESOURCE_VERSION: (state, action) =>
+    //     resources.redoResourceVersion(state, action),
 
     AUTH_START: (state, action) => auth.authStart(state),
     AUTH_SUCCESS: (state, action) => auth.authSuccess(state, action),
     AUTH_FAIL: (state, action) => auth.authFail(state, action),
     AUTH_LOGOUT: (state, action) => auth.authLogout(state),
     CHANGE_BAR_SIZE: (state, action) => auth.changeBarSize(state, action),
-    SET_CURRENT_TOP_TAB: (state, action) => {
-        state.currentTopTab = action.currentTopTab
-    },
+    // SET_CURRENT_TOP_TAB: (state, action) => {
+    //     state.currentTopTab = action.currentTopTab
+    // },
 
     SAVE_HOVERED_ELEMENT_RECT: (state: Object, action: Object) =>
         saveHoveredElementRect(state, action),
@@ -445,6 +449,17 @@ const reducer = createReducer(initialState, {
         if (action.data) {
             state.resourcesObjects[action.data._id] = action.data
         }
+    },
+    SET_ACTIVE_CONTAINER: (state: Object, action: Object) => {
+        if (state.activeContainer !== action.container)
+            state.activeContainer = action.container
+    },
+    UNSET_ACTIVE_CONTAINER: (state: Object, action: Object) => {
+        if (state.activeContainer === action.container)
+            state.activeContainer = ''
+    },
+    SAVE_TO_CLIPBOARD: (state: Object, action: Object) => {
+        state.clipboard = action.data
     },
 })
 

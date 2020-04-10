@@ -22,11 +22,13 @@
 .Input,
 .Span {
     padding: 0px 4px;
+    font-size: 13px;
+    font-family: Arial;
 }
 
 .Span {
     opacity: 0;
-    padding: 0px 5px;
+    display: inline-block;
 }
 
 .ItemHighlighted {

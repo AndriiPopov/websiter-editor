@@ -1,7 +1,7 @@
-import { MotionType, AnimationType, TransitionNameType } from '../interface';
+import { MotionType, TransitionNameType, OpenAnimation } from '../interface';
 interface GetMotionProps {
     motion?: MotionType;
-    openAnimation?: AnimationType;
+    openAnimation?: OpenAnimation;
     openTransitionName?: TransitionNameType;
     prefixCls?: string;
 }

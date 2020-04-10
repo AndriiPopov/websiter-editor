@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import Menu, { SubMenu, MenuItem } from './MenuModule/index'
 import buildItemsForMenu from './methods/buildItemsForMenu'
 import { connect } from 'react-redux'
@@ -15,6 +15,17 @@ export type Props = {
 const activeKeys = []
 
 const MenuElement = (props: Props) => {
+    useEffect(() => {
+        if (!props.document.getElementById('__menu__popup__container__')) {
+            const container = props.document.createElement('div')
+            container.setAttribute('id', '__menu__popup__container__')
+            container.setAttribute(
+                'style',
+                'z-index:100000;position: absolute;'
+            )
+            props.document.body.appendChild(container)
+        }
+    })
     const builtItems = buildItemsForMenu(props)
 
     activeKeys.length = 0
@@ -53,7 +64,9 @@ const MenuElement = (props: Props) => {
         <Menu
             prefixCls={'systemclass_menu'}
             // $FlowFixMe
-            getPopupContainer={() => props.document.body}
+            getPopupContainer={() =>
+                props.document.getElementById('__menu__popup__container__')
+            }
             topMenuBlockClasses={
                 props.elementValues.properties.topMenuBlockClasses
             }
@@ -76,6 +89,7 @@ const MenuElement = (props: Props) => {
             selectable={false}
             triggerSubMenuAction={props.elementValues.properties.trigger}
             activeKeys={activeKeys}
+            overflowedIndicator={props.overflowIcon}
         >
             {menuElements}
         </Menu>

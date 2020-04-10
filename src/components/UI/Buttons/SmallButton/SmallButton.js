@@ -1,4 +1,4 @@
-import React  from 'react'
+import React from 'react'
 import ReactTooltip from 'react-tooltip'
 import { connect } from 'react-redux'
 
@@ -18,7 +18,6 @@ type Props = {
 }
 
 export const SmallButton = (props: Props) => {
-    const width = window.innerWidth
     const handleButtonClick = () => {
         if (props.buttonClicked) {
             if (props.requiredRights)
@@ -31,7 +30,9 @@ export const SmallButton = (props: Props) => {
     return (
         <>
             <button
-                data-tip={props.tooltip}
+                data-tip={
+                    !props.tooltipsOff && props.tooltip ? props.tooltip : ''
+                }
                 data-testid="MyButton"
                 className={`${
                     props.disabled ? classes.ButtonDisabled : classes.Button
@@ -64,54 +65,46 @@ export const SmallButton = (props: Props) => {
                     place="top"
                     className={classes.Tooltip}
                     delayShow={250}
-                    overridePosition={(
-                        position,
-                        currentEvent,
-                        currentTarget,
-                        node,
-                        place,
-                        desiredPlace,
-                        effect,
-                        offset
-                    ) => {
-                        let buttonRect, tooltipRect
-                        if (currentEvent.target) {
-                            buttonRect = currentTarget.getBoundingClientRect()
-                            tooltipRect = node.getBoundingClientRect()
-                        } else {
-                            buttonRect = currentEvent.getBoundingClientRect()
-                            tooltipRect = currentTarget.getBoundingClientRect()
-                        }
-
-                        let top, left
-                        if (
-                            buttonRect.top -
-                                (tooltipRect.bottom - tooltipRect.top) >=
-                            0
-                        ) {
-                            top =
-                                buttonRect.top -
-                                (tooltipRect.bottom - tooltipRect.top)
-                        } else {
-                            top = buttonRect.bottom
-                        }
-
-                        if (
-                            buttonRect.left +
-                                (tooltipRect.right - tooltipRect.left) <=
-                            width
-                        ) {
-                            left = buttonRect.left
-                        } else {
-                            left =
-                                width - (tooltipRect.right - tooltipRect.left)
-                        }
-                        return { left, top }
-                    }}
+                    overridePosition={tooltipOverwritePositions}
                 />
             ) : null}
         </>
     )
+}
+
+export const tooltipOverwritePositions = (
+    position,
+    currentEvent,
+    currentTarget,
+    node,
+    place,
+    desiredPlace,
+    effect,
+    offset
+) => {
+    const width = window.innerWidth
+    let buttonRect, tooltipRect
+    if (currentEvent.target) {
+        buttonRect = currentTarget.getBoundingClientRect()
+        tooltipRect = node.getBoundingClientRect()
+    } else {
+        buttonRect = currentEvent.getBoundingClientRect()
+        tooltipRect = currentTarget.getBoundingClientRect()
+    }
+
+    let top, left
+    if (buttonRect.top - (tooltipRect.bottom - tooltipRect.top) >= 0) {
+        top = buttonRect.top - (tooltipRect.bottom - tooltipRect.top)
+    } else {
+        top = buttonRect.bottom
+    }
+
+    if (buttonRect.left + (tooltipRect.right - tooltipRect.left) <= width) {
+        left = buttonRect.left
+    } else {
+        left = width - (tooltipRect.right - tooltipRect.left)
+    }
+    return { left, top }
 }
 
 const mapStateToProps = state => {

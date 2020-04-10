@@ -3,6 +3,10 @@ import { connect } from 'react-redux'
 import isEqual from 'lodash/isEqual'
 import omit from 'lodash/omit'
 import Menu from '../Menu/Menu'
+import 'slick-carousel/slick/slick.css'
+import 'slick-carousel/slick/slick-theme.css'
+import Slider from 'react-slick'
+
 import { getCurrentResourceValue } from '../../../utils/basic'
 
 import * as actions from '../../../store/actions/index'
@@ -17,6 +21,7 @@ import { emptyTags, headTags } from './methods/tagsLibrary'
 import parse from 'html-react-parser'
 import sanitize from 'sanitize-html'
 
+import { modulesPropertyNodes } from '../../../utils/modulesIndex'
 import type {
     elementType,
     resourceType,
@@ -50,17 +55,18 @@ const _BuilderElement = (props: Props) => {
 
     useEffect(() => {
         const box = elementRef.current
-        if (box) {
+        if (box && ownRefinedProperties) {
             if (Tag === 'script') {
                 //$FlowFixMe
                 const newScript = props.document.createElement(Tag)
                 newScript.textContent = box.textContent
-                setBoxProperties(newScript, refinedProperties, props)
+                setBoxProperties(newScript, ownRefinedProperties, props)
                 box.parentNode.appendChild(newScript)
+
                 // box.parentNode.removeChild(box)
             } else {
                 // saveHoveredElementRect(box, props)
-                setBoxProperties(box, refinedProperties, props)
+                setBoxProperties(box, ownRefinedProperties, props)
             }
         }
     })
@@ -69,14 +75,49 @@ const _BuilderElement = (props: Props) => {
         return null
     }
 
-    const refinedProperties = refineProperties(props)
+    const { refinedProperties, ownRefinedProperties } = refineProperties(props)
 
     const currentPath = [...props.element.path, props.element.id]
 
     let Tag = props.element.tag || 'div'
 
     Tag = Tag.length > 0 ? Tag : 'div'
-
+    const getModulePropertiesNodes = tag => {
+        const nodes = {}
+        const possibleNodes = modulesPropertyNodes[tag] || []
+        for (let el of possibleNodes) {
+            const nodeItem = props.structure.find(
+                item =>
+                    item.forModule === props.element.id &&
+                    item.childrenTo === el.id
+            )
+            let node
+            if (nodeItem) {
+                node = props.structure
+                    .filter(item =>
+                        isEqual(item.path, [...nodeItem.path, nodeItem.id])
+                    )
+                    .map(item => (
+                        <BuilderElement
+                            key={item.id}
+                            structure={props.structure.filter(itemInn =>
+                                itemInn.path.includes(item.id)
+                            )}
+                            element={item}
+                            document={props.document}
+                            pluginsPathArray={props.pluginsPathArray}
+                            sourcePlugin={props.sourcePlugin}
+                            routePlugin={props.routePlugin}
+                            parentPluginProps={props.parentPluginProps}
+                            childrenForPlugin={props.childrenForPlugin}
+                            currentResource={props.currentResource}
+                        />
+                    ))
+            }
+            if (node) nodes[el.id] = node
+        }
+        return nodes
+    }
     if (props.element.childrenTo) {
         return null
     } else if (props.element.isChildren) {
@@ -191,7 +232,65 @@ const _BuilderElement = (props: Props) => {
                         document={props.document}
                         parentPluginProps={props.parentPluginProps}
                         childrenForPlugin={props.childrenForPlugin}
+                        {...getModulePropertiesNodes(Tag)}
                     />
+                </div>
+            )
+        } else if (Tag === 'websiterGallery') {
+            let items = refinedProperties.items || []
+            if (refinedProperties.originalClass) {
+                items = items.map(item => ({
+                    ...item,
+                    originalClass: refinedProperties.originalClass,
+                }))
+            }
+            const settings = {
+                dots: true,
+                infinite: true,
+                speed: 500,
+                slidesToShow: 1,
+                slidesToScroll: 1,
+            }
+            return (
+                <div
+                    //$FlowFixMe
+                    ref={elementRef}
+                    onMouseEnter={e => hoverBox(e, props)}
+                    onMouseMove={e => hoverBox(e, props)}
+                    onMouseLeave={e => unhoverBox(e, props)}
+                    onMouseDown={e => chooseBox(e, props)}
+                >
+                    <Slider
+                        // element={props.element}
+                        // elementValues={props.elementValues}
+                        // document={props.document}
+                        // parentPluginProps={props.parentPluginProps}
+                        // childrenForPlugin={props.childrenForPlugin}
+                        {...settings}
+                        {...refinedProperties}
+                        {...getModulePropertiesNodes(Tag)}
+                    >
+                        <div>
+                            <div
+                                style={{
+                                    width: '100px',
+                                    height: '100px',
+                                    background: 'red',
+                                }}
+                            >
+                                sdfsdf
+                            </div>
+                        </div>
+                        {props.currentWebsiteObject && props.filesStructure
+                            ? items.map(item => {
+                                  return (
+                                      <div>
+                                          <img src={item.original} />
+                                      </div>
+                                  )
+                              })
+                            : null}
+                    </Slider>
                 </div>
             )
         } else if (Tag === 'richEditor') {
@@ -220,6 +319,8 @@ const _BuilderElement = (props: Props) => {
                 return props.isHead ? '' : null
             }
         } else {
+            Tag = Tag.replace(/[^a-z]/g, '')
+            Tag = Tag.trim()
             return emptyTags.includes(Tag) ? (
                 <Tag
                     ref={elementRef}
@@ -227,7 +328,7 @@ const _BuilderElement = (props: Props) => {
                     onMouseMove={e => hoverBox(e, props)}
                     onMouseLeave={e => unhoverBox(e, props)}
                     onMouseDown={e => chooseBox(e, props)}
-                    {...omit(props.isHead ? refinedProperties : {}, [
+                    {...omit(props.isHead ? ownRefinedProperties : {}, [
                         'class',
                         'for',
                     ])}
@@ -239,7 +340,7 @@ const _BuilderElement = (props: Props) => {
                     onMouseMove={e => hoverBox(e, props)}
                     onMouseLeave={e => unhoverBox(e, props)}
                     onMouseDown={e => chooseBox(e, props)}
-                    {...omit(props.isHead ? refinedProperties : {}, [
+                    {...omit(props.isHead ? ownRefinedProperties : {}, [
                         'class',
                         'for',
                     ])}
@@ -291,6 +392,8 @@ const mapStateToProps = (state, props) => {
         findMode: state.findMode,
         elementValues,
         pluginsStructure: state.mD.pluginsStructure,
+        currentWebsiteObject: state.mD.currentWebsiteObject,
+        filesStructure: state.mD.filesStructure,
     }
 }
 
@@ -331,30 +434,52 @@ export default BuilderElement
 const PluginElementRaw = props => {
     if (!props.plugin.hidden && props.pluginStructure) {
         //Pass children to plugin
-
-        return props.pluginStructure
-            .filter(itemInn =>
-                isEqual(itemInn.path, [
-                    props.pluginStructure.filter(
-                        item => item.path.length === 0
-                    )[0].id,
-                ])
-            )
-            .map(itemInn => (
-                <BuilderElement
-                    key={itemInn.id}
-                    structure={props.pluginStructure}
-                    element={itemInn}
-                    document={props.document}
-                    sourcePlugin={props.plugin.id}
-                    routePlugin={props.routePlugin}
-                    pluginsPathArray={props.pluginsPathArray}
-                    parentPluginProps={props.parentPluginProps}
-                    childrenForPlugin={props.childrenForPlugin}
-                    currentResource={props.currentResource}
-                    isHead={props.isHead}
-                />
-            ))
+        if (props.plugin.propagating) {
+            return Array.isArray(props.parentPluginProps.items)
+                ? props.parentPluginProps.items.map(item =>
+                      props.pluginStructure
+                          .filter(itemInn =>
+                              isEqual(itemInn.path, ['element_0'])
+                          )
+                          .map(itemInn => (
+                              <BuilderElement
+                                  key={itemInn.id}
+                                  structure={props.pluginStructure}
+                                  element={itemInn}
+                                  document={props.document}
+                                  sourcePlugin={props.plugin.id}
+                                  routePlugin={props.routePlugin}
+                                  pluginsPathArray={props.pluginsPathArray}
+                                  parentPluginProps={{
+                                      ...props.parentPluginProps,
+                                      ...item,
+                                  }}
+                                  childrenForPlugin={props.childrenForPlugin}
+                                  currentResource={props.currentResource}
+                                  isHead={props.isHead}
+                              />
+                          ))
+                  )
+                : null
+        } else {
+            return props.pluginStructure
+                .filter(itemInn => isEqual(itemInn.path, ['element_0']))
+                .map(itemInn => (
+                    <BuilderElement
+                        key={itemInn.id}
+                        structure={props.pluginStructure}
+                        element={itemInn}
+                        document={props.document}
+                        sourcePlugin={props.plugin.id}
+                        routePlugin={props.routePlugin}
+                        pluginsPathArray={props.pluginsPathArray}
+                        parentPluginProps={props.parentPluginProps}
+                        childrenForPlugin={props.childrenForPlugin}
+                        currentResource={props.currentResource}
+                        isHead={props.isHead}
+                    />
+                ))
+        }
     }
 
     return null

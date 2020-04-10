@@ -3,7 +3,7 @@
     outline: none;
     border: none;
     font-size: 12px;
-    display: block;
+    display: block !important;
     height: initial;
 }
 
@@ -18,5 +18,10 @@
 }
 
 .Inline {
+    display: inline-block !important;
+}
+
+.Svg {
+    margin-right: auto;
     display: inline-block;
 }

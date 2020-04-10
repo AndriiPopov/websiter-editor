@@ -1,7 +1,6 @@
 import React, { Component, useRef, useEffect } from 'react'
 import { connect } from 'react-redux'
 import isEqual from 'lodash/isEqual'
-import omit from 'lodash/omit'
 import cloneDeep from 'lodash/cloneDeep'
 
 import * as classes from './SiteBuilder.module.css'
@@ -53,47 +52,65 @@ class SiteBuilder extends Component<Props, State> {
     //     //saveRect(this.props)
     // }
     head = ''
+    currentScroll = 0
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.currentPageId !== this.props.currentPageId) {
+            this.currentScroll = 0
+        }
+        const iframeElement = document.getElementById('builderFrame')
+        if (iframeElement) {
+            if (!this.props.isRefreshing) {
+                setTimeout(() => {
+                    const iframeElement = document.getElementById(
+                        'builderFrame'
+                    )
+                    if (iframeElement) {
+                        iframeElement.contentWindow.document.documentElement.scrollTop = iframeElement.contentWindow.document.body.scrollTop = this.currentScroll
+                        iframeElement.contentWindow.scrollTo(
+                            this.currentScroll,
+                            this.currentScroll
+                        )
+                    }
+                }, 1)
+            }
+        }
+    }
 
     shouldComponentUpdate(nextProps) {
         return !this.props.sizeIsChanging && !nextProps.sizeIsChanging
     }
 
     componentWillReceiveProps(newProps: Props) {
+        if (!newProps.isRefreshing) {
+            const iframeElement = document.getElementById('builderFrame')
+            if (iframeElement) {
+                this.currentScroll =
+                    iframeElement.contentWindow.document.documentElement
+                        .scrollTop ||
+                    iframeElement.contentWindow.document.body.scrollTop
+            }
+        }
+
         if (newProps.pagesStructure) {
+            if (newProps.refreshedGlobalStructure) {
+                this.props.saveElementsStructureFromBuilder(
+                    ...newProps.refreshedGlobalStructure
+                )
+                return
+            }
+
             if (
                 newProps.currentPageDraftStructure &&
                 newProps.pageTemplateDraftStructure
             ) {
-                const newStructure = refreshPageStructure(
-                    newProps.currentPageDraftStructure,
-                    newProps.pageTemplateDraftStructure
-                )
-                if (
-                    !isEqual(
-                        newStructure.map(item =>
-                            omit(item, [
-                                'expanded',
-                                'children',
-                                'itemPath',
-                                'itemIndex',
-                            ])
-                        ),
-                        newProps.currentPageDraftStructure.map(item =>
-                            omit(item, [
-                                'expanded',
-                                'children',
-                                'itemPath',
-                                'itemIndex',
-                            ])
-                        )
-                    )
-                ) {
+                if (newProps.refreshedPageStructure) {
                     this.props.saveElementsStructureFromBuilder(
-                        'page',
-                        newStructure
+                        ...newProps.refreshedPageStructure
                     )
                     return
                 }
+
                 const newHead = newProps.pageTemplateDraftStructure
                     .filter(itemInn =>
                         isEqual(itemInn.path, ['element_01', 'element_0'])
@@ -129,6 +146,7 @@ class SiteBuilder extends Component<Props, State> {
             }
         }
     }
+    prod = process.env.NODE_ENV !== 'development'
 
     render() {
         let frame = null
@@ -144,12 +162,21 @@ class SiteBuilder extends Component<Props, State> {
 
             const bodyProps = cloneDeep(props.bodyValues.properties)
             const bodyStyle = props.bodyValues.style
-            if (bodyStyle) bodyProps.style = bodyStyle
+            if (typeof bodyStyle === 'string') bodyProps.style = bodyStyle
 
             const htmlProps = cloneDeep(props.htmlValues.properties)
             const htmlStyle = props.htmlValues.style
-            if (htmlStyle) htmlProps.style = htmlStyle
+            if (typeof htmlStyle === 'string') htmlProps.style = htmlStyle
+            // const iframeElement = document.getElementById('builderFrame')
 
+            // if (this.props.isRefreshing && iframeElement) {
+            //     this.setState({
+            //         currentScroll:
+            //             iframeElement.contentWindow.document.documentElement
+            //                 .scrollTop ||
+            //             iframeElement.contentWindow.document.body.scrollTop,
+            //     })
+            // }
             frame = this.props.isRefreshing ? (
                 <StopRefresh />
             ) : (
@@ -170,11 +197,20 @@ class SiteBuilder extends Component<Props, State> {
                             border: 'none',
                             margin: '0',
                             padding: '0',
+                            position: 'absolute',
                         }}
                         bodyProps={bodyProps}
                         htmlProps={htmlProps}
+                        base={`  <base href="http${
+                            this.prod ? 's' : ''
+                        }://live.websiter.dev${this.prod ? '' : ':5000'}/${
+                            this.props.currentWebsiteObject.domain
+                        }/" />  `}
                         initialContent={
-                            systemClassMenu + ' ' + this.state.headValue
+                            systemClassMenu +
+                            ' ' +
+                            '<link rel="stylesheet" type="text/css" charset="UTF-8" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css" /><link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css" />' +
+                            this.state.headValue
                             // +
                             // ' <script src="src/tinymce_5.1.5.zip"></script>'
                         }
@@ -230,7 +266,6 @@ class SiteBuilder extends Component<Props, State> {
 
 const mapStateToProps = state => {
     const refinedProperties = refinePropertiesFromCMS(state.mD)
-
     let bodyRawValues = {
         properties: {},
         style: '',
@@ -241,9 +276,9 @@ const mapStateToProps = state => {
         style: '',
     }
 
-    if (state.mD.currentTemplateDraft) {
-        bodyRawValues = state.mD.currentTemplateDraft.values.element_1
-        htmlRawValues = state.mD.currentTemplateDraft.values.element_01
+    if (state.mD.pageTemplateFSBDraft) {
+        bodyRawValues = state.mD.pageTemplateFSBDraft.values.element_1
+        htmlRawValues = state.mD.pageTemplateFSBDraft.values.element_01
     }
 
     const bodyValues = {
@@ -262,22 +297,55 @@ const mapStateToProps = state => {
         style: htmlRawValues.style,
     }
 
+    const currentPageDraftStructureGlobalSettings = state.mD
+        .globalSettingsPageDraft
+        ? state.mD.globalSettingsPageDraft.structure
+        : null
+    const pageTemplateDraftStructureGlobalSettings = state.mD
+        .globalSettingsTemplateDraft
+        ? state.mD.globalSettingsTemplateDraft.structure
+        : null
+
+    const currentPageDraftStructure = state.mD.currentPageFSBDraft
+        ? state.mD.currentPageFSBDraft.structure
+        : null
+    const pageTemplateDraftStructure = state.mD.pageTemplateFSBDraft
+        ? state.mD.pageTemplateFSBDraft.structure
+        : null
+
+    const refreshedPageStructure = refreshPageStructure(
+        state.mD,
+        state.mD.currentPageFSBDraft || null,
+        state.mD.pageTemplateFSBDraft || null,
+        false,
+        state.mD.pageTemplateFSBId
+    )
+    const refreshedGlobalStructure = refreshPageStructure(
+        state.mD,
+        state.mD.globalSettingsPageDraft || null,
+        state.mD.globalSettingsTemplateDraft || null,
+        true,
+        state.mD.globalSettingsTemplateId
+    )
+
     return {
+        currentPageId: state.mD.currentPageId,
         zoom: state.pageZoom,
         isRefreshing: state.isRefreshing,
         shouldRefresh: state.shouldRefresh,
         pagesStructure: state.mD.pagesStructure,
-        currentPageDraftStructure: state.mD.currentPageDraft
-            ? state.mD.currentPageDraft.structure
-            : null,
-        pageTemplateDraftStructure: state.mD.pageTemplateDraft
-            ? state.mD.pageTemplateDraft.structure
-            : null,
+        currentPageDraftStructure,
+        pageTemplateDraftStructure,
+        currentPageDraftStructureGlobalSettings,
+        pageTemplateDraftStructureGlobalSettings,
         refinedProperties,
         bodyValues,
         htmlValues,
-        pageTemplateId: state.mD.pageTemplateId,
+        pageTemplateId: state.mD.pageTemplateFSBId,
         sizeIsChanging: state.sizeIsChanging,
+        refreshedGlobalStructure,
+        refreshedPageStructure,
+        currentWebsiteObject: state.mD.currentWebsiteObject,
     }
 }
 
@@ -291,8 +359,14 @@ const mapDispatchToProps = dispatch => {
             dispatch(actions.markShouldRefreshing(value)),
         saveElementsStructure: (type, structure) =>
             dispatch(actions.saveElementsStructure(type, structure)),
-        saveElementsStructureFromBuilder: (type, structure) =>
-            dispatch(actions.saveElementsStructureFromBuilder(type, structure)),
+        saveElementsStructureFromBuilder: (type, structure, globalSettings) =>
+            dispatch(
+                actions.saveElementsStructureFromBuilder(
+                    type,
+                    structure,
+                    globalSettings
+                )
+            ),
     }
 }
 

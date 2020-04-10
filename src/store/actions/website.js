@@ -22,10 +22,10 @@ export const setSizeIsChanging = (isChanging: boolean) => ({
     isChanging,
 })
 
-export const setCurrentTopTab = (currentTopTab: string) => ({
-    type: 'SET_CURRENT_TOP_TAB',
-    currentTopTab,
-})
+// export const setCurrentTopTab = (currentTopTab: string) => ({
+//     type: 'SET_CURRENT_TOP_TAB',
+//     currentTopTab,
+// })
 
 export const saveMainData = mD => ({
     type: 'SAVE_MAIN_DATA',

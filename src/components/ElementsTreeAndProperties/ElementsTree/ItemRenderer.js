@@ -23,6 +23,7 @@ import {
     current as currentIndex,
     resourceDraftIndex,
 } from '../../../utils/resourceTypeIndex'
+import { SmallButton } from '../../UI/Buttons/SmallButton/SmallButton'
 
 type Props = {
     changeBoxProperty: typeof actions.changeBoxProperty,
@@ -81,55 +82,15 @@ const ItemRenderer = (props: Props) => {
         isSearchMatch = _this$props.isSearchMatch,
         isSearchFocus = _this$props.isSearchFocus,
         didDrop = _this$props.didDrop
-    // otherProps = _objectWithoutProperties(_this$props, [
-    //     'scaffoldBlockPxWidth',
-    //     'toggleChildrenVisibility',
-    //     'connectDragPreview',
-    //     'connectDragSource',
-    //     'isDragging',
-    //     'canDrop',
-    //     'canDrag',
-    //     'node',
-    //     'title',
-    //     'subtitle',
-    //     'draggedNode',
-    //     'path',
-    //     'treeIndex',
-    //     'isSearchMatch',
-    //     'isSearchFocus',
-    //     'buttons',
-    //     'className',
-    //     'style',
-    //     'didDrop',
-    //     'treeId',
-    //     'isOver',
-    //     'parentNode',
-    //     'chooseBox',
-    //     'hoverBox',
-    //     'unhoverBox',
-    //     'changeBoxProperty',
-    //     'resourceDraft',
-    //     'currentResource',
-    //     'pluginsStructure',
-    //     'properties',
-    //     'mode',
-    //     'itemPath',
-    //     'text',
-    //     'isChildren',
-    //     'isElementFromCMSVariable',
-    //     'forChildren',
-    //     'textContent',
-    //     'rowDirection',
-    //     'tryWebsiter',
-    //     'userId',
-    //     'loadedWebsite',
-    //     'resourcesObjects',
-    // ])
 
     var handle
 
     if (canDrag) {
-        handle = connectDragSource(<div className={classes.rst__moveHandle} />)
+        handle = connectDragSource(
+            <div className={classes.rst__moveHandle}>
+                <i className="material-icons">more_vert</i>
+            </div>
+        )
     }
 
     var isLandingPadActive = !didDrop && isDragging
@@ -153,12 +114,8 @@ const ItemRenderer = (props: Props) => {
         isChildren,
         isElementFromCMSVariable,
         childrenTo,
+        isPropagatingItem,
     } = props.currentNode
-    if (
-        id ===
-        'element_21_forPlugin_5e552539a8244072b62fceaf_childrenTo_element_3'
-    )
-        console.log(tag)
 
     const rowClasses = [classes.rst__row]
     if (isLandingPadActive) rowClasses.push(classes.rst__rowLandingPad)
@@ -169,7 +126,9 @@ const ItemRenderer = (props: Props) => {
     if (!isLandingPadActive)
         rowClasses.push(
             isCurrentBox
-                ? [classes.Chosen]
+                ? props.isFocused
+                    ? [classes.Chosen]
+                    : [classes.ChosenBlur]
                 : id === props.hoveredElementId
                 ? [classes.Hovered]
                 : null
@@ -282,7 +241,8 @@ const ItemRenderer = (props: Props) => {
                                             itemPath.length > 0) ||
                                         ((mode === 'template' &&
                                             itemPath.length > 1) ||
-                                            itemPath[0] === 'element_02') ? (
+                                            itemPath[0] === 'element_02') ||
+                                        isPropagatingItem ? (
                                             props.checkUserRights(
                                                 mode === 'page'
                                                     ? ['content']
@@ -302,6 +262,8 @@ const ItemRenderer = (props: Props) => {
                                                     )}
                                                     blur={handleRename}
                                                     withState
+                                                    maxLength="40"
+                                                    maxWidth="220px"
                                                 />
                                             ) : (
                                                 tag
@@ -314,18 +276,28 @@ const ItemRenderer = (props: Props) => {
                                                 <>
                                                     {currentNodeValues
                                                         .properties.id
-                                                        ? ` id="${
-                                                              currentNodeValues
+                                                        ? ` id="${currentNodeValues.properties.id.substr(
+                                                              0,
+                                                              25
+                                                          ) +
+                                                              (currentNodeValues
                                                                   .properties.id
-                                                          }"`
+                                                                  .length > 25
+                                                                  ? '...'
+                                                                  : '')}"`
                                                         : ''}
                                                     {currentNodeValues
                                                         .properties.class
-                                                        ? ` class="${
-                                                              currentNodeValues
+                                                        ? ` class="${currentNodeValues.properties.class.substr(
+                                                              0,
+                                                              25
+                                                          ) +
+                                                              (currentNodeValues
                                                                   .properties
                                                                   .class
-                                                          }"`
+                                                                  .length > 25
+                                                                  ? '...'
+                                                                  : '')}"`
                                                         : ''}
                                                 </>
                                             ) : (
@@ -343,6 +315,51 @@ const ItemRenderer = (props: Props) => {
                                     </>
                                 )}
                             </div>
+                            {mode === 'page' ? (
+                                <div>
+                                    {(currentNodeValues.CMSVariableType &&
+                                        currentNodeValues.CMSVariableType.indexOf(
+                                            'propagating_'
+                                        ) === 0) ||
+                                    currentNodeValues.CMSVariableType ===
+                                        'array' ? (
+                                        <SmallButton
+                                            inline
+                                            buttonClicked={() =>
+                                                props.addBox(mode, 'inside')
+                                            }
+                                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M21.6,13.4H13.4v8.2H10.6V13.4H2.4V10.6h8.2V2.4h2.8v8.2h8.2Zm-2.4,2.8h-.1l-.9.9,1.5,1.4H16.2V15.1H15.1v4.4h4.6l-1.5,1.4.9.9,2.6-2.7h.1Z"></path></svg>'
+                                            // tooltip="Add a new item inside the chosen element (Ctrl + A)"
+                                            // requiredRights={['content']}
+                                        />
+                                    ) : null}
+                                    {isPropagatingItem ? (
+                                        <>
+                                            {itemPath.length > 0 &&
+                                            itemPath[0] !== 'trash' ? (
+                                                <SmallButton
+                                                    inline
+                                                    buttonClicked={() =>
+                                                        props.addBox(mode)
+                                                    }
+                                                    icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>'
+                                                    // tooltip="Add a new item below (Ctrl + A)"
+                                                    // requiredRights={['content']}
+                                                />
+                                            ) : null}
+                                            <SmallButton
+                                                inline
+                                                buttonClicked={() =>
+                                                    props.deleteBox(mode, true)
+                                                }
+                                                icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>'
+                                                // tooltip="Delete item (Delete)"
+                                                // requiredRights={['content']}
+                                            />
+                                        </>
+                                    ) : null}
+                                </div>
+                            ) : null}
                         </div>
                     </div>
                 )}
@@ -362,6 +379,7 @@ const mapStateToProps = (state, props) => {
         isCurrentBox:
             state.mD[resourceDraftIndex[props.mode]].currentBox ===
             currentNode.id,
+        isFocused: state.activeContainer === props.mode + 'elements',
         currentNode,
         currentNodeValues:
             state.mD[resourceDraftIndex[props.mode]].values[currentNode.id],
@@ -393,6 +411,9 @@ const mapDispatchToProps = (dispatch, props) => {
         hoverBox: (id, mode) => dispatch(actions.hoverBox(id, mode)),
         unhoverBox: () => dispatch(actions.unhoverBox()),
         checkUserRights: rights => dispatch(checkUserRights(rights)),
+        addBox: (mode, type) => dispatch(actions.addBox(mode, type)),
+        deleteBox: (mode, withChildren) =>
+            dispatch(actions.deleteBox(mode, withChildren)),
     }
 }
 

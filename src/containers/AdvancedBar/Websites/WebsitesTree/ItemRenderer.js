@@ -72,6 +72,8 @@ const ItemRenderer = (props: Props) => {
                                             )
                                     }}
                                     withState
+                                    maxLength="30"
+                                    maxWidth="220px"
                                 />
                             </div>
                         </div>

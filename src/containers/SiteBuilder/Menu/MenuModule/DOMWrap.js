@@ -1,10 +1,10 @@
-/* eslint-disable */
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
+import React from 'react'
+import ReactDOM from 'react-dom'
 import ResizeObserver from 'resize-observer-polyfill'
 import SubMenu from './SubMenu'
-import { getWidth, setStyle, menuAllProps } from './util'
+import { getWidth, setStyle, menuAllProps, getPosition } from './util'
 function _typeof(obj) {
+    '@babel/helpers - typeof'
     if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
         _typeof = function _typeof(obj) {
             return typeof obj
@@ -66,7 +66,7 @@ function _objectSpread(target) {
     for (var i = 1; i < arguments.length; i++) {
         var source = arguments[i] != null ? arguments[i] : {}
         if (i % 2) {
-            ownKeys(source, true).forEach(function(key) {
+            ownKeys(Object(source), true).forEach(function(key) {
                 _defineProperty(target, key, source[key])
             })
         } else if (Object.getOwnPropertyDescriptors) {
@@ -75,7 +75,7 @@ function _objectSpread(target) {
                 Object.getOwnPropertyDescriptors(source)
             )
         } else {
-            ownKeys(source).forEach(function(key) {
+            ownKeys(Object(source)).forEach(function(key) {
                 Object.defineProperty(
                     target,
                     key,
@@ -200,18 +200,8 @@ function _setPrototypeOf(o, p) {
     return _setPrototypeOf(o, p)
 }
 
-var canUseDOM = !!(
-    typeof window !== 'undefined' &&
-    window.document &&
-    window.document.createElement
-)
 var MENUITEM_OVERFLOWED_CLASSNAME = 'menuitem-overflowed'
-var FLOAT_PRECISION_ADJUST = 0.5 // Fix ssr
-
-if (canUseDOM) {
-    // eslint-disable-next-line global-require
-    require('mutationobserver-shim')
-}
+var FLOAT_PRECISION_ADJUST = 0.5
 
 var DOMWrap =
     /*#__PURE__*/
@@ -233,7 +223,7 @@ var DOMWrap =
             _this.originalTotalWidth = 0 // copy of overflowed items
 
             _this.overflowedItems = [] // cache item of the original items (so we can track the size and order)
-
+            _this.ulSizes = {}
             _this.menuItemSizes = []
             _this.state = {
                 lastVisibleIndex: undefined,
@@ -258,6 +248,25 @@ var DOMWrap =
                 })
             }
 
+            _this.getMenuItemNodesOver = function() {
+                var prefixCls = _this.props.prefixCls
+                var ul = ReactDOM.findDOMNode(_assertThisInitialized(_this))
+
+                if (!ul) {
+                    return []
+                } // filter out all overflowed indicator placeholder
+
+                return [].slice.call(ul.children).filter(function(node) {
+                    return (
+                        node.className
+                            .split(' ')
+                            .indexOf(
+                                ''.concat(prefixCls, '-overflowed-submenu')
+                            ) >= 0
+                    )
+                })
+            }
+
             _this.getOverflowedSubMenuItem = function(
                 keyPrefix,
                 overflowedItems,
@@ -270,7 +279,6 @@ var DOMWrap =
                     prefixCls = _this$props.prefixCls,
                     theme = _this$props.theme
 
-                return null
                 if (level !== 1 || mode !== 'horizontal') {
                     return null
                 } // put all the overflowed item inside a submenu
@@ -343,7 +351,6 @@ var DOMWrap =
             } // memorize rendered menuSize
 
             _this.setChildrenWidthAndResize = function() {
-                return
                 if (_this.props.mode !== 'horizontal') {
                     return
                 }
@@ -359,7 +366,13 @@ var DOMWrap =
                 if (!ulChildrenNodes || ulChildrenNodes.length === 0) {
                     return
                 }
-
+                var menuItemNodesOver = _this.getMenuItemNodesOver()
+                var currentDisplayState = menuItemNodesOver.map(
+                    item => item.style.display
+                )
+                menuItemNodesOver.forEach(item => {
+                    setStyle(item, 'display', 'none')
+                })
                 var lastOverflowedIndicatorPlaceholder =
                     ul.children[ulChildrenNodes.length - 1] // need last overflowed indicator for calculating length;
 
@@ -371,7 +384,6 @@ var DOMWrap =
 
                 var menuItemNodes = _this.getMenuItemNodes() // reset display attribute for all hidden elements caused by overflow to calculate updated width
                 // and then reset to original state after width calculation
-
                 var overflowedItems = menuItemNodes.filter(function(c) {
                     return (
                         c.className
@@ -383,21 +395,28 @@ var DOMWrap =
                     setStyle(c, 'display', 'inline-block')
                 })
                 _this.menuItemSizes = menuItemNodes.map(function(c) {
-                    return getWidth(c)
+                    return getPosition(c)
                 })
+                _this.ulSizes = getPosition(ul)
+
                 overflowedItems.forEach(function(c) {
                     setStyle(c, 'display', 'none')
                 })
+                menuItemNodesOver.forEach(
+                    (item, index) =>
+                        (item.style.display = currentDisplayState[index])
+                )
+                ul.children[ul.children.length - 1].style.display =
+                    'inline-block'
                 _this.overflowedIndicatorWidth = getWidth(
                     ul.children[ul.children.length - 1]
                 )
-                _this.originalTotalWidth = _this.menuItemSizes.reduce(function(
-                    acc,
-                    cur
-                ) {
-                    return acc + cur
-                },
-                0)
+
+                if (_this.menuItemSizes.length > 0) {
+                    _this.originalTotalWidth =
+                        _this.menuItemSizes[_this.menuItemSizes.length - 1]
+                            .right - _this.ulSizes.left
+                }
 
                 _this.handleResize() // prevent the overflowed indicator from taking space;
 
@@ -405,8 +424,6 @@ var DOMWrap =
             }
 
             _this.handleResize = function() {
-                /////// edit !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                return
                 if (_this.props.mode !== 'horizontal') {
                     return
                 }
@@ -417,25 +434,22 @@ var DOMWrap =
                     return
                 }
 
-                var width = getWidth(ul)
+                var width = _this.ulSizes.right - _this.ulSizes.left
                 _this.overflowedItems = []
-                var currentSumWidth = 0 // index for last visible child in horizontal mode
 
                 var lastVisibleIndex // float number comparison could be problematic
                 // e.g. 0.1 + 0.2 > 0.3 =====> true
                 // thus using FLOAT_PRECISION_ADJUST as buffer to help the situation
-
                 if (_this.originalTotalWidth > width + FLOAT_PRECISION_ADJUST) {
                     lastVisibleIndex = -1
-
-                    _this.menuItemSizes.forEach(function(liWidth) {
-                        currentSumWidth += liWidth
-
-                        if (
-                            currentSumWidth + _this.overflowedIndicatorWidth <=
-                            width
-                        ) {
-                            lastVisibleIndex += 1
+                    _this.menuItemSizes.forEach(function(liWidth, index) {
+                        if (index > 0) {
+                            if (
+                                liWidth.left + _this.overflowedIndicatorWidth <=
+                                _this.ulSizes.right
+                            ) {
+                                lastVisibleIndex += 1
+                            }
                         }
                     })
                 }
@@ -509,7 +523,7 @@ var DOMWrap =
                     }
 
                     if (this.mutationObserver) {
-                        this.resizeObserver.disconnect()
+                        this.mutationObserver.disconnect()
                     }
                 },
             },
@@ -527,48 +541,79 @@ var DOMWrap =
                     ) {
                         var item = childNode
 
-                        // if (_this3.props.mode === 'horizontal') {
-                        //   var overflowed = _this3.getOverflowedSubMenuItem(childNode.props.eventKey, []);
+                        if (_this3.props.mode === 'horizontal') {
+                            var overflowed = _this3.getOverflowedSubMenuItem(
+                                childNode.props.eventKey,
+                                []
+                            )
 
-                        //   if (lastVisibleIndex !== undefined && _this3.props.className.indexOf("".concat(_this3.props.prefixCls, "-root")) !== -1) {
-                        //     if (index > lastVisibleIndex) {
-                        //       item = React.cloneElement(childNode, // 这里修改 eventKey 是为了防止隐藏状态下还会触发 openkeys 事件
-                        //       {
-                        //         style: {
-                        //           display: 'none'
-                        //         },
-                        //         eventKey: "".concat(childNode.props.eventKey, "-hidden"),
+                            if (
+                                lastVisibleIndex !== undefined &&
+                                _this3.props.className.indexOf(
+                                    ''.concat(_this3.props.prefixCls, '-root')
+                                ) !== -1
+                            ) {
+                                if (index > lastVisibleIndex) {
+                                    item = React.cloneElement(
+                                        childNode, // 这里修改 eventKey 是为了防止隐藏状态下还会触发 openkeys 事件
+                                        {
+                                            style: {
+                                                display: 'none',
+                                            },
+                                            eventKey: ''.concat(
+                                                childNode.props.eventKey,
+                                                '-hidden'
+                                            ),
 
-                        //         /**
-                        //          * Legacy code. Here `className` never used:
-                        //          * https://github.com/react-component/menu/commit/4cd6b49fce9d116726f4ea00dda85325d6f26500#diff-e2fa48f75c2dd2318295cde428556a76R240
-                        //          */
-                        //         className: "".concat(MENUITEM_OVERFLOWED_CLASSNAME)
-                        //       });
-                        //     }
+                                            /**
+                                             * Legacy code. Here `className` never used:
+                                             * https://github.com/react-component/menu/commit/4cd6b49fce9d116726f4ea00dda85325d6f26500#diff-e2fa48f75c2dd2318295cde428556a76R240
+                                             */
+                                            className: ''.concat(
+                                                MENUITEM_OVERFLOWED_CLASSNAME
+                                            ),
+                                        }
+                                    )
+                                }
 
-                        //     if (index === lastVisibleIndex + 1) {
-                        //       _this3.overflowedItems = children.slice(lastVisibleIndex + 1).map(function (c) {
-                        //         return React.cloneElement(c, // children[index].key will become '.$key' in clone by default,
-                        //         // we have to overwrite with the correct key explicitly
-                        //         {
-                        //           key: c.props.eventKey,
-                        //           mode: 'vertical-left'
-                        //         });
-                        //       });
-                        //       overflowed = _this3.getOverflowedSubMenuItem(childNode.props.eventKey, _this3.overflowedItems);
-                        //     }
-                        //   }
+                                if (index === lastVisibleIndex + 1) {
+                                    _this3.overflowedItems = children
+                                        .slice(lastVisibleIndex + 1)
+                                        .map(function(c) {
+                                            return React.cloneElement(
+                                                c, // children[index].key will become '.$key' in clone by default,
+                                                // we have to overwrite with the correct key explicitly
+                                                {
+                                                    key: c.props.eventKey,
+                                                    mode: 'vertical-left',
+                                                }
+                                            )
+                                        })
+                                    overflowed = _this3.getOverflowedSubMenuItem(
+                                        childNode.props.eventKey,
+                                        _this3.overflowedItems
+                                    )
+                                }
+                            }
 
-                        //   var ret = [].concat(_toConsumableArray(acc), [overflowed, item]);
+                            var ret = [].concat(_toConsumableArray(acc), [
+                                overflowed,
+                                item,
+                            ])
 
-                        //   if (index === children.length - 1) {
-                        //     // need a placeholder for calculating overflowed indicator width
-                        //     ret.push(_this3.getOverflowedSubMenuItem(childNode.props.eventKey, [], true));
-                        //   }
+                            if (index === children.length - 1) {
+                                // need a placeholder for calculating overflowed indicator width
+                                ret.push(
+                                    _this3.getOverflowedSubMenuItem(
+                                        childNode.props.eventKey,
+                                        [],
+                                        true
+                                    )
+                                )
+                            }
 
-                        //   return ret;
-                        // }
+                            return ret
+                        }
 
                         return [].concat(_toConsumableArray(acc), [item])
                     },

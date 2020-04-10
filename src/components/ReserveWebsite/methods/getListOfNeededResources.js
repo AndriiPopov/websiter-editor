@@ -105,6 +105,24 @@ export default props => {
                         mD.resourcesObjects
                     )
                 }
+                if (mD.globalSettingsPageId) {
+                    addConnectedResources(
+                        mD.globalSettingsPageDraft,
+                        mD.globalSettingsPageId,
+                        newRequestedResourcesList,
+                        mD.currentWebsiteObject,
+                        mD.resourcesObjects
+                    )
+                }
+                if (mD.globalSettingsTemplateId) {
+                    addConnectedResources(
+                        mD.globalSettingsTemplateDraft,
+                        mD.globalSettingsTemplateId,
+                        newRequestedResourcesList,
+                        mD.currentWebsiteObject,
+                        mD.resourcesObjects
+                    )
+                }
             }
         }
     }

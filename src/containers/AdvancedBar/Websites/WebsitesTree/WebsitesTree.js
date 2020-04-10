@@ -9,6 +9,7 @@ import SmallButton from '../../../../components/UI/Buttons/SmallButton/SmallButt
 import ItemRenderer from './ItemRenderer'
 import * as wsActions from '../../../../websocketActions'
 import isEqual from 'lodash/isEqual'
+import OverlayOnSizeIsChanging from '../../../../components/UI/OverlayOnSizeIsChanging/OverlayOnSizeIsChanging'
 
 type Props = {
     notVirtual?: boolean,
@@ -63,7 +64,13 @@ const WebsitesTree = (props: Props) => (
                 }
                 scaffoldBlockPxWidth={22}
                 rowHeight={20}
+                style={{
+                    flex: '1 1',
+                    height: 'auto !important',
+                    overflow: 'auto',
+                }}
             />
+            <OverlayOnSizeIsChanging />
         </div>
     </>
 )

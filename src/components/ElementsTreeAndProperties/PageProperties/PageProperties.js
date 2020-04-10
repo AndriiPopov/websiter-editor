@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 // $FlowFixMe
 import 'react-tabs/style/react-tabs.css'
@@ -9,8 +9,14 @@ import MenuItems from '../Properties/MenuItems/MenuItems'
 import Editor from '../../Editor/Editor'
 import HTMLEditor from '../../HTMLEditor/HTMLEditor'
 import { resourceDraftIndex } from '../../../utils/resourceTypeIndex'
+import { SketchPicker, CirclePicker } from 'react-color'
+
+import { getCurrentResourceValue } from '../../../utils/basic'
+import checkUserRights from '../../../utils/checkUserRights'
+import Select from '../../UI/Select/Select'
 
 import type { initialStateType } from '../../../store/reducer/reducer'
+import FileItems from '../Properties/FileItems/FileItems'
 
 type Props = {
     changeProperty: (key: string | {}, value: string) => ?{},
@@ -22,6 +28,7 @@ type Props = {
 }
 
 const Properties = (props: Props) => {
+    const rangeInput = useRef(null)
     const tabClass = ['react-tabs__tab', classes.reactTabsTab].join(' ')
     const pannelClass = [
         'react-tabs__tab-panel--selected',
@@ -56,7 +63,8 @@ const Properties = (props: Props) => {
                         mode={props.mode}
                         attrName={'menuItems'}
                     />
-                ) : (
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                  'text' ? (
                     <Editor
                         currentElement={props.currentBox}
                         elementValue={props.elementValues.value}
@@ -71,6 +79,126 @@ const Properties = (props: Props) => {
                         requiredRights={['content']}
                         currentResource={props.currentResource}
                     />
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                      'number' ||
+                  props.templateCMSElementValues.CMSVariableType === 'range' ? (
+                    <>
+                        <input
+                            type={
+                                props.templateCMSElementValues.CMSVariableType
+                            }
+                            defaultValue={props.elementValues.value}
+                            style={{ margin: '5px' }}
+                            onChange={e => {
+                                if (!props.checkUserRights(['content'])) return
+                                if (rangeInput.current)
+                                    rangeInput.current.value = e.target.value
+                                props.changeProperty('value', e.target.value)
+                            }}
+                            max={
+                                props.templateCMSElementValues.properties
+                                    ? props.templateCMSElementValues.properties
+                                          .max
+                                    : undefined
+                            }
+                            min={
+                                props.templateCMSElementValues.properties
+                                    ? props.templateCMSElementValues.properties
+                                          .min
+                                    : undefined
+                            }
+                            step={
+                                props.templateCMSElementValues.properties
+                                    ? props.templateCMSElementValues.properties
+                                          .step
+                                    : undefined
+                            }
+                        />
+                        {props.templateCMSElementValues.CMSVariableType ===
+                        'range' ? (
+                            <input
+                                type="number"
+                                ref={rangeInput}
+                                defaultValue={props.elementValues.value}
+                                readOnly
+                            />
+                        ) : null}
+                    </>
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                  'select' ? (
+                    <Select
+                        options={
+                            props.templateCMSElementValues.properties
+                                ? props.templateCMSElementValues.properties
+                                      .options || []
+                                : []
+                        }
+                        default={(props.templateCMSElementValues.properties
+                            ? props.templateCMSElementValues.properties
+                                  .options || []
+                            : []
+                        ).findIndex(
+                            el =>
+                                el.value.toString() ===
+                                props.elementValues.value.toString()
+                        )}
+                        onChange={option => {
+                            if (!props.checkUserRights(['developer'])) return
+                            props.changeProperty('value', option.value)
+                        }}
+                    />
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                  'colorSelect' ? (
+                    <div style={{ padding: '10px' }}>
+                        <CirclePicker
+                            colors={
+                                props.templateCMSElementValues.properties
+                                    ? props.templateCMSElementValues.properties
+                                          .colors
+                                    : undefined
+                            }
+                            color={props.elementValues.color}
+                            onChangeComplete={value => {
+                                if (!props.checkUserRights(['content'])) return
+                                props.changeProperty('color', value.rgb)
+                            }}
+                        />
+                    </div>
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                  'color' ? (
+                    <SketchPicker
+                        presetColors={
+                            props.templateCMSElementValues.properties
+                                ? props.templateCMSElementValues.properties
+                                      .colors
+                                : undefined
+                        }
+                        color={props.elementValues.color}
+                        onChangeComplete={value => {
+                            if (!props.checkUserRights(['content'])) return
+                            props.changeProperty('color', value.rgb)
+                        }}
+                        disableAlpha={
+                            props.templateCMSElementValues.properties
+                                ? props.templateCMSElementValues.properties
+                                      .disableAlpha
+                                : undefined
+                        }
+                    />
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                  'file' ? (
+                    <FileItems
+                        elementValues={props.elementValues}
+                        element={props.element}
+                        changeProperty={props.changeProperty}
+                        mode={props.mode}
+                        attrName="fileUrl"
+                        attrThumb="fileThumbnail"
+                    />
+                ) : (
+                    <div>
+                        Value for propagating plugin variable cannot be set.
+                    </div>
                 )}
             </TabPanel>
             <TabPanel>
@@ -109,7 +237,8 @@ const Properties = (props: Props) => {
                         mode={props.mode}
                         attrName={'defaultMenuItems'}
                     />
-                ) : (
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                  'text' ? (
                     <Editor
                         currentElement={props.currentBox}
                         elementValue={
@@ -126,6 +255,88 @@ const Properties = (props: Props) => {
                         requiredRights={['content']}
                         currentResource={props.currentResource}
                     />
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                      'number' ||
+                  props.templateCMSElementValues.CMSVariableType === 'range' ? (
+                    <>
+                        <input
+                            type={
+                                props.templateCMSElementValues.CMSVariableType
+                            }
+                            style={{ margin: '5px' }}
+                            defaultValue={
+                                props.templateCMSElementValues
+                                    .CMSVariableDefaultValue
+                            }
+                            readOnly
+                        />
+                        {props.templateCMSElementValues.CMSVariableType ===
+                        'range' ? (
+                            <input
+                                type="number"
+                                defaultValue={
+                                    props.templateCMSElementValues
+                                        .CMSVariableDefaultValue
+                                }
+                                readOnly
+                            />
+                        ) : null}
+                    </>
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                  'select' ? (
+                    <Select
+                        options={
+                            props.templateCMSElementValues.properties
+                                ? props.templateCMSElementValues.properties
+                                      .options || []
+                                : []
+                        }
+                        default={(props.templateCMSElementValues.properties
+                            ? props.templateCMSElementValues.properties
+                                  .options || []
+                            : []
+                        ).findIndex(
+                            el =>
+                                el.value.toString() ===
+                                props.templateCMSElementValues.CMSVariableDefaultValue.toString()
+                        )}
+                        onChange={option => {}}
+                    />
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                  'colorSelect' ? (
+                    <div style={{ padding: '10px' }}>
+                        <CirclePicker
+                            colors={
+                                props.templateCMSElementValues.properties
+                                    ? props.templateCMSElementValues.properties
+                                          .colors
+                                    : undefined
+                            }
+                            color={props.templateCMSElementValues.defaultColor}
+                        />
+                    </div>
+                ) : props.templateCMSElementValues.CMSVariableType ===
+                  'color' ? (
+                    <SketchPicker
+                        presetColors={
+                            props.templateCMSElementValues.properties
+                                ? props.templateCMSElementValues.properties
+                                      .colors
+                                : undefined
+                        }
+                        color={props.templateCMSElementValues.defaultColor}
+                        disableAlpha={
+                            props.templateCMSElementValues.properties
+                                ? props.templateCMSElementValues.properties
+                                      .disableAlpha
+                                : undefined
+                        }
+                    />
+                ) : (
+                    <div>
+                        There is no default value for propagating plugin
+                        variable.
+                    </div>
                 )}
             </TabPanel>
         </Tabs>
@@ -144,8 +355,19 @@ const mapStateToProps = (state, props) => {
             )
             if (element && state.mD.pageTemplateDraft) {
                 elementValues = resourceDraft.values[element.id]
-                templateCMSElementValues =
-                    state.mD.pageTemplateDraft.values[element.id]
+                if (element.forPropagatingPlugin) {
+                    const { pluginId, variable } = element.forPropagatingPlugin
+                    const templateDraft = getCurrentResourceValue(
+                        pluginId,
+                        state.mD.resourcesObjects
+                    )
+                    if (templateDraft)
+                        templateCMSElementValues =
+                            templateDraft.values[variable]
+                } else {
+                    templateCMSElementValues =
+                        state.mD.pageTemplateDraft.values[element.id]
+                }
             }
         }
     }
@@ -158,5 +380,12 @@ const mapStateToProps = (state, props) => {
         currentResource: state.mD.currentPageId,
     }
 }
-
-export default connect(mapStateToProps)(Properties)
+const mapDispatchToProps = dispatch => {
+    return {
+        checkUserRights: rights => dispatch(checkUserRights(rights)),
+    }
+}
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(Properties)

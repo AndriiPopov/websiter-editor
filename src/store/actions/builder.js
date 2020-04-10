@@ -5,6 +5,7 @@ import omit from 'lodash/omit'
 import isObject from 'lodash/isObject'
 import { current, resourceDraftIndex } from '../../utils/resourceTypeIndex'
 
+import getBoxType from '../../utils/getBoxType'
 import type { resourceType } from '../../store/reducer/reducer'
 var htmlparser = require('htmlparser2')
 
@@ -27,6 +28,8 @@ const findRouteElements = (
                 result.push(index)
         })
     }
+    const trashIndex = draft.structure.findIndex(item => item.id === 'trash')
+    if (trashIndex >= 0) result.push(trashIndex)
     return result
 }
 
@@ -66,50 +69,13 @@ export const saveElementsStructure = (
 
 export const saveElementsStructureFromBuilder = (
     type,
-    structure: $PropertyType<resourceType, 'structure'>
+    draft: $PropertyType<resourceType, 'structure'>,
+    globalSettings?: boolean
 ) => (dispatch: Object, getState) => {
     const { mD } = getState()
-    const resourceDraft = mD[resourceDraftIndex[type]]
-    if (!mD || !type || !resourceDraft || !structure) return
-
-    const pageTemplateDraft = mD.pageTemplateDraft
-    const newValues = {}
-    const newStructure = structure.map(item => {
-        const oldItem = resourceDraft.structure.find(
-            itemInn => itemInn.id === item.id
-        )
-        let newItem = { ...item }
-        if (oldItem) newItem = { ...newItem, expanded: oldItem.expanded }
-
-        newValues[item.id] = {
-            ...pageTemplateDraft.values[item.id],
-            value: '',
-            menuItems: [],
-            currentMenuItem: '',
-            currentMenuId: 0,
-            // properties: {},
-
-            ...(resourceDraft.values[item.id] || {}),
-        }
-
-        return { ...newItem, path: item.path }
-    })
-    const draft = {
-        ...resourceDraft,
-        structure: newStructure,
-        values: newValues,
-    }
-
-    const isNotForHistory =
-        isEqual(
-            resourceDraft.structure.map(item =>
-                omit(item, ['expanded', 'children', 'itemPath'])
-            ),
-            newStructure.map(item =>
-                omit(item, ['expanded', 'children', 'itemPath'])
-            )
-        ) && isEqual(resourceDraft.values, draft.values)
-    dispatch(actions.addResourceVersion(mD, type, draft, {}, isNotForHistory))
+    dispatch(
+        actions.addResourceVersion(mD, type, draft, {}, false, globalSettings)
+    )
 }
 
 export const chooseBox = (type, item: string) => (
@@ -211,6 +177,7 @@ export const changeBoxPropertyInValues = (
     if (isObject(key) && !(typeof key === 'string' || key instanceof String))
         changes = key
     else changes[key.toString()] = value
+
     const draft = {
         ...resourceDraft,
         values: {
@@ -230,7 +197,11 @@ export const changeBoxPropertyInValues = (
             type,
             draft,
             {
-                throttle: 1000,
+                throttle:
+                    typeof key === 'string' &&
+                    ['currentFileId', 'defaultFileUrl', 'fileUrl'].includes(key)
+                        ? 100
+                        : 1000,
             },
             isNotForHistory
         )
@@ -267,7 +238,7 @@ export const toggleFindMode = (value?: string) => ({
 
 export const addBox = (
     mode: 'plugin' | 'template' | 'page',
-    type?: 'children' | 'inside' | 'text' | 'cmsVariable'
+    type?: 'children' | 'inside' | 'text' | 'cmsVariable' | 'page'
 ) => (dispatch: Object, getState) => {
     const { mD } = getState()
     const resourceDraft = mD[resourceDraftIndex[mode]]
@@ -283,10 +254,14 @@ export const addBox = (
         }
     } else if (mode === 'template') {
         if (elementIndex < 0)
-            elementIndex = routeElements[routeElements.length - 1]
+            elementIndex = resourceDraft.structure.findIndex(
+                item => item.id === 'element_1'
+            )
 
         if (resourceDraft.structure[elementIndex].id === 'element_01')
-            elementIndex = routeElements[routeElements.length - 1]
+            elementIndex = resourceDraft.structure.findIndex(
+                item => item.id === 'element_1'
+            )
 
         if (
             resourceDraft.structure[elementIndex].path.length < 2 &&
@@ -294,8 +269,8 @@ export const addBox = (
         )
             putInside = true
     }
-
     const element = resourceDraft.structure[elementIndex]
+    const elementValues = resourceDraft.values[element.id]
     if (element.isChildren) {
         putInside = false
     } else if (element.childrenTo) {
@@ -304,9 +279,25 @@ export const addBox = (
         if (type === 'inside') putInside = true
     }
 
-    if (type === 'inside') putInside = true
+    if (type === 'inside' || (type === 'text' && !element.text))
+        putInside = true
 
-    const newId = `element_${resourceDraft.currentId}`
+    if (type === 'page') {
+        if (
+            elementValues.CMSVariableType &&
+            elementValues.CMSVariableType.indexOf('propagating_') >= 0
+        ) {
+            putInside = true
+        } else if (element.isPropagatingItem) {
+            putInside = false
+        } else {
+            return
+        }
+    }
+    const newId =
+        mode === 'page'
+            ? `elementCMS_${resourceDraft.currentId}`
+            : `element_${resourceDraft.currentId}`
     const newCurrentId = resourceDraft.currentId + 1
 
     const isCMSVariable =
@@ -326,13 +317,16 @@ export const addBox = (
                       ]
                     : [...resourceDraft.structure[elementIndex].path],
                 tag:
-                    type === 'text'
+                    mode === 'page'
+                        ? 'Item'
+                        : type === 'text'
                         ? 'text'
                         : type === 'children'
                         ? 'New children'
                         : isCMSVariable
                         ? 'New CMS variable'
                         : 'div',
+                isPropagatingItem: mode === 'page',
                 textMode: 'text',
                 text: type === 'text',
                 isChildren: type === 'children',
@@ -356,6 +350,7 @@ export const addBox = (
         currentId: newCurrentId,
         currentBox: newId,
     }
+
     dispatch(actions.addResourceVersion(mD, mode, draft))
 }
 
@@ -364,42 +359,132 @@ export const deleteBox = (
     withChildren?: boolean
 ) => (dispatch: Object, getState) => {
     const { mD } = getState()
+
     const resourceDraft = mD[resourceDraftIndex[type]]
     if (!resourceDraft) return
     const routeElements = findRouteElements(resourceDraft, type)
     let elementIndex = findElementIndex(resourceDraft)
     if (elementIndex < 0 || routeElements.includes(elementIndex)) return
 
-    const elementId = resourceDraft.structure[elementIndex].id
+    const itemInStructure = resourceDraft.structure[elementIndex]
+    if (!itemInStructure) return
+    const elementId = itemInStructure.id
 
-    let draft = {}
-    const removedElements = [elementId]
-    if (withChildren) {
-        draft = {
-            ...resourceDraft,
-            structure: resourceDraft.structure.filter(item => {
-                const notRemove =
-                    elementId !== item.id && !item.path.includes(elementId)
-                if (!notRemove) removedElements.push(item.id)
-                return notRemove
-            }),
-        }
-    } else {
-        const newPageStructure = resourceDraft.structure.map(item => ({
-            ...item,
-            path: item.path.filter(pathItem => pathItem !== elementId),
-        }))
-
-        draft = {
-            ...resourceDraft,
-            structure: [
-                ...newPageStructure.slice(0, elementIndex),
-                ...newPageStructure.slice(elementIndex + 1),
-            ],
+    if (withChildren === 'page') {
+        if (!itemInStructure.isPropagatingItem) {
+            return
         }
     }
-    for (let item of removedElements) {
-        delete draft.values[item.id]
+    let draft = {}
+    const removedElements = [elementId]
+    if (itemInStructure.path[0] === 'trash') {
+        if (withChildren) {
+            draft = {
+                ...resourceDraft,
+                structure: resourceDraft.structure.filter(item => {
+                    const notRemove =
+                        elementId !== item.id && !item.path.includes(elementId)
+                    if (!notRemove) removedElements.push(item.id)
+                    return notRemove
+                }),
+            }
+        } else {
+            const newPageStructure = resourceDraft.structure.map(item => ({
+                ...item,
+                path: item.path.filter(pathItem => pathItem !== elementId),
+            }))
+
+            draft = {
+                ...resourceDraft,
+                structure: [
+                    ...newPageStructure.slice(0, elementIndex),
+                    ...newPageStructure.slice(elementIndex + 1),
+                ],
+            }
+        }
+        for (let item of removedElements) {
+            delete draft.values[item.id]
+        }
+    } else {
+        let trashItem = resourceDraft.structure.find(
+            item => item.id === 'trash'
+        )
+
+        if (withChildren) {
+            let structureElementsToLeave = resourceDraft.structure.filter(
+                item => {
+                    const notRemove =
+                        elementId !== item.id && !item.path.includes(elementId)
+                    if (!notRemove) removedElements.push(item.id)
+                    return notRemove
+                }
+            )
+            draft = {
+                ...resourceDraft,
+                structure: [
+                    ...structureElementsToLeave,
+                    ...(!trashItem
+                        ? [
+                              {
+                                  id: 'trash',
+                                  path: [],
+                                  tag: 'Trash',
+                              },
+                          ]
+                        : []),
+                    ...resourceDraft.structure
+                        .filter(item => removedElements.includes(item.id))
+                        .map(item => ({
+                            ...item,
+                            path: [
+                                'trash',
+                                ...(item.id !== elementId
+                                    ? item.path.slice(
+                                          item.path.indexOf(elementId)
+                                      )
+                                    : []),
+                            ],
+                        })),
+                ],
+                values: {
+                    ...resourceDraft.values,
+                    trash: {
+                        properties: {},
+                        style: '',
+                    },
+                },
+            }
+        } else {
+            const newPageStructure = resourceDraft.structure.map(item => ({
+                ...item,
+                path: item.path.filter(pathItem => pathItem !== elementId),
+            }))
+
+            draft = {
+                ...resourceDraft,
+                structure: [
+                    ...newPageStructure.slice(0, elementIndex),
+                    ...newPageStructure.slice(elementIndex + 1),
+                    ...(!trashItem
+                        ? [
+                              {
+                                  id: 'trash',
+                                  path: [],
+                                  tag: 'Trash',
+                              },
+                          ]
+                        : []),
+                    { ...itemInStructure, path: ['trash'] },
+                ],
+                values: {
+                    ...resourceDraft.values,
+                    trash: {
+                        properties: {},
+                        style: '',
+                    },
+                },
+            }
+        }
     }
     dispatch(actions.addResourceVersion(mD, type, draft))
     dispatch(deleteFromHoveredSizes(mD[current[type]], removedElements))
@@ -417,12 +502,17 @@ export const duplicateBox = (
     if (elementIndex < 0 || routeElements.includes(elementIndex)) return
 
     const elementId = resourceDraft.structure[elementIndex].id
-
+    const idPrefix = withChildren === 'page' ? 'elementCMS_' : 'element_'
+    if (withChildren === 'page') {
+        if (!resourceDraft.structure[elementIndex].isPropagatingItem) {
+            return
+        }
+    }
     const sourceChildren = resourceDraft.structure.filter(item =>
         item.path.includes(elementId)
     )
 
-    const newId = `element_${resourceDraft.currentId}`
+    const newId = idPrefix + resourceDraft.currentId
     let draft = { currentId: resourceDraft.currentId + 1 }
 
     if (withChildren) {
@@ -430,7 +520,7 @@ export const duplicateBox = (
         const newValuesElements = { [newId]: resourceDraft.values[elementId] }
         const newChildren = sourceChildren
             .map(item => {
-                let newItemId = `element_${draft.currentId}`
+                let newItemId = idPrefix + draft.currentId
                 draft.currentId += 1
                 idMatch[item.id] = newItemId
                 newValuesElements[newItemId] = resourceDraft.values[item.id]
@@ -962,6 +1052,314 @@ export const parseHTML = (type, value: string) => (
         values: {
             ...resourceDraft.values,
             ...newElementsValues,
+        },
+    }
+    dispatch(actions.addResourceVersion(mD, type, draft))
+}
+
+export const copyBox = (
+    type: 'page' | 'plugin' | 'template',
+    cut: boolean,
+    withChildren?: boolean
+) => (dispatch: Object, getState) => {
+    const { mD } = getState()
+
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!resourceDraft) return
+    const routeElements = findRouteElements(resourceDraft, type)
+    let elementIndex = findElementIndex(resourceDraft)
+    if (elementIndex < 0 || routeElements.includes(elementIndex)) return
+
+    const elementId = resourceDraft.structure[elementIndex].id
+
+    const itemInStructure = resourceDraft.structure.find(
+        item => item.id === elementId
+    )
+    if (!itemInStructure) return
+    if (type === 'page') {
+        if (!itemInStructure.isPropagatingItem) return
+        withChildren = true
+    }
+    let draft = {}
+    const removedElementsIds = [elementId]
+
+    let trashItem = resourceDraft.structure.find(item => item.id === 'trash')
+    let structureElementsToLeave = []
+
+    const cutPath = oldStructure => {
+        return oldStructure.map((item, index) =>
+            index === 0
+                ? { ...item, path: [] }
+                : {
+                      ...item,
+                      path: item.path.slice(
+                          item.path.indexOf(oldStructure[0].id)
+                      ),
+                  }
+        )
+    }
+    if (withChildren) {
+        const structureElementsToRemain = resourceDraft.structure.filter(
+            item => {
+                const notRemove =
+                    elementId !== item.id && !item.path.includes(elementId)
+                if (!notRemove) {
+                    removedElementsIds.push(item.id)
+                    structureElementsToLeave.push(item)
+                }
+                return notRemove
+            }
+        )
+        let valuesToLeave = {}
+        structureElementsToLeave = cutPath(structureElementsToLeave)
+        structureElementsToLeave.forEach(
+            item => (valuesToLeave[item.id] = resourceDraft.values[item.id])
+        )
+        if (cut && itemInStructure.path[0] !== 'trash') {
+            draft = {
+                ...resourceDraft,
+                structure: [
+                    ...structureElementsToRemain,
+                    ...(!trashItem
+                        ? [
+                              {
+                                  id: 'trash',
+                                  path: [],
+                                  tag: 'Trash',
+                              },
+                          ]
+                        : []),
+                    ...resourceDraft.structure
+                        .filter(item => removedElementsIds.includes(item.id))
+                        .map(item => ({
+                            ...item,
+                            path: [
+                                'trash',
+                                ...(item.id !== elementId
+                                    ? item.path.slice(
+                                          item.path.indexOf(elementId)
+                                      )
+                                    : []),
+                            ],
+                        })),
+                ],
+                values: {
+                    ...resourceDraft.values,
+                    trash: {
+                        properties: {},
+                        style: '',
+                    },
+                },
+            }
+        }
+    } else {
+        structureElementsToLeave = cutPath([itemInStructure])
+
+        if (cut && itemInStructure.path[0] !== 'trash') {
+            const newPageStructure = resourceDraft.structure.map(item => ({
+                ...item,
+                path: item.path.filter(pathItem => pathItem !== elementId),
+            }))
+            draft = {
+                ...resourceDraft,
+                structure: [
+                    ...newPageStructure.slice(0, elementIndex),
+                    ...newPageStructure.slice(elementIndex + 1),
+                    ...(!trashItem
+                        ? [
+                              {
+                                  id: 'trash',
+                                  path: [],
+                                  tag: 'Trash',
+                              },
+                          ]
+                        : []),
+                    { ...itemInStructure, path: ['trash'] },
+                ],
+                values: {
+                    ...resourceDraft.values,
+                    trash: {
+                        properties: {},
+                        style: '',
+                    },
+                },
+            }
+        }
+    }
+    if (cut && itemInStructure.path[0] !== 'trash') {
+        dispatch(actions.addResourceVersion(mD, type, draft))
+        dispatch(deleteFromHoveredSizes(mD[current[type]], removedElementsIds))
+    }
+    let valuesToLeave = {}
+    structureElementsToLeave.forEach(
+        item => (valuesToLeave[item.id] = resourceDraft.values[item.id])
+    )
+
+    dispatch(
+        saveToClipboard({
+            structure: structureElementsToLeave,
+            values: valuesToLeave,
+            type: 'websiterElements',
+        })
+    )
+}
+
+const saveToClipboard = data => ({
+    type: 'SAVE_TO_CLIPBOARD',
+    data,
+})
+
+const checkPossibilityToPaste = (fromElement, toElement, mode) => {
+    if (mode === 'page') {
+        if (toElement) {
+            if (toElement.isPropagatingItem) return 'notInside'
+            if (
+                toElement.CMSVariableType &&
+                toElement.CMSVariableType.indexOf('propagating_') >= 0
+            )
+                return 'inside'
+        }
+        return false
+    }
+    const fromType = getBoxType(false, fromElement, mode, true)
+    const toType = getBoxType(false, toElement, mode)
+
+    if (
+        [
+            'html',
+            'headBody',
+            'trash',
+            'CMSRoute',
+            'children',
+            'childrenTo',
+        ].includes(fromType)
+    )
+        return false
+    if (fromType === 'isCMSVariable') {
+        if (toType === 'CMSRoute') return 'inside'
+        if (toElement.path.length > 0 && toElement.path[0] === 'element_02')
+            return true
+        return false
+    }
+    if (
+        ['element', 'plugin', 'text', 'isElementFromCMSVariable'].includes(
+            fromType
+        )
+    ) {
+        if (['html', 'headbody', 'childrenTo'].includes(toType)) {
+            return 'inside'
+        }
+        if (toType === 'element') return true
+        if (['plugin', 'text', 'isElementFromCMSVariable'].includes(toType))
+            return 'notInside'
+    }
+
+    return false
+}
+
+export const pasteBox = (type, inside) => (dispatch: Object, getState) => {
+    const state = getState()
+    const { mD } = state
+    if (state.clipboard.type !== 'websiterElements') return
+    if (state.clipboard.structure.length < 1) return
+    const resourceDraft = mD[resourceDraftIndex[type]]
+    if (!resourceDraft) return
+    let elementIndex = findElementIndex(resourceDraft)
+
+    const pastToElementItem = resourceDraft.structure[elementIndex]
+
+    // const elementId = state.clipboard.structure[0].id
+
+    const sourceChildren = state.clipboard.structure
+    const onlyInside = checkPossibilityToPaste(
+        sourceChildren[0],
+        pastToElementItem,
+        type
+    )
+    if (!onlyInside) return
+
+    let putInside
+    if (type === 'plugin') {
+        if (elementIndex <= 0) {
+            elementIndex = 0
+            putInside = true
+        }
+    } else if (type === 'template') {
+        if (elementIndex < 0)
+            elementIndex = resourceDraft.structure.findIndex(
+                item => item.id === 'element_1'
+            )
+        if (resourceDraft.structure[elementIndex].id === 'element_01')
+            elementIndex = resourceDraft.structure.findIndex(
+                item => item.id === 'element_1'
+            )
+
+        if (
+            resourceDraft.structure[elementIndex].path.length < 2 &&
+            !isEqual(resourceDraft.structure[elementIndex].path, ['element_02'])
+        )
+            putInside = true
+    } else if (type === 'page') {
+        putInside = onlyInside
+    }
+    const element = resourceDraft.structure[elementIndex]
+    if (element.isChildren) {
+        putInside = false
+    } else if (element.childrenTo) {
+        putInside = true
+    } else {
+        if (inside) putInside = true
+    }
+    if (inside || type === 'text' || onlyInside === 'inside') putInside = true
+    if (onlyInside === 'notInside') putInside = false
+
+    let draft = { currentId: resourceDraft.currentId }
+
+    const idMatch = {}
+    const newValuesElements = {}
+    const newChildren = sourceChildren
+        .map(item => {
+            let newItemId = `element${type === 'page' ? 'CMS' : ''}_${
+                draft.currentId
+            }`
+            draft.currentId += 1
+            idMatch[item.id] = newItemId
+            newValuesElements[newItemId] = state.clipboard.values[item.id]
+            return {
+                ...item,
+                id: newItemId,
+            }
+        })
+        .map(item => {
+            return {
+                ...item,
+                // $FlowFixMe
+                path: [
+                    ...element.path,
+                    ...(putInside ? [element.id] : []),
+                    ...item.path.map(pathItem => {
+                        if (idMatch[pathItem]) {
+                            return idMatch[pathItem]
+                        } else {
+                            return pathItem
+                        }
+                    }),
+                ],
+            }
+        })
+
+    draft = {
+        ...resourceDraft,
+        ...draft,
+        structure: [
+            ...resourceDraft.structure.slice(0, elementIndex + 1),
+
+            ...newChildren,
+            ...resourceDraft.structure.slice(elementIndex + 1),
+        ],
+        values: {
+            ...resourceDraft.values,
+            ...newValuesElements,
         },
     }
     dispatch(actions.addResourceVersion(mD, type, draft))

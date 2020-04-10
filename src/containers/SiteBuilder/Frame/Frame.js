@@ -203,7 +203,9 @@ var Frame = (function(_Component) {
                 if (initialRender) {
                     doc.open('text/html', 'replace')
                     doc.write(
-                        '<!DOCTYPE html><html><head></head><body></body></html>'
+                        '<!DOCTYPE html><html><head>' +
+                            this.props.base +
+                            '</head><body></body></html>'
                     )
                     doc.close()
                     this._setInitialContent = true
@@ -213,7 +215,9 @@ var Frame = (function(_Component) {
                     textArea.innerHTML = encodedString
                     return textArea.value
                 }
-                doc.head.innerHTML = decodeEntities(this.props.initialContent)
+                doc.head.innerHTML =
+                    decodeEntities(this.props.initialContent) + this.props.base
+
                 // .replace(
                 //     /&(l|g|quo)t;/g,
                 //     function(a, b) {
@@ -258,6 +262,7 @@ var Frame = (function(_Component) {
                 delete props.contentDidUpdate
                 delete props.bodyProps
                 delete props.htmlProps
+                delete props.base
                 return _react2.default.createElement(
                     'iframe',
                     _extends({}, props, {
@@ -277,6 +282,7 @@ var Frame = (function(_Component) {
 Frame.propTypes = {
     style: _propTypes2.default.object, // eslint-disable-line
     head: _propTypes2.default.node,
+    base: _propTypes2.default.string,
     bodyProps: _propTypes2.default.object,
     htmlProps: _propTypes2.default.object,
     initialContent: _propTypes2.default.string,
@@ -290,6 +296,7 @@ Frame.propTypes = {
 }
 Frame.defaultProps = {
     style: {},
+    base: '',
     head: null,
     bodyProps: {},
     htmlProps: {},

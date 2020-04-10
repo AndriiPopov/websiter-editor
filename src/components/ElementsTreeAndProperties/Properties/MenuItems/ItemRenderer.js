@@ -12,6 +12,7 @@ import {
     _objectSpread,
     // $FlowFixMe
 } from '../../../../utils/sortTreeMethods'
+import Svg from '../../../Svg/Svg'
 
 import type {
     menuItemType,
@@ -124,7 +125,9 @@ const ItemRenderer = (props: Props) => {
             )
         } else {
             handle = connectDragSource(
-                <div className={classes.rst__moveHandle} />
+                <div className={classes.rst__moveHandle}>
+                    <i className="material-icons">more_vert</i>
+                </div>
             )
         }
     }
@@ -205,25 +208,39 @@ const ItemRenderer = (props: Props) => {
                                 {sourceItem ? (
                                     name
                                 ) : (
-                                    <>
-                                        <InspectorValue
-                                            value={name}
-                                            blur={value =>
-                                                props.changeMenuItemProperty(
-                                                    type,
-                                                    'name',
-                                                    value,
-                                                    id
-                                                )
-                                            }
-                                            withState
-                                        />
-                                        {!sourceItem &&
-                                        generatedFrom === 'variable'
-                                            ? ' (variable)'
-                                            : ''}
-                                    </>
+                                    <InspectorValue
+                                        value={name}
+                                        blur={value =>
+                                            props.changeMenuItemProperty(
+                                                type,
+                                                'name',
+                                                value,
+                                                id
+                                            )
+                                        }
+                                        withState
+                                        maxLength="40"
+                                        maxWidth="220px"
+                                    />
                                 )}
+                            </div>
+                            <div
+                                className={[
+                                    classes.IconsContainer,
+                                    props.type === 'page'
+                                        ? classes.IconsContainerPage
+                                        : classes.IconsContainerNotPage,
+                                ].join(' ')}
+                            >
+                                <div>
+                                    {generatedFrom === 'link' ? (
+                                        <Svg icon='<svg width="17" height="17" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg>' />
+                                    ) : generatedFrom === 'variable' ? (
+                                        <Svg icon='<svg width="17" height="17" viewBox="0 0 24 24"><path d="M19 15l-6 6-1.42-1.42L15.17 16H4V4h2v10h9.17l-3.59-3.58L13 9l6 6z"></path></svg>' />
+                                    ) : (
+                                        <Svg icon='<svg width="17" height="17" viewBox="0 0 24 24"><path d="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"></path></svg>' />
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

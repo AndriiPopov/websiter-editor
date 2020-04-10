@@ -41,6 +41,7 @@ const HTMLEditor = (props: Props) => {
                 flex: '1',
                 flexDirection: 'column',
                 height: '100%',
+                position: 'relative',
             }}
         >
             {!state ? (

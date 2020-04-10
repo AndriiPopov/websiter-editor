@@ -1,8 +1,8 @@
-import * as React from 'react';
+import React from 'react';
 import SubPopupMenu from './SubPopupMenu';
 import { noop } from './util';
 import { RenderIconType, SelectInfo, SelectEventHandler, DestroyEventHandler, MenuMode, OpenEventHandler, OpenAnimation, MiniStore, BuiltinPlacements, TriggerSubMenuAction, MenuClickEventHandler, MotionType } from './interface';
-export interface MenuProps {
+export interface MenuProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onClick' | 'onSelect'> {
     defaultSelectedKeys?: string[];
     defaultActiveFirst?: boolean;
     selectedKeys?: string[];
@@ -22,9 +22,6 @@ export interface MenuProps {
     level?: number;
     selectable?: boolean;
     multiple?: boolean;
-    children?: React.ReactNode;
-    className?: string;
-    style?: React.CSSProperties;
     activeKey?: string;
     prefixCls?: string;
     builtinPlacements?: BuiltinPlacements;
@@ -37,6 +34,8 @@ export interface MenuProps {
     openTransitionName?: string;
     /** @deprecated Please use `motion` instead */
     openAnimation?: OpenAnimation;
+    /** direction of menu */
+    direction?: 'ltr' | 'rtl';
 }
 declare class Menu extends React.Component<MenuProps> {
     static defaultProps: {

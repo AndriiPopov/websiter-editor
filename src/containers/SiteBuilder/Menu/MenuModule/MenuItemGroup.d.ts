@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { MenuClickEventHandler } from './interface';
 export interface MenuItemGroupProps {
     disabled?: boolean;
@@ -7,8 +7,9 @@ export interface MenuItemGroupProps {
     className?: string;
     subMenuKey?: string;
     rootPrefixCls?: string;
-    title?: string;
+    title?: React.ReactNode;
     onClick?: MenuClickEventHandler;
+    direction?: 'ltr' | 'rtl';
 }
 declare class MenuItemGroup extends React.Component<MenuItemGroupProps> {
     static isMenuItemGroup: boolean;

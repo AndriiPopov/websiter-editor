@@ -4,6 +4,7 @@ import type { Node } from 'react'
 
 //import * as actions from '../../../store/actions/index';
 import classes from './Checkbox.module.css'
+import Svg from '../../Svg/Svg'
 //import SmallButton from '../Buttons/SmallButton/SmallButton';
 
 type Props = {
@@ -14,6 +15,8 @@ type Props = {
     radio?: boolean,
     children?: Node,
     inline?: boolean,
+    style?: Object,
+    icon?: string,
 }
 
 const Checkbox = (props: Props) => {
@@ -24,6 +27,7 @@ const Checkbox = (props: Props) => {
                     ? [classes.Div, classes.Inline].join(' ')
                     : classes.Div
             }
+            style={props.style}
         >
             <label>
                 <input
@@ -33,6 +37,9 @@ const Checkbox = (props: Props) => {
                     checked={props.checked || false}
                     onChange={e => props.onChange(e.target.checked)}
                 />
+                {props.icon ? (
+                    <Svg icon={props.icon} className={classes.Svg} />
+                ) : null}
                 {props.title}
                 {props.children}
             </label>

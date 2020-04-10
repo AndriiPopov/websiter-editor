@@ -1,7 +1,7 @@
-/* eslint-disable */
-import * as React from 'react'
+import React from 'react'
 import { menuAllProps } from './util'
 function _typeof(obj) {
+    '@babel/helpers - typeof'
     if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
         _typeof = function _typeof(obj) {
             return typeof obj
@@ -155,6 +155,7 @@ var MenuItemGroup =
                     }) // Set onClick to null, to ignore propagated onClick event
 
                     delete props.onClick
+                    delete props.direction
                     return React.createElement(
                         'li',
                         Object.assign({}, props, {
