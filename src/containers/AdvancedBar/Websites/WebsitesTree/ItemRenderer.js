@@ -4,26 +4,22 @@ import { connect } from 'react-redux'
 import * as actions from '../../../../store/actions/index'
 import * as classes from './WebsitesTree.module.css'
 import InspectorValue from '../../../../components/UI/InspectorValue/InspectorValue'
-import {
-    _extends,
-    _objectSpread,
-    // $FlowFixMe
-} from '../../../../utils/sortTreeMethods'
+import { _extends, _objectSpread } from '../../../../utils/sortTreeMethods'
 import checkUserRights from '../../../../utils/checkUserRights'
 import * as wsActions from '../../../../websocketActions'
 
-import type { initialStateType } from '../../../../store/reducer/reducer'
+// import type { initialStateType } from '../../../../store/reducer/reducer'
 
-type Props = {
-    chooseWebsite: typeof actions.chooseWebsite,
-    connectDragPreview: Function,
-    className: string,
-    style: string,
-    node: { name: string, id: string },
-    userId: $PropertyType<initialStateType, 'userId'>,
-}
+// type Props = {
+//     chooseWebsite: typeof actions.chooseWebsite,
+//     connectDragPreview: Function,
+//     className: string,
+//     style: string,
+//     node: { name: string, id: string },
+//     userId: $PropertyType<initialStateType, 'userId'>,
+// }
 
-const ItemRenderer = (props: Props) => {
+const ItemRenderer = props => {
     var _this$props = props,
         connectDragPreview = _this$props.connectDragPreview,
         className = _this$props.className,

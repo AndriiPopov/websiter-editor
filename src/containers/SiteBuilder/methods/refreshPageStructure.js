@@ -1,18 +1,23 @@
-import type { resourceType } from '../../../store/reducer/reducer'
+// import type { resourceType } from '../../../store/reducer/reducer'
 import isEqual from 'lodash/isEqual'
+import cloneDeep from 'lodash/cloneDeep'
 import omit from 'lodash/omit'
 import { getCurrentResourceValue } from '../../../utils/basic'
 
 export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
+    // console.log('start')
     let currentId = pageDraft && pageDraft.currentId ? pageDraft.currentId : 0
     const refreshPageStructure = (
-        resourceDraft: resourceType,
-        templateDraft: resourceType,
+        resourceDraft,
+        templateDraft,
         templateId,
-        pluginId?: string,
-        currentPath?: Array<string>,
-        arrayId?: string
+        pluginId,
+        currentPath,
+        arrayId
     ) => {
+        // console.log('startin')
+        // console.log(cloneDeep(resourceDraft))
+        // console.log(cloneDeep(templateDraft))
         if (!resourceDraft || !templateDraft)
             return { structure: [], values: {} }
 
@@ -21,15 +26,15 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
         if (!templateStructure || !pageStructure)
             return { structure: [], values: {} }
 
-        //$FlowFixMe
         const pageStructureWithoutPropagating = []
         for (let item of pageStructure) {
             if (
                 resourceDraft.values[item.id].CMSVariableType &&
                 resourceDraft.values[item.id].CMSVariableType.indexOf(
                     'propagating_' !== 0
-                ) &&
-                resourceDraft.values[item.id].CMSVariableType !== 'array'
+                )
+                // &&
+                // resourceDraft.values[item.id].CMSVariableType !== 'array'
             ) {
                 pageStructureWithoutPropagating.push(item)
             }
@@ -55,6 +60,11 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
             return false
         })
 
+        // console.log('cloneDeep(newStructure)')
+        // console.log(cloneDeep(newStructure))
+        // console.log(cloneDeep('pageStructureWithoutPropagating'))
+        // console.log(cloneDeep(pageStructureWithoutPropagating))
+
         if (!pluginId) {
             newStructure = newStructure.map(item => {
                 templateIds.push(item.id)
@@ -72,6 +82,9 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
                     const oldItem = pageStructureWithoutPropagating.find(el =>
                         isEqual(el.forPropagatingPlugin, forPropagatingPlugin)
                     )
+                    // console.log('oldItem')
+                    // console.log(oldItem)
+                    // console.log(forPropagatingPlugin)
                     if (oldItem) {
                         templateIds.push(item.id)
                         pageIds.push(oldItem.id)
@@ -96,22 +109,42 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
                     }
                 })
                 .map(item => {
-                    const arrayIndex = item.path.indexOf(arrayId)
+                    // console.log(arrayId)
+                    // const arrayIndex = item.path.indexOf(arrayId)
+                    // console.log([
+                    //     ...currentPath,
+                    //     ...item.path
+                    //         .slice(item.path.indexOf(arrayId) + 1)
+                    //         .filter(el => el !== 'element_02')
+                    //         .map(el => pageIds[templateIds.indexOf(el)]),
+                    // ])
+                    // console.log(item.path)
+                    // console.log(
+                    //     item.path.filter(
+                    //         (el, index) =>
+                    //             el !== 'element_02' && index > arrayIndex
+                    //     )
+                    // )
+
+                    // console.log('templateIds')
+                    // console.log(templateIds)
+                    // console.log('pageIds')
+                    // console.log(pageIds)
+
                     return {
                         ...item,
                         path: [
                             ...currentPath,
                             ...item.path
-                                .filter(
-                                    (el, index) =>
-                                        el !== 'element_02' &&
-                                        index > arrayIndex
-                                )
-                                .map(el => pageIds[templateIds.indexOf(el.id)]),
+                                .slice(item.path.indexOf(arrayId) + 1)
+                                .filter(el => el !== 'element_02')
+                                .map(el => pageIds[templateIds.indexOf(el)]),
                         ],
                     }
                 })
         }
+        // console.log('newStructure')
+        // console.log(newStructure)
 
         const propagatingPluginsVariablesIds = []
         for (let item of newStructure) {
@@ -126,7 +159,7 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
         }
 
         let newValues = {}
-        //$FlowFixMe
+
         let structureWithOldAndPropagating = []
         for (let item of newStructure) {
             const itemIdInTemplate = templateIds[pageIds.indexOf(item.id)]
@@ -151,11 +184,17 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
                 CMSVariableType:
                     templateDraft.values[itemIdInTemplate].CMSVariableType,
             }
+            // console.log(item.path)
+            // console.log(
+            //     item.path.filter(
+            //         id => !propagatingPluginsVariablesIds.includes(id)
+            //     )
+            // )
             structureWithOldAndPropagating.push({
                 ...newItem,
-                path: item.path.filter(
-                    id => !propagatingPluginsVariablesIds.includes(id)
-                ),
+                // path: item.path.filter(
+                //     id => !propagatingPluginsVariablesIds.includes(id)
+                // ),
             })
             if (itemValue.CMSVariableType.indexOf('propagating_') === 0) {
                 const children = pageStructure.filter(el =>
@@ -171,7 +210,10 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
                 for (let child of children) {
                     const innerChildPath = [...child.path, child.id]
                     const childrenOfItem = pageStructure.filter(el =>
-                        isEqual(el.path, innerChildPath)
+                        isEqual(
+                            el.path.slice(0, innerChildPath.length),
+                            innerChildPath
+                        )
                     )
                     const { structure, values } = refreshPageStructure(
                         { structure: childrenOfItem, values: pageDraft.values },
@@ -181,6 +223,8 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
                         innerChildPath,
                         arrayId
                     )
+                    // console.log(structure)
+                    // console.log('structure')
                     structureWithOldAndPropagating = [
                         ...structureWithOldAndPropagating,
                         child,
@@ -198,9 +242,15 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
                 const children = pageStructure.filter(el =>
                     isEqual(el.path, [...item.path, item.id])
                 )
+                // console.log(cloneDeep(templateDraft))
                 const childTemplateDraft = {
-                    structure: templateDraft.structure.filter(el =>
-                        el.path.includes(item.id)
+                    structure: templateDraft.structure.filter(
+                        el =>
+                            el.path.includes(item.id) ||
+                            (item.forPropagatingPlugin &&
+                                el.path.includes(
+                                    item.forPropagatingPlugin.variable
+                                ))
                     ),
                     values: {},
                 }
@@ -212,15 +262,25 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
                 for (let child of children) {
                     const innerChildPath = [...child.path, child.id]
                     const childrenOfItem = pageStructure.filter(el =>
-                        isEqual(el.path, innerChildPath)
+                        isEqual(
+                            el.path.slice(0, innerChildPath.length),
+                            innerChildPath
+                        )
                     )
+                    const valuesOfChildren = {}
+                    for (let el of childrenOfItem) {
+                        valuesOfChildren[el.id] = pageDraft.values[el.id]
+                    }
+                    // console.log(childrenOfItem)
                     const { structure, values } = refreshPageStructure(
-                        { structure: childrenOfItem, values: pageDraft.values },
+                        { structure: childrenOfItem, values: valuesOfChildren },
                         childTemplateDraft,
                         templateId,
                         pluginId || templateId,
                         innerChildPath,
-                        item.id
+                        (item.forPropagatingPlugin &&
+                            item.forPropagatingPlugin.variable) ||
+                            item.id
                     )
                     structureWithOldAndPropagating = [
                         ...structureWithOldAndPropagating,
@@ -235,6 +295,8 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
                 }
             }
         }
+        // console.log('fin in')
+
         return {
             structure: structureWithOldAndPropagating,
             values: newValues,
@@ -263,6 +325,7 @@ export default (mD, pageDraft, templateDraft, globalSettings, templateId) => {
         }
         draft.structure = draft.structure.map(item => omit(item, 'itemPath'))
 
+        // console.log('fin')
         if (
             !isEqual(
                 draft.structure.map(item =>

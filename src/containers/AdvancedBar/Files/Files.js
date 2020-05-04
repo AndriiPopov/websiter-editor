@@ -62,7 +62,10 @@ const Files = props => {
                 />
             </div>
             {props.currentFileItem ? (
-                <div className={classes.LastContainer}>
+                <div
+                    className={classes.LastContainer}
+                    style={{ overflow: 'auto' }}
+                >
                     <FileProperties
                         ref={toastEditorRef}
                         value={value}

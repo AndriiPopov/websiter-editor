@@ -1,13 +1,13 @@
 import React, { Component } from 'react'
 
-type Props = {}
+// type Props = {}
 
-type State = {
-    component: Object | null,
-}
+// type State = {
+//     component: Object | null,
+// }
 
-const asyncComponent = (importComponent: Object) => {
-    return class extends Component<Props, State> {
+const asyncComponent = importComponent => {
+    return class extends Component {
         state = {
             component: null,
         }

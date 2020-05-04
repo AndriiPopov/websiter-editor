@@ -2,19 +2,17 @@ import React from 'react'
 import { connect } from 'react-redux'
 import isEmpty from 'lodash/isEmpty'
 
-import type { initialStateType } from '../../../store/reducer/reducer'
+// import type { initialStateType } from '../../../store/reducer/reducer'
 
-export type Props = {
-    currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
-    hoverMode: $PropertyType<initialStateType, 'hoverMode'>,
-    hoveredElementSize: $PropertyType<initialStateType, 'hoveredElementSize'>,
-    hoveredElementId: $PropertyType<initialStateType, 'hoveredElementId'>,
-}
+// export type Props = {
+//     currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
+//     hoverMode: $PropertyType<initialStateType, 'hoverMode'>,
+//     hoveredElementSize: $PropertyType<initialStateType, 'hoveredElementSize'>,
+//     hoveredElementId: $PropertyType<initialStateType, 'hoveredElementId'>,
+// }
 
-const HoveredBoxHighlight = (props: Props) => {
-    const iframe = ((document.getElementById(
-        'builderFrame'
-    ): any): HTMLIFrameElement)
+const HoveredBoxHighlight = props => {
+    const iframe = document.getElementById('builderFrame')
     //const innerDoc = iframe.contentDocument || iframe.contentWindow.document
     if (!iframe) return null
     const scrollY = iframe.contentWindow.pageYOffset

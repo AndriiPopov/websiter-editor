@@ -10,42 +10,41 @@ import {
     isDescendant,
     _toConsumableArray,
     _objectSpread,
-    // $FlowFixMe
 } from '../../../../utils/sortTreeMethods'
 import Svg from '../../../Svg/Svg'
 
-import type {
-    menuItemType,
-    initialStateType,
-} from '../../../../store/reducer/reducer'
+// import type {
+//     menuItemType,
+//     initialStateType,
+// } from '../../../../store/reducer/reducer'
 
-type Props = {
-    chooseMenuItem: typeof actions.chooseMenuItem,
-    changeMenuItemProperty: typeof actions.changeMenuItemProperty,
-    resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
-    connectDragPreview: Function,
-    scaffoldBlockPxWidth: number,
-    toggleChildrenVisibility: Function,
-    connectDragPreview: Function,
-    connectDragSource: Function,
-    isDragging: boolean,
-    canDrop: boolean,
-    canDrag: boolean,
-    node: menuItemType & { children: Array<menuItemType>, expanded: boolean },
-    draggedNode: {},
-    path: Array<string>,
-    treeIndex: number,
-    isSearchMatch: boolean,
-    isSearchFocus: boolean,
-    className: string,
-    style: string,
-    didDrop: boolean,
-    currentPage: $PropertyType<initialStateType, 'currentPage'>,
-    currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
-    currentTemplate: $PropertyType<initialStateType, 'currentTemplate'>,
-}
+// type Props = {
+//     chooseMenuItem: typeof actions.chooseMenuItem,
+//     changeMenuItemProperty: typeof actions.changeMenuItemProperty,
+//     resourcesObjects: $PropertyType<initialStateType, 'resourcesObjects'>,
+//     connectDragPreview: Function,
+//     scaffoldBlockPxWidth: number,
+//     toggleChildrenVisibility: Function,
+//     connectDragPreview: Function,
+//     connectDragSource: Function,
+//     isDragging: boolean,
+//     canDrop: boolean,
+//     canDrag: boolean,
+//     node: menuItemType & { children: Array<menuItemType>, expanded: boolean },
+//     draggedNode: {},
+//     path: Array<string>,
+//     treeIndex: number,
+//     isSearchMatch: boolean,
+//     isSearchFocus: boolean,
+//     className: string,
+//     style: string,
+//     didDrop: boolean,
+//     currentPage: $PropertyType<initialStateType, 'currentPage'>,
+//     currentPlugin: $PropertyType<initialStateType, 'currentPlugin'>,
+//     currentTemplate: $PropertyType<initialStateType, 'currentTemplate'>,
+// }
 
-const ItemRenderer = (props: Props) => {
+const ItemRenderer = props => {
     var _this$props = props,
         scaffoldBlockPxWidth = _this$props.scaffoldBlockPxWidth,
         toggleChildrenVisibility = _this$props.toggleChildrenVisibility,
@@ -126,7 +125,7 @@ const ItemRenderer = (props: Props) => {
         } else {
             handle = connectDragSource(
                 <div className={classes.rst__moveHandle}>
-                    <i className="material-icons">more_vert</i>
+                    <Svg icon='<svg width="17" height="17" viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>' />
                 </div>
             )
         }
@@ -148,7 +147,6 @@ const ItemRenderer = (props: Props) => {
     if (!isLandingPadActive) rowClasses.push(className)
     return (
         <div
-            // $FlowFixMe
             {..._extends({ style: { height: '100%' } }, otherProps)}
             onMouseDown={() => props.changeBoxPropertyInValues(type, id)}
         >
@@ -219,7 +217,7 @@ const ItemRenderer = (props: Props) => {
                                             )
                                         }
                                         withState
-                                        maxLength="40"
+                                        maxLength="30"
                                         maxWidth="220px"
                                     />
                                 )}

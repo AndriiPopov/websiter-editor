@@ -9,14 +9,14 @@ import ElementsTree from '../../../components/ElementsTreeAndProperties/Elements
 import Properties from '../../../components/ElementsTreeAndProperties/Properties/Properties'
 import checkUserRights from '../../../utils/checkUserRights'
 
-import type { initialStateType } from '../../../store/reducer/reducer'
+// import type { initialStateType } from '../../../store/reducer/reducer'
 
-type Props = {
-    barSizes: $PropertyType<initialStateType, 'barSizes'>,
-    changeBoxProperty: typeof actions.changeBoxProperty,
-}
+// type Props = {
+//     barSizes: $PropertyType<initialStateType, 'barSizes'>,
+//     changeBoxProperty: typeof actions.changeBoxProperty,
+// }
 
-const Plugins = (props: Props) => {
+const Plugins = props => {
     const handleChangeBoxProperty = (key, value) => {
         if (props.checkUserRights(['content']))
             props.changeBoxPropertyInValues('plugin', key, value)

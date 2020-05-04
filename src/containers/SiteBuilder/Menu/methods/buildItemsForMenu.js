@@ -1,8 +1,8 @@
 import { buildTree } from '../../../../utils/basic'
 
-import type { Props } from '../Menu'
+// import type { Props } from '../Menu'
 
-export default (props: Props) => {
+export default props => {
     const buildMenuItems = menuItems => {
         let structureAfterVariables = []
         const structure = []
@@ -23,7 +23,7 @@ export default (props: Props) => {
             structureAfterVariables.forEach(item => {
                 if (item.generatedFrom === 'all') {
                     props.pagesStructure.forEach(page => {
-                        if (!hiddenPages.includes(page.id)) {
+                        if (!page.hidden || page.folderPage) {
                             structure.push({
                                 name: page.name,
                                 properties: item.properties,
@@ -32,7 +32,7 @@ export default (props: Props) => {
                                     ...item.path,
                                     ...page.path.map(l => item.id + l),
                                 ],
-                                url: page.url,
+                                url: page.relUrl,
                             })
                         }
                     })
@@ -40,7 +40,7 @@ export default (props: Props) => {
                     props.pagesStructure.forEach(page => {
                         if (
                             page.path.includes(item.generatedFrom) &&
-                            !hiddenPages.includes(page.id)
+                            (!page.hidden || page.folderPage)
                         ) {
                             structure.push({
                                 id: item.id + page.id,
@@ -52,11 +52,11 @@ export default (props: Props) => {
                                         .slice(
                                             page.path.indexOf(
                                                 item.generatedFrom
-                                            ) - 1
+                                            ) + 1
                                         )
                                         .map(l => item.id + l),
                                 ],
-                                url: page.url,
+                                url: page.relUrl,
                             })
                         }
                     })
@@ -64,14 +64,14 @@ export default (props: Props) => {
                     props.pagesStructure.forEach(page => {
                         if (
                             page.id === item.generatedFrom &&
-                            !hiddenPages.includes(page.id)
+                            (!page.hidden || page.folderPage)
                         ) {
                             structure.push({
                                 id: item.id,
                                 name: item.name,
                                 properties: item.properties,
                                 path: item.path,
-                                url: page.url,
+                                url: page.relUrl,
                             })
                         }
                     })
@@ -80,7 +80,7 @@ export default (props: Props) => {
                         id: item.id,
                         name: item.name,
                         path: item.path,
-                        url: item.properties ? item.properties.url || '' : '',
+                        url: item.properties.url || '',
                         properties: item.properties,
                     })
                 }
@@ -88,17 +88,17 @@ export default (props: Props) => {
         }
         return structure
     }
-    const hiddenPages = []
-    props.pagesStructure.forEach(page => {
-        if (page.hidden) hiddenPages.push(page.id)
-    })
-    props.pagesStructure.forEach(page => {
-        page.path.forEach(id => {
-            if (hiddenPages.includes(id)) {
-                hiddenPages.push(page.id)
-            }
-        })
-    })
+    // const hiddenPages = []
+    // props.pagesStructure.forEach(page => {
+    //     if (page.hidden) hiddenPages.push(page.id)
+    // })
+    // props.pagesStructure.forEach(page => {
+    //     page.path.forEach(id => {
+    //         if (hiddenPages.includes(id)) {
+    //             hiddenPages.push(page.id)
+    //         }
+    //     })
+    // })
 
     return buildTree(buildMenuItems(props.elementValues.menuItems))
 }

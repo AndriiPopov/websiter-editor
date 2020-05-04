@@ -2,18 +2,18 @@ import React from 'react'
 
 import classes from './RangeInput.module.css'
 
-type Props = {
-    min?: number,
-    max?: number,
-    step?: number,
-    changed: Function,
-    saveToHistory?: Function,
-    title?: string,
-    value?: number,
-    datatestid?: string,
-}
+// type Props = {
+//     min?: number,
+//     max?: number,
+//     step?: number,
+//     changed: Function,
+//     saveToHistory?: Function,
+//     title?: string,
+//     value?: number,
+//     datatestid?: string,
+// }
 
-const RangeInput = (props: Props) => {
+const RangeInput = props => {
     const handleChange = e => {
         let value = parseFloat(e.target.value) || 0
 

@@ -4,19 +4,25 @@ import * as actions from '../../../../store/actions/index'
 import * as classes from './TextProperty.module.css'
 import SmallButton from '../../../UI/Buttons/SmallButton/SmallButton'
 import Editor from '../../../Editor/Editor'
-import Select from '../../../UI/Select/Select'
+import Select from 'antd/es/select'
 import checkUserRights from '../../../../utils/checkUserRights'
-import type { elementType } from '../../../../store/reducer/reducer'
+import StarOutlined from '@ant-design/icons/StarOutlined'
+import SplitCellsOutlined from '@ant-design/icons/SplitCellsOutlined'
+import ForkOutlined from '@ant-design/icons/ForkOutlined'
+import ControlPanel from '../../../UI/ControlPanel'
+import Divider from 'antd/es/divider'
 
-type Props = {
-    element: elementType,
-    changeProperty: (key: string | {}, value: string) => {},
-    splitText: typeof actions.splitText,
-    textToSpan: typeof actions.textToSpan,
-    requiredRights: Array<string>,
-}
+// import type { elementType } from '../../../../store/reducer/reducer'
 
-const TextProperty = (props: Props) => {
+// type Props = {
+//     element,
+//     changeProperty: (key: string | {}, value: string) => {},
+//     splitText: typeof actions.splitText,
+//     textToSpan: typeof actions.textToSpan,
+//     requiredRights: Array<string>,
+// }
+
+const TextProperty = props => {
     const [state, setState] = useState({
         selectionStart: 0,
         selectionEnd: 0,
@@ -34,10 +40,6 @@ const TextProperty = (props: Props) => {
             })
         }
     }, [props.elementValues.textContent])
-
-    const setCssMode = item => {
-        props.changeProperty('textMode', item.value)
-    }
 
     const handleTextChangeCss = value => {
         if (!props.checkUserRights(props.requiredRights)) {
@@ -71,31 +73,37 @@ const TextProperty = (props: Props) => {
 
     return props.elementValues ? (
         <>
-            <div>
-                <div className={classes.SelectContainer}>
-                    <Select
-                        options={[
-                            { value: 'text', label: 'text' },
-                            { value: 'css', label: 'css' },
-                            { value: 'javascript', label: 'javascript' },
-                        ]}
-                        default={
-                            props.elementValues.textMode === 'text'
-                                ? 0
-                                : props.elementValues.textMode === 'css'
-                                ? 1
-                                : 2
-                        }
-                        onChange={setCssMode}
-                        isClearable={false}
-                        requiredRights={props.requiredRights}
-                    />
-                </div>
+            <ControlPanel>
+                <Select
+                    onSelect={value => {
+                        if (!props.checkUserRights(props.requiredRights)) return
+                        props.changeProperty('textMode', value)
+                    }}
+                    dropdownMatchSelectWidth={false}
+                    size="small"
+                    style={{ border: '1px solid #ccc' }}
+                    value={props.elementValues.textMode}
+                    placeholder="Choose one option"
+                >
+                    {[
+                        { value: 'text', label: 'text' },
+                        { value: 'css', label: 'css' },
+                        { value: 'javascript', label: 'javascript' },
+                    ].map(option => (
+                        <Select.Option
+                            key={'select' + option.value}
+                            value={option.value}
+                        >
+                            {option.label}
+                        </Select.Option>
+                    ))}
+                </Select>
 
                 {props.elementValues.textMode === 'text' ? (
                     <>
                         <SmallButton
                             title="Split"
+                            tooltip="Split the text into separate text elements"
                             buttonClicked={() => {
                                 props.splitText(
                                     props.type,
@@ -103,13 +111,13 @@ const TextProperty = (props: Props) => {
                                     state.selectionEnd
                                 )
                             }}
-                            icon='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M14 4l2.29 2.29-2.88 2.88 1.42 1.42 2.88-2.88L20 10V4zm-4 0H4v6l2.29-2.29 4.71 4.7V20h2v-8.41l-5.29-5.3z"></path></svg>'
-                            inline
+                            icon={<ForkOutlined />}
                             requiredRights={props.requiredRights}
                         />
-
+                        <Divider type="vertical" />
                         <SmallButton
                             title="To span"
+                            tooltip="Put the highlighted text into a sparate span element"
                             buttonClicked={() => {
                                 props.textToSpan(
                                     props.type,
@@ -117,24 +125,22 @@ const TextProperty = (props: Props) => {
                                     state.selectionEnd
                                 )
                             }}
-                            icon='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M14 4l2.29 2.29-2.88 2.88 1.42 1.42 2.88-2.88L20 10V4zm-4 0H4v6l2.29-2.29 4.71 4.7V20h2v-8.41l-5.29-5.3z"></path></svg>'
-                            inline
+                            icon={<SplitCellsOutlined />}
                             requiredRights={props.requiredRights}
                         />
                     </>
                 ) : (
                     <SmallButton
                         buttonClicked={() => {
-                            //$FlowFixMe
                             editor.current.makeCodePrettier()
                         }}
-                        icon='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M14 4l2.29 2.29-2.88 2.88 1.42 1.42 2.88-2.88L20 10V4zm-4 0H4v6l2.29-2.29 4.71 4.7V20h2v-8.41l-5.29-5.3z"></path></svg>'
-                        inline
+                        title="Beautify"
+                        icon={<StarOutlined />}
                         tooltip="Beautify the code"
                         requiredRights={props.requiredRights}
                     />
                 )}
-            </div>
+            </ControlPanel>
             <div className={classes.Editors}>
                 {props.elementValues.textMode === 'text' ? (
                     <textarea

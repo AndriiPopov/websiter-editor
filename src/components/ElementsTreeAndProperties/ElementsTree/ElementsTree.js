@@ -21,59 +21,60 @@ import {
 } from '../../../utils/resourceTypeIndex'
 import Buttons from './Buttons'
 import OverlayOnSizeIsChanging from '../../UI/OverlayOnSizeIsChanging/OverlayOnSizeIsChanging'
-import type {
-    resourceType,
-    initialStateType,
-    elementType,
-} from '../../../store/reducer/reducer'
+// import type {
+//     resourceType,
+//     initialStateType,
+//     elementType,
+// } from '../../../store/reducer/reducer'
 import getBoxType from '../../../utils/getBoxType'
 import generateButtonRules from './methods/generateButtonRules'
 import { allModules } from '../../../utils/modulesIndex'
+import ControlPanel from '../../UI/ControlPanel'
 
-export type State = {
-    searchString: string,
-    searchFocusIndex: number,
-    searchFoundCount: null | number,
-    searchStringHasBeenCleared: boolean,
-    searchOpen: boolean,
-}
+// export type State = {
+//     searchString: string,
+//     searchFocusIndex: number,
+//     searchFoundCount: null | number,
+//     searchStringHasBeenCleared: boolean,
+//     searchOpen: boolean,
+// }
 
-export type Props = {
-    resourceDraft: resourceType,
-    currentResource:
-        | $PropertyType<initialStateType, 'currentPage'>
-        | $PropertyType<initialStateType, 'currentPlugin'>,
-    mode: 'page' | 'plugin' | 'template',
-    findMode: $PropertyType<initialStateType, 'findMode'>,
-    fromFrame: $PropertyType<initialStateType, 'fromFrame'>,
-    hoveredElementId: $PropertyType<initialStateType, 'hoveredElementId'>,
-    chooseBox: typeof actions.chooseBox,
-    addBox: typeof actions.addBox,
-    duplicateBox: typeof actions.duplicateBox,
-    deleteBox: typeof actions.deleteBox,
-    saveElementsStructure: typeof actions.saveElementsStructure,
-    hoverBox: typeof actions.hoverBox,
-    unhoverBox: typeof actions.unhoverBox,
-    mergeBoxToPlugin: typeof actions.mergeBoxToPlugin,
-    dissolvePluginToBox: typeof actions.dissolvePluginToBox,
-    markShouldRefreshing: typeof actions.markShouldRefreshing,
-    toggleFindMode: typeof actions.toggleFindMode,
-    currentBoxType:
-        | 'html'
-        | 'page'
-        | 'headBody'
-        | 'plugin'
-        | 'children'
-        | 'childrenTo'
-        | 'element'
-        | 'isCMSVariable'
-        | 'isElementFromCMSVariable'
-        | 'none',
-    searchQuery: string,
-    node: elementType,
-}
+// export type Props = {
+//     resourceDraft: resourceType,
+//     currentResource:
+//         | $PropertyType<initialStateType, 'currentPage'>
+//         | $PropertyType<initialStateType, 'currentPlugin'>,
+//     mode: 'page' | 'plugin' | 'template',
+//     findMode: $PropertyType<initialStateType, 'findMode'>,
+//     fromFrame: $PropertyType<initialStateType, 'fromFrame'>,
+//     hoveredElementId: $PropertyType<initialStateType, 'hoveredElementId'>,
+//     chooseBox: typeof actions.chooseBox,
+//     addBox: typeof actions.addBox,
+//     duplicateBox: typeof actions.duplicateBox,
+//     deleteBox: typeof actions.deleteBox,
+//     saveElementsStructure: typeof actions.saveElementsStructure,
+//     hoverBox: typeof actions.hoverBox,
+//     unhoverBox: typeof actions.unhoverBox,
+//     mergeBoxToPlugin: typeof actions.mergeBoxToPlugin,
+//     dissolvePluginToBox: typeof actions.dissolvePluginToBox,
+//     markShouldRefreshing: typeof actions.markShouldRefreshing,
+//     toggleFindMode: typeof actions.toggleFindMode,
+//     currentBoxType:
+//         | 'html'
+//         | 'page'
+//         | 'headBody'
+//         | 'plugin'
+//         | 'children'
+//         | 'childrenTo'
+//         | 'element'
+//         | 'isCMSVariable'
+//         | 'isElementFromCMSVariable'
+//         | 'none',
+//     searchQuery: string,
+//     node,
+// }
 
-const ElementsTree = (props: Props) => {
+const ElementsTree = props => {
     const { resourceDraftStructure, structureWithPluginChildren } = props
 
     if (!resourceDraftStructure) return null
@@ -193,6 +194,7 @@ const ElementsTree = (props: Props) => {
     }
 
     const searchFinishCallbackHandle = matches => {
+        return
         setState({
             ...state,
             searchFoundCount: matches.length,
@@ -203,7 +205,7 @@ const ElementsTree = (props: Props) => {
         })
     }
 
-    const [state: State, setState] = useState({
+    const [state, setState] = useState({
         searchString: '',
         searchFocusIndex: 0,
         searchFoundCount: null,
@@ -390,6 +392,40 @@ const ElementsTree = (props: Props) => {
             }
         }
     }
+
+    const handleButtonMenuClick = e => {
+        if (!props.checkUserRights(['developer'])) {
+            return
+        }
+
+        switch (e.key) {
+            case 'addText':
+                props.addBox(props.mode, 'text')
+                break
+            case 'addInside':
+                props.addBox(props.mode, 'inside')
+                break
+            case 'addFromCMS':
+                props.addBox(props.mode, 'cmsVariable')
+                break
+            case 'addInheritedChildren':
+                props.addBox(props.mode, 'children')
+                break
+            case 'duplicateWithout':
+                props.duplicateBox(props.mode)
+                break
+            case 'duplicateWith':
+                props.duplicateBox(props.mode, true)
+                break
+            case 'deleteWith':
+                props.deleteBox(props.mode, true)
+                break
+
+            default:
+                break
+        }
+    }
+
     return (
         <div
             className={classes.Container}
@@ -410,7 +446,7 @@ const ElementsTree = (props: Props) => {
                 setActiveAndKeyDown('blur')
             }}
         >
-            <div>
+            <ControlPanel>
                 <Buttons
                     state={state}
                     setState={setState}
@@ -423,8 +459,9 @@ const ElementsTree = (props: Props) => {
                     toggleFindMode={props.toggleFindMode}
                     markShouldRefreshing={props.markShouldRefreshing}
                     buttonRules={buttonRules}
+                    handleButtonMenuClick={handleButtonMenuClick}
                 />
-            </div>
+            </ControlPanel>
             <div className={classes.TreeContainer}>
                 <SortableTree
                     treeData={treeData}
@@ -446,6 +483,7 @@ const ElementsTree = (props: Props) => {
                         height: 'auto !important',
                         overflow: 'auto',
                     }}
+                    slideRegionSize={20}
                 />
             </div>
             {state.searchOpen ? (
@@ -462,9 +500,13 @@ const mapStateToProps = (state, props) => {
         let draft = getCurrentResourceValue(item.id, state.resourcesObjects)
         pluginElementsStructures[item.id] = draft ? draft.structure : []
     }
-    const resourceDraftStructure = state.mD[resourceDraftIndex[props.mode]]
-        ? state.mD[resourceDraftIndex[props.mode]].structure
-        : null
+    let resourceDraftStructure = null
+    let resourceDraftValues = null
+    if (state.mD[resourceDraftIndex[props.mode]]) {
+        resourceDraftStructure =
+            state.mD[resourceDraftIndex[props.mode]].structure
+        resourceDraftValues = state.mD[resourceDraftIndex[props.mode]].values
+    }
 
     const currentResource = state.mD[currentIndex[props.mode]]
     const pluginsStructure = state.mD.pluginsStructure
@@ -484,6 +526,7 @@ const mapStateToProps = (state, props) => {
         // structure: state.mD[structureIndex[props.mode]].structure,
         currentResource,
         resourceDraftStructure,
+        resourceDraftValues,
         pluginsStructure,
         pluginElementsStructures,
         structureWithPluginChildren,

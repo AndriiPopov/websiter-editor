@@ -455,7 +455,7 @@ export var SubPopupMenu =
                 return React.cloneElement(child, newChildProps)
             }
 
-            _this.renderMenuItem = function(c, i, subMenuKey) {
+            _this.renderMenuItem = function(c, i, subMenuKey, addProps) {
                 /* istanbul ignore if */
                 if (!c) {
                     return null
@@ -468,6 +468,7 @@ export var SubPopupMenu =
                     selectedKeys: state.selectedKeys,
                     triggerSubMenuAction: _this.props.triggerSubMenuAction,
                     subMenuKey: subMenuKey,
+                    ...addProps,
                 }
                 return _this.renderCommonMenuItem(c, i, extraProps)
             }
@@ -617,6 +618,7 @@ export var SubPopupMenu =
                     delete props.popupMenuItemClasses
                     delete props.popupMenuItemActiveClasses
                     delete props.activeKeys
+
                     return React.createElement(
                         DOMWrap,
                         Object.assign(

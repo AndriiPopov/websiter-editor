@@ -5,12 +5,13 @@ import {
 import isEqual from 'lodash/isEqual'
 // import { CloudFrontUrl, bucket } from '../../../../awsConfig'
 
-import type Props from '../BuilderElement'
+// import type Props from '../BuilderElement'
+import { getFileUrl } from '../../../../utils/getFileUrl'
 
 const toRGBAString = rgb =>
     rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${rgb.a})` : 'rgba(0,0,0,0)'
 
-export default (props: Props) => {
+export default props => {
     const result = {}
     for (let attribute in props.elementValues.properties) {
         const inheritedPropertyName = getInheritedPropertyName(
@@ -23,7 +24,7 @@ export default (props: Props) => {
             result[attribute] = JSON.parse(
                 JSON.stringify(result[attribute]).replace(
                     // /\$[^:;\$\s]*\$/g,
-                    /\$[A-Za-z0-9]*\$/g,
+                    /\$[A-Za-z0-9_-]*\$/g,
                     match => {
                         const inheritedPropertyName = getInheritedPropertyName(
                             match
@@ -122,13 +123,25 @@ export const refinePropertiesFromCMS = mD => {
                 }
             } else if (itemValues.CMSVariableType === 'file') {
                 return {
-                    [itemValues.CMSVariableSystemName]:
-                        'http://live.websiter.dev:5000/' +
-                        mD.currentWebsiteObject.domain +
-                        (resourceVariable
+                    [itemValues.CMSVariableSystemName]: getFileUrl(
+                        mD.filesStructure,
+                        resourceVariable
                             ? resourceVariable.fileUrl ||
-                              itemValues.defaultFileUrl
-                            : itemValues.defaultFileUrl),
+                                  itemValues.defaultFileUrl
+                            : itemValues.defaultFileUrl,
+                        false,
+                        resourceVariable
+                            ? resourceVariable.fileThumbnail ||
+                                  itemValues.fileThumbnail
+                            : itemValues.fileThumbnail,
+                        mD.currentWebsiteObject.domain
+                    ),
+                    // 'http://live.websiter.dev:5000/' +
+                    // mD.currentWebsiteObject.domain +
+                    // (resourceVariable
+                    //     ? resourceVariable.fileUrl ||
+                    //       itemValues.defaultFileUrl
+                    //     : itemValues.defaultFileUrl),
                 }
             } else if (
                 itemValues.CMSVariableType === 'colorSelect' ||
@@ -162,10 +175,13 @@ export const refinePropertiesFromCMS = mD => {
 
                 for (let child of children) {
                     let propagatingItem = {}
-
+                    const innerChildPath = [...child.path, child.id]
                     const childVariables = currentPageDraft.structure
                         .filter(el =>
-                            isEqual([...child.path, child.id], el.path)
+                            isEqual(
+                                el.path.slice(0, innerChildPath.length),
+                                innerChildPath
+                            )
                         )
                         .filter(el =>
                             el.forPropagatingPlugin

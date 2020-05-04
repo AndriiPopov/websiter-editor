@@ -1,7 +1,6 @@
 import React from 'react'
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
-// $FlowFixMe
-import 'react-tabs/style/react-tabs.css'
+import Tabs from 'antd/es/tabs'
+
 import { connect } from 'react-redux'
 
 import * as classes from './Properties.module.css'
@@ -9,7 +8,6 @@ import TextProperty from './TextProperty/TextProperty'
 import ParseProperty from './ParseProperty/ParseProperty'
 import { checkIfCapital } from '../../../utils/basic'
 import propertiesSuggestedList from './propertiesSuggestedList'
-import Select from '../../UI/Select/Select'
 import MenuItems from './MenuItems/MenuItems'
 import Editor from '../../Editor/Editor'
 import HTMLEditor from '../../HTMLEditor/HTMLEditor'
@@ -19,15 +17,15 @@ import {
 } from '../../../utils/resourceTypeIndex'
 import { getCurrentResourceValue } from '../../../utils/basic'
 import CMSPannels from './Property pannels/CMSPannels'
-import type { resourceType, elementType } from '../../../store/reducer/reducer'
+// import type { resourceType, elementType } from '../../../store/reducer/reducer'
 
-type Props = {
-    resourceDraft: resourceType,
-    changeProperty: (key: string | {}, value: string) => ?{},
-    mode: 'page' | 'plugin' | 'template',
-}
+// type Props = {
+//     resourceDraft: resourceType,
+//     changeProperty: (key: string | {}, value: string) => ?{},
+//     mode: 'page' | 'plugin' | 'template',
+// }
 
-const Properties = (props: Props) => {
+const Properties = props => {
     const { element, elementValues, currentBox, currentResource } = props
 
     const tabClass = ['react-tabs__tab', classes.reactTabsTab].join(' ')
@@ -38,7 +36,7 @@ const Properties = (props: Props) => {
 
     const handlePropertiesChange = (value, cursorPosition) => {
         if (value) {
-            const changes: elementType = {}
+            const changes = {}
             changes.cursorPosition = cursorPosition
             changes['propertiesString'] = value
             let obj
@@ -145,21 +143,13 @@ const Properties = (props: Props) => {
             )
         } else {
             result = (
-                <Tabs
-                    className={['react-tabs', classes.reactTabs].join(' ')}
-                    selectedTabPanelClassName={pannelClass}
-                >
-                    <TabList>
-                        {!isPlugin ? (
-                            <Tab className={tabClass}>Style</Tab>
-                        ) : null}
-                        <Tab className={tabClass}>Properties</Tab>
-                        {element.tag === 'websiterMenu' ? (
-                            <Tab className={tabClass}>Items</Tab>
-                        ) : null}
-                    </TabList>
-                    {!isPlugin ? (
-                        <TabPanel>
+                <Tabs defaultActiveKey="style" animated={false} size="small">
+                    {!isPlugin && (
+                        <Tabs.TabPane
+                            tab="Style"
+                            key="style"
+                            forceRender={true}
+                        >
                             <Editor
                                 currentElement={currentBox}
                                 elementValue={
@@ -174,10 +164,13 @@ const Properties = (props: Props) => {
                                 requiredRights={['developer']}
                                 currentResource={currentResource}
                             />
-                        </TabPanel>
-                    ) : null}
-                    {/* ) : null} */}
-                    <TabPanel>
+                        </Tabs.TabPane>
+                    )}
+                    <Tabs.TabPane
+                        tab="Properties"
+                        key="props"
+                        forceRender={true}
+                    >
                         <Editor
                             suggestOptions={[
                                 ...(element.tag !== 'menu'
@@ -198,9 +191,13 @@ const Properties = (props: Props) => {
                             requiredRights={['developer']}
                             currentResource={currentResource}
                         />
-                    </TabPanel>
-                    {element.tag === 'websiterMenu' ? (
-                        <TabPanel>
+                    </Tabs.TabPane>
+                    {element.tag === 'websiterMenu' && (
+                        <Tabs.TabPane
+                            tab="Menu items"
+                            key="menuitems"
+                            forceRender={true}
+                        >
                             <MenuItems
                                 elementValues={elementValues}
                                 element={element}
@@ -208,8 +205,8 @@ const Properties = (props: Props) => {
                                 mode={props.mode}
                                 attrName="menuItems"
                             />
-                        </TabPanel>
-                    ) : null}
+                        </Tabs.TabPane>
+                    )}
                 </Tabs>
             )
         }

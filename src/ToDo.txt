@@ -5,35 +5,27 @@ increase speed -- article in bookmarks
 
 
 ----------------Check--------------------------
-Image upload not updated images list
+Sign ups with different systems
 
 ----------------LATER------------------------
 Wrong version - rerequest resources
 Create a path in elements tree
-add active menu items as setting
 Add suggested options in properties
 Add suggested options in autocorrect from plugin names
-Add menu props with overflow icon etc
-map, gallery 
+add gallery
 limit the storage and resources
-images crop and resize with sharp and save different versions of them
 tests
-copy elements to buffer
-Add keyboard support
+active menu item set
+after connection lost unsaved and new version
+404 error page for each website
+ctrl c ctrl v ctrl x as buttons
 Add fonts and weights in html rich editor
-add files and folders on amazon
-set proxy on express for css and favicons
-add elements in cms
+Hidden files as foldres
 
 
-
-//edit templates/pages show in iframe
-//add copy with size option in images
 //mobile view
 // hover on text highlight
 //ctrl click -> go to plugin
-//save blocks of changes
-
 
 sudo -i gedit /etc/hosts
 
@@ -45,10 +37,9 @@ Now go to chrome://settings/clearBrowserData, tick the box Cached images and fil
 
 
  service mongod stop
+
  sudo mongod --port 27017 --dbpath /var/lib/mongodb --replSet rs0 --bind_ip localhost
 
  sudo -H gedit /etc/environment
 
  heroku certs:auto:refresh --app websiter
- strunjan 148
-

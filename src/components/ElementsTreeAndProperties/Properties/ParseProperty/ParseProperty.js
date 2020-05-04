@@ -6,30 +6,31 @@ import * as classes from './ParseProperty.module.css'
 import SmallButton from '../../../UI/Buttons/SmallButton/SmallButton'
 import Editor from '../../../Editor/Editor'
 import checkUserRights from '../../../../utils/checkUserRights'
+import ControlPanel from '../../../UI/ControlPanel'
 
-import type {
-    resourceType,
-    elementType,
-    initialStateType,
-} from '../../../../store/reducer/reducer'
+// import type {
+//     resourceType,
+//     elementType,
+//     initialStateType,
+// } from '../../../../store/reducer/reducer'
 
-type Props = {
-    element: elementType,
-    resourceDraft: resourceType,
-    changeProperty: (key: string | {}, value: string) => {},
-    currentResource:
-        | $PropertyType<initialStateType, 'currentPlugin'>
-        | $PropertyType<initialStateType, 'currentPage'>,
-    splitText: typeof actions.splitText,
-    textToSpan: typeof actions.textToSpan,
-    tryWebsiter: $PropertyType<initialStateType, 'tryWebsiter'>,
-    websites: $PropertyType<initialStateType, 'websites'>,
-    loadedWebsite: $PropertyType<initialStateType, 'loadedWebsite'>,
-    userId: $PropertyType<initialStateType, 'userId'>,
-    requiredRights: Array<string>,
-}
+// type Props = {
+//     element,
+//     resourceDraft: resourceType,
+//     changeProperty: (key: string | {}, value: string) => {},
+//     currentResource:
+//         | $PropertyType<initialStateType, 'currentPlugin'>
+//         | $PropertyType<initialStateType, 'currentPage'>,
+//     splitText: typeof actions.splitText,
+//     textToSpan: typeof actions.textToSpan,
+//     tryWebsiter: $PropertyType<initialStateType, 'tryWebsiter'>,
+//     websites: $PropertyType<initialStateType, 'websites'>,
+//     loadedWebsite: $PropertyType<initialStateType, 'loadedWebsite'>,
+//     userId: $PropertyType<initialStateType, 'userId'>,
+//     requiredRights: Array<string>,
+// }
 
-const ParseProperty = (props: Props) => {
+const ParseProperty = props => {
     const [value, setValue] = useState('')
 
     const handleTextChange = editorValue => {
@@ -41,17 +42,15 @@ const ParseProperty = (props: Props) => {
 
     return props.element ? (
         <>
-            <div>
+            <ControlPanel>
                 <SmallButton
                     title="Parse the code"
                     buttonClicked={() => {
                         props.parseHTML(props.type, value)
                     }}
-                    icon='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M14 4l2.29 2.29-2.88 2.88 1.42 1.42 2.88-2.88L20 10V4zm-4 0H4v6l2.29-2.29 4.71 4.7V20h2v-8.41l-5.29-5.3z"></path></svg>'
-                    inline
                     requiredRights={props.requiredRights}
                 />
-            </div>
+            </ControlPanel>
             <div className={classes.Editors}>
                 <Editor
                     currentElement={props.currentBox}

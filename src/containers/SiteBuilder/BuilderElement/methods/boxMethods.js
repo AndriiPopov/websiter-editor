@@ -1,6 +1,6 @@
-import type Props from '../BuilderElement'
+// import type Props from '../BuilderElement'
 
-export const hoverBox = (e: SyntheticMouseEvent<>, props: Props) => {
+export const hoverBox = (e, props) => {
     e.stopPropagation()
     // let Tag = props.element.tag || 'div'
 
@@ -23,14 +23,14 @@ export const hoverBox = (e: SyntheticMouseEvent<>, props: Props) => {
     }
 }
 
-export const unhoverBox = (e: SyntheticMouseEvent<>, props: Props) => {
+export const unhoverBox = (e, props) => {
     if (props.findMode) {
         e.stopPropagation()
         props.unhoverBox()
     }
 }
 
-export const chooseBox = (e: SyntheticMouseEvent<>, props: Props) => {
+export const chooseBox = (e, props) => {
     if (props.findMode === 'page') {
         e.stopPropagation()
         props.chooseBox(

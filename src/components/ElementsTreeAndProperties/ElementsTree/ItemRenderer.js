@@ -8,64 +8,66 @@ import {
     _extends,
     isDescendant,
     _objectSpread,
-    // $FlowFixMe
 } from '../../../utils/sortTreeMethods'
 import tagItems from '../../../utils/tagItems'
 import checkUserRights from '../../../utils/checkUserRights'
+import PlusOutlined from '@ant-design/icons/PlusOutlined'
+import DeleteOutlined from '@ant-design/icons/DeleteOutlined'
 
-import type {
-    initialStateType,
-    elementType,
-    resourceType,
-} from '../../../store/reducer/reducer'
+// import type {
+//     initialStateType,
+//     elementType,
+//     resourceType,
+// } from '../../../store/reducer/reducer'
 
 import {
     current as currentIndex,
     resourceDraftIndex,
 } from '../../../utils/resourceTypeIndex'
 import { SmallButton } from '../../UI/Buttons/SmallButton/SmallButton'
+import Svg from '../../Svg/Svg'
 
-type Props = {
-    changeBoxProperty: typeof actions.changeBoxProperty,
-    chooseBox: typeof actions.chooseBox,
-    hoverBox: typeof actions.hoverBox,
-    unhoverBox: typeof actions.unhoverBox,
-    connectDragPreview: Function,
-    scaffoldBlockPxWidth: number,
-    toggleChildrenVisibility: Function,
-    connectDragPreview: Function,
-    connectDragSource: Function,
-    isDragging: boolean,
-    canDrop: boolean,
-    canDrag: boolean,
-    node: elementType & {
-        children: Array<elementType>,
-        expanded: boolean,
-        resourceDraft: resourceType,
-        currentResource:
-            | $PropertyType<initialStateType, 'currentPage'>
-            | $PropertyType<initialStateType, 'currentPlugin'>,
-        pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
-        mode: 'page' | 'plugin',
-        itemPath: Array<{}>,
-    },
-    draggedNode: {},
-    path: Array<string>,
-    treeIndex: number,
-    isSearchMatch: boolean,
-    isSearchFocus: boolean,
-    className: string,
-    style: string,
-    didDrop: boolean,
-    type: 'page' | 'plugin' | 'template',
-    tryWebsiter: $PropertyType<initialStateType, 'tryWebsiter'>,
-    websites: $PropertyType<initialStateType, 'websites'>,
-    loadedWebsite: $PropertyType<initialStateType, 'loadedWebsite'>,
-    userId: $PropertyType<initialStateType, 'userId'>,
-    mode: string,
-}
+// type Props = {
+//     changeBoxProperty: typeof actions.changeBoxProperty,
+//     chooseBox: typeof actions.chooseBox,
+//     hoverBox: typeof actions.hoverBox,
+//     unhoverBox: typeof actions.unhoverBox,
+//     connectDragPreview: Function,
+//     scaffoldBlockPxWidth: number,
+//     toggleChildrenVisibility: Function,
+//     connectDragPreview: Function,
+//     connectDragSource: Function,
+//     isDragging: boolean,
+//     canDrop: boolean,
+//     canDrag: boolean,
+//     node & {
+//         children: Array<elementType>,
+//         expanded: boolean,
+//         resourceDraft: resourceType,
+//         currentResource:
+//             | $PropertyType<initialStateType, 'currentPage'>
+//             | $PropertyType<initialStateType, 'currentPlugin'>,
+//         pluginsStructure: $PropertyType<initialStateType, 'pluginsStructure'>,
+//         mode: 'page' | 'plugin',
+//         itemPath: Array<{}>,
+//     },
+//     draggedNode: {},
+//     path: Array<string>,
+//     treeIndex: number,
+//     isSearchMatch: boolean,
+//     isSearchFocus: boolean,
+//     className: string,
+//     style: string,
+//     didDrop: boolean,
+//     type: 'page' | 'plugin' | 'template',
+//     tryWebsiter: $PropertyType<initialStateType, 'tryWebsiter'>,
+//     websites: $PropertyType<initialStateType, 'websites'>,
+//     loadedWebsite: $PropertyType<initialStateType, 'loadedWebsite'>,
+//     userId: $PropertyType<initialStateType, 'userId'>,
+//     mode: string,
+// }
 
-const ItemRenderer = (props: Props) => {
+const ItemRenderer = props => {
     if (!props.currentNode) return null
     var _this$props = props,
         scaffoldBlockPxWidth = _this$props.scaffoldBlockPxWidth,
@@ -88,7 +90,7 @@ const ItemRenderer = (props: Props) => {
     if (canDrag) {
         handle = connectDragSource(
             <div className={classes.rst__moveHandle}>
-                <i className="material-icons">more_vert</i>
+                <Svg icon='<svg width="17" height="17" viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>' />
             </div>
         )
     }
@@ -262,7 +264,7 @@ const ItemRenderer = (props: Props) => {
                                                     )}
                                                     blur={handleRename}
                                                     withState
-                                                    maxLength="40"
+                                                    maxLength="30"
                                                     maxWidth="220px"
                                                 />
                                             ) : (
@@ -325,11 +327,17 @@ const ItemRenderer = (props: Props) => {
                                         'array' ? (
                                         <SmallButton
                                             inline
-                                            buttonClicked={() =>
+                                            buttonClicked={() => {
+                                                if (
+                                                    !props.checkUserRights([
+                                                        'content',
+                                                    ])
+                                                )
+                                                    return
                                                 props.addBox(mode, 'inside')
-                                            }
-                                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M21.6,13.4H13.4v8.2H10.6V13.4H2.4V10.6h8.2V2.4h2.8v8.2h8.2Zm-2.4,2.8h-.1l-.9.9,1.5,1.4H16.2V15.1H15.1v4.4h4.6l-1.5,1.4.9.9,2.6-2.7h.1Z"></path></svg>'
-                                            // tooltip="Add a new item inside the chosen element (Ctrl + A)"
+                                            }}
+                                            icon={<PlusOutlined />}
+                                            tooltip="Add a new item inside the chosen element (Ctrl + A)"
                                             // requiredRights={['content']}
                                         />
                                     ) : null}
@@ -339,21 +347,33 @@ const ItemRenderer = (props: Props) => {
                                             itemPath[0] !== 'trash' ? (
                                                 <SmallButton
                                                     inline
-                                                    buttonClicked={() =>
+                                                    buttonClicked={() => {
+                                                        if (
+                                                            !props.checkUserRights(
+                                                                ['content']
+                                                            )
+                                                        )
+                                                            return
                                                         props.addBox(mode)
-                                                    }
-                                                    icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>'
-                                                    // tooltip="Add a new item below (Ctrl + A)"
+                                                    }}
+                                                    icon={<PlusOutlined />}
+                                                    tooltip="Add a new item below (Ctrl + A)"
                                                     // requiredRights={['content']}
                                                 />
                                             ) : null}
                                             <SmallButton
                                                 inline
-                                                buttonClicked={() =>
+                                                buttonClicked={() => {
+                                                    if (
+                                                        !props.checkUserRights([
+                                                            'content',
+                                                        ])
+                                                    )
+                                                        return
                                                     props.deleteBox(mode, true)
-                                                }
-                                                icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>'
-                                                // tooltip="Delete item (Delete)"
+                                                }}
+                                                icon={<DeleteOutlined />}
+                                                tooltip="Delete item (Delete)"
                                                 // requiredRights={['content']}
                                             />
                                         </>

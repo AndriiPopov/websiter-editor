@@ -1,7 +1,6 @@
-import React, { useRef } from 'react'
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
-// $FlowFixMe
-import 'react-tabs/style/react-tabs.css'
+import React, { useState } from 'react'
+import Tabs from 'antd/es/tabs'
+
 import { connect } from 'react-redux'
 
 import * as classes from '../Properties/Properties.module.css'
@@ -13,39 +12,27 @@ import { SketchPicker, CirclePicker } from 'react-color'
 
 import { getCurrentResourceValue } from '../../../utils/basic'
 import checkUserRights from '../../../utils/checkUserRights'
-import Select from '../../UI/Select/Select'
+import Select from 'antd/es/select'
+import InputNumber from 'antd/es/input-number'
+import Slider from 'antd/es/slider'
 
-import type { initialStateType } from '../../../store/reducer/reducer'
+// import type { initialStateType } from '../../../store/reducer/reducer'
 import FileItems from '../Properties/FileItems/FileItems'
 
-type Props = {
-    changeProperty: (key: string | {}, value: string) => ?{},
-    mode: 'page' | 'plugin' | 'template',
-    currentResource:
-        | $PropertyType<initialStateType, 'currentPlugin'>
-        | $PropertyType<initialStateType, 'currentPage'>
-        | $PropertyType<initialStateType, 'currentTemplate'>,
-}
+// type Props = {
+//     changeProperty: (key: string | {}, value: string) => ?{},
+//     mode: 'page' | 'plugin' | 'template',
+//     currentResource:
+//         | $PropertyType<initialStateType, 'currentPlugin'>
+//         | $PropertyType<initialStateType, 'currentPage'>
+//         | $PropertyType<initialStateType, 'currentTemplate'>,
+// }
 
-const Properties = (props: Props) => {
-    const rangeInput = useRef(null)
-    const tabClass = ['react-tabs__tab', classes.reactTabsTab].join(' ')
-    const pannelClass = [
-        'react-tabs__tab-panel--selected',
-        classes.reactTabsTabPanelSelected,
-    ].join(' ')
-
+const Properties = props => {
+    const [rangeValue, setRangeValue] = useState()
     return props.element && props.templateCMSElementValues ? (
-        <Tabs
-            className={['react-tabs', classes.reactTabs].join(' ')}
-            selectedTabPanelClassName={pannelClass}
-        >
-            <TabList>
-                <Tab className={tabClass}>Value</Tab>
-                <Tab className={tabClass}>Description</Tab>
-                <Tab className={tabClass}>Default value</Tab>
-            </TabList>
-            <TabPanel>
+        <Tabs defaultActiveKey="value" animated={false} size="small">
+            <Tabs.TabPane tab="Value" key="value">
                 {props.templateCMSElementValues.CMSVariableType === 'html' ? (
                     <HTMLEditor
                         value={props.elementValues.value}
@@ -83,17 +70,46 @@ const Properties = (props: Props) => {
                       'number' ||
                   props.templateCMSElementValues.CMSVariableType === 'range' ? (
                     <>
-                        <input
-                            type={
-                                props.templateCMSElementValues.CMSVariableType
-                            }
+                        {props.templateCMSElementValues.CMSVariableType ===
+                            'range' && (
+                            <Slider
+                                style={{ margin: '10px' }}
+                                defaultValue={props.elementValues.value}
+                                value={rangeValue}
+                                onChange={value => {
+                                    setRangeValue(value)
+                                    if (!props.checkUserRights(['content']))
+                                        return
+                                    props.changeProperty('value', value)
+                                }}
+                                max={
+                                    props.templateCMSElementValues.properties
+                                        ? props.templateCMSElementValues
+                                              .properties.max
+                                        : undefined
+                                }
+                                min={
+                                    props.templateCMSElementValues.properties
+                                        ? props.templateCMSElementValues
+                                              .properties.min
+                                        : undefined
+                                }
+                                step={
+                                    props.templateCMSElementValues.properties
+                                        ? props.templateCMSElementValues
+                                              .properties.step
+                                        : undefined
+                                }
+                            />
+                        )}
+                        <InputNumber
+                            style={{ margin: '10px' }}
                             defaultValue={props.elementValues.value}
-                            style={{ margin: '5px' }}
-                            onChange={e => {
+                            value={rangeValue}
+                            onChange={value => {
+                                setRangeValue(value)
                                 if (!props.checkUserRights(['content'])) return
-                                if (rangeInput.current)
-                                    rangeInput.current.value = e.target.value
-                                props.changeProperty('value', e.target.value)
+                                props.changeProperty('value', value)
                             }}
                             max={
                                 props.templateCMSElementValues.properties
@@ -114,39 +130,34 @@ const Properties = (props: Props) => {
                                     : undefined
                             }
                         />
-                        {props.templateCMSElementValues.CMSVariableType ===
-                        'range' ? (
-                            <input
-                                type="number"
-                                ref={rangeInput}
-                                defaultValue={props.elementValues.value}
-                                readOnly
-                            />
-                        ) : null}
                     </>
                 ) : props.templateCMSElementValues.CMSVariableType ===
                   'select' ? (
                     <Select
-                        options={
-                            props.templateCMSElementValues.properties
-                                ? props.templateCMSElementValues.properties
-                                      .options || []
-                                : []
-                        }
-                        default={(props.templateCMSElementValues.properties
+                        onSelect={value => {
+                            if (!props.checkUserRights(['developer'])) return
+                            props.changeProperty('value', value)
+                        }}
+                        dropdownMatchSelectWidth={false}
+                        size="small"
+                        style={{ border: '1px solid #ccc', margin: '10px' }}
+                        value={props.elementValues.value.toString()}
+                        showSearch={true}
+                        placeholder="Choose one option"
+                    >
+                        {(props.templateCMSElementValues.properties
                             ? props.templateCMSElementValues.properties
                                   .options || []
                             : []
-                        ).findIndex(
-                            el =>
-                                el.value.toString() ===
-                                props.elementValues.value.toString()
-                        )}
-                        onChange={option => {
-                            if (!props.checkUserRights(['developer'])) return
-                            props.changeProperty('value', option.value)
-                        }}
-                    />
+                        ).map(option => (
+                            <Select.Option
+                                key={'select' + option.value}
+                                value={option.value}
+                            >
+                                {option.label}
+                            </Select.Option>
+                        ))}
+                    </Select>
                 ) : props.templateCMSElementValues.CMSVariableType ===
                   'colorSelect' ? (
                     <div style={{ padding: '10px' }}>
@@ -200,8 +211,8 @@ const Properties = (props: Props) => {
                         Value for propagating plugin variable cannot be set.
                     </div>
                 )}
-            </TabPanel>
-            <TabPanel>
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Description" key="desc">
                 <Editor
                     currentElement={props.currentBox}
                     elementValue={
@@ -217,8 +228,8 @@ const Properties = (props: Props) => {
                     requiredRights={['content']}
                     currentResource={props.currentResource}
                 />
-            </TabPanel>
-            <TabPanel>
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Default value" key="default">
                 {props.templateCMSElementValues.CMSVariableType === 'html' ? (
                     <HTMLEditor
                         value={
@@ -259,49 +270,50 @@ const Properties = (props: Props) => {
                       'number' ||
                   props.templateCMSElementValues.CMSVariableType === 'range' ? (
                     <>
-                        <input
-                            type={
-                                props.templateCMSElementValues.CMSVariableType
-                            }
-                            style={{ margin: '5px' }}
-                            defaultValue={
-                                props.templateCMSElementValues
-                                    .CMSVariableDefaultValue
-                            }
-                            readOnly
-                        />
                         {props.templateCMSElementValues.CMSVariableType ===
-                        'range' ? (
-                            <input
-                                type="number"
+                            'range' && (
+                            <Slider
+                                style={{ margin: '10px' }}
                                 defaultValue={
                                     props.templateCMSElementValues
                                         .CMSVariableDefaultValue
                                 }
                                 readOnly
                             />
-                        ) : null}
+                        )}
+                        <InputNumber
+                            style={{ margin: '10px' }}
+                            value={
+                                props.templateCMSElementValues
+                                    .CMSVariableDefaultValue
+                            }
+                            readOnly
+                        />
                     </>
                 ) : props.templateCMSElementValues.CMSVariableType ===
                   'select' ? (
                     <Select
-                        options={
-                            props.templateCMSElementValues.properties
-                                ? props.templateCMSElementValues.properties
-                                      .options || []
-                                : []
-                        }
-                        default={(props.templateCMSElementValues.properties
+                        onSelect={value => {}}
+                        dropdownMatchSelectWidth={false}
+                        size="small"
+                        style={{ border: '1px solid #ccc', margin: '10px' }}
+                        value={props.templateCMSElementValues.CMSVariableDefaultValue.toString()}
+                        showSearch={true}
+                        placeholder="Choose one option"
+                    >
+                        {(props.templateCMSElementValues.properties
                             ? props.templateCMSElementValues.properties
                                   .options || []
                             : []
-                        ).findIndex(
-                            el =>
-                                el.value.toString() ===
-                                props.templateCMSElementValues.CMSVariableDefaultValue.toString()
-                        )}
-                        onChange={option => {}}
-                    />
+                        ).map(option => (
+                            <Select.Option
+                                key={'select' + option.value}
+                                value={option.value}
+                            >
+                                {option.label}
+                            </Select.Option>
+                        ))}
+                    </Select>
                 ) : props.templateCMSElementValues.CMSVariableType ===
                   'colorSelect' ? (
                     <div style={{ padding: '10px' }}>
@@ -338,7 +350,7 @@ const Properties = (props: Props) => {
                         variable.
                     </div>
                 )}
-            </TabPanel>
+            </Tabs.TabPane>
         </Tabs>
     ) : null
 }

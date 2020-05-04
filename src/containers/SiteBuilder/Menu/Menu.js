@@ -3,18 +3,18 @@ import Menu, { SubMenu, MenuItem } from './MenuModule/index'
 import buildItemsForMenu from './methods/buildItemsForMenu'
 import { connect } from 'react-redux'
 
-import type { elementType, pageType } from '../../../store/reducer/reducer'
+// import type { elementType, pageType } from '../../../store/reducer/reducer'
 
-export type Props = {
-    pageInStructure: pageType,
-    element: elementType,
-    document: {},
-    parentPluginProps: $PropertyType<elementType, 'properties'>,
-}
+// export type Props = {
+//     pageInStructure: pageType,
+//     element,
+//     document: {},
+//     parentPluginProps: $PropertyType<elementType, 'properties'>,
+// }
 
 const activeKeys = []
 
-const MenuElement = (props: Props) => {
+const MenuElement = props => {
     useEffect(() => {
         if (!props.document.getElementById('__menu__popup__container__')) {
             const container = props.document.createElement('div')
@@ -30,10 +30,10 @@ const MenuElement = (props: Props) => {
 
     activeKeys.length = 0
     const menuElements = builtItems.map((item, index) => {
+        const key = item.id + '_' + index
         if (item.children.length === 0) {
-            const key = item.id + '_' + index
             if (
-                item.url === props.pageInStructure.url ||
+                item.url === '/' + props.pageInStructure.relUrl ||
                 (item.url === '' && props.pageInStructure.homepage)
             )
                 activeKeys.push(key)
@@ -41,53 +41,50 @@ const MenuElement = (props: Props) => {
                 <MenuItem
                     key={key}
                     className={item.properties ? item.properties.class : ''}
+                    href={item.url}
+                    target={
+                        item.properties &&
+                        (item.properties.newTab ? '_blank' : '_self')
+                    }
                 >
-                    <div
-                        style={{ height: '100%', width: '100%' }}
-                        onClick={() => (window.location = item.url)}
-                    >
-                        {item.name}
-                    </div>
+                    {item.name}
                 </MenuItem>
             )
         } else {
             return (
                 <SubMenu1
                     item={item}
-                    key={item.id + '_' + index}
+                    key={key}
                     pageInStructure={props.pageInStructure}
                 />
             )
         }
     })
+    console.log(props.pageInStructure.relUrl)
+    console.log(builtItems)
+    console.log(props.refinedProperties)
+    console.log(activeKeys)
     return (
         <Menu
             prefixCls={'systemclass_menu'}
-            // $FlowFixMe
             getPopupContainer={() =>
                 props.document.getElementById('__menu__popup__container__')
             }
-            topMenuBlockClasses={
-                props.elementValues.properties.topMenuBlockClasses
-            }
-            topMenuItemClasses={
-                props.elementValues.properties.topMenuItemClasses
-            }
+            topMenuBlockClasses={props.refinedProperties.topMenuBlockClasses}
+            topMenuItemClasses={props.refinedProperties.topMenuItemClasses}
             topMenuItemActiveClasses={
-                props.elementValues.properties.topMenuItemActiveClasses
+                props.refinedProperties.topMenuItemActiveClasses
             }
             popupMenuBlockClasses={
-                props.elementValues.properties.popupMenuBlockClasses
+                props.refinedProperties.popupMenuBlockClasses
             }
-            popupMenuItemClasses={
-                props.elementValues.properties.popupMenuItemClasses
-            }
+            popupMenuItemClasses={props.refinedProperties.popupMenuItemClasses}
             popupMenuItemActiveClasses={
-                props.elementValues.properties.popupMenuItemActiveClasses
+                props.refinedProperties.popupMenuItemActiveClasses
             }
-            mode={props.elementValues.properties.mode}
+            mode={props.refinedProperties.mode}
             selectable={false}
-            triggerSubMenuAction={props.elementValues.properties.trigger}
+            triggerSubMenuAction={props.refinedProperties.trigger}
             activeKeys={activeKeys}
             overflowedIndicator={props.overflowIcon}
         >
@@ -99,31 +96,33 @@ const MenuElement = (props: Props) => {
 const SubMenu1 = props => {
     const { ...other } = props
     return (
-        <SubMenu {...other} title={props.item.name}>
+        <SubMenu {...other} key={props.key} title={props.item.name}>
             {props.item.children.map((item, index) => {
+                const key = props.key + '_' + index
                 if (item.children.length === 0) {
-                    const key = item.id + '_' + index
                     if (
-                        item.url === props.pageInStructure.url ||
+                        item.url === '/' + props.pageInStructure.relUrl ||
                         (item.url === '' && props.pageInStructure.homepage)
                     )
                         activeKeys.push(key)
                     return (
-                        <MenuItem key={key}>
-                            <div
-                                style={{ height: '100%', width: '100%' }}
-                                onClick={() => (window.location = item.url)}
-                            >
-                                {item.name}
-                            </div>
+                        <MenuItem
+                            key={key}
+                            href={item.url}
+                            target={
+                                item.properties &&
+                                (item.properties.newTab ? '_blank' : '_self')
+                            }
+                        >
+                            {item.name}
                         </MenuItem>
                     )
                 } else {
                     return (
                         <SubMenu2
-                            item={item}
                             {...other}
-                            key={item.id + '_' + index}
+                            item={item}
+                            key={key}
                             pageInStructure={props.pageInStructure}
                         />
                     )

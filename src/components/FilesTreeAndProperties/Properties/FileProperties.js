@@ -3,12 +3,12 @@ import { connect } from 'react-redux'
 import axios from 'axios'
 import * as classes from './FileProperties.module.css'
 import Editor from '../../Editor/Editor'
-import Select from '../../UI/Select/Select'
+import Select from 'antd/es/select'
+
 import Svg from '../../Svg/Svg'
 import 'tui-image-editor/dist/tui-image-editor.css'
 import 'tui-color-picker/dist/tui-color-picker.min.css'
 import ImageEditor from '@toast-ui/react-image-editor'
-import ValueInput from '../../UI/ValueInput/ValueInput'
 import SmallButton from '../../UI/Buttons/SmallButton/SmallButton'
 import {
     resizeImageFromSrcToSpecificSize,
@@ -17,6 +17,8 @@ import {
 import bytes from 'bytes'
 import TimeAgo from 'react-timeago'
 import { getFileUrl } from '../../../utils/getFileUrl'
+import checkUserRights from '../../../utils/checkUserRights'
+import InputNumber from 'antd/es/input-number'
 
 const FileProperties = forwardRef((props, ref) => {
     useEffect(() => {
@@ -138,9 +140,9 @@ const FileProperties = forwardRef((props, ref) => {
                                 <tr>
                                     <td>Set new resolution</td>
                                     <td>
-                                        <ValueInput
+                                        <InputNumber
                                             min={0}
-                                            changed={value =>
+                                            onChange={value =>
                                                 handleChangeResolution(
                                                     value,
                                                     'width'
@@ -150,9 +152,9 @@ const FileProperties = forwardRef((props, ref) => {
                                             inline={true}
                                         />{' '}
                                         X{' '}
-                                        <ValueInput
+                                        <InputNumber
                                             min={0}
-                                            changed={value =>
+                                            onChange={value =>
                                                 handleChangeResolution(
                                                     value,
                                                     'height'
@@ -293,18 +295,30 @@ const FileProperties = forwardRef((props, ref) => {
             { value: 'javascript', label: 'javascript' },
             { value: 'json', label: 'json' },
             { value: 'html', label: 'html' },
+            { value: 'xml', label: 'xml' },
         ]
         return props.loaded ? (
             <>
                 <Select
-                    options={editorModeOptions}
-                    default={editorModeOptions.findIndex(
-                        item => item.label === props.editorMode
-                    )}
-                    onChange={item => props.setEditorMode(item.value)}
-                    isClearable={false}
-                    requiredRights={['developer', 'content']}
-                />
+                    onSelect={value => {
+                        if (!props.checkUserRights(['developer', 'content']))
+                            return
+                        props.setEditorMode(value)
+                    }}
+                    dropdownMatchSelectWidth={false}
+                    size="small"
+                    style={{ border: '1px solid #ccc', margin: '10px' }}
+                    value={props.editorMode}
+                >
+                    {editorModeOptions.map(option => (
+                        <Select.Option
+                            key={'select' + option.value}
+                            value={option.value}
+                        >
+                            {option.label}
+                        </Select.Option>
+                    ))}
+                </Select>
                 <Editor
                     currentElement={props.currentFileId}
                     elementValue={props.value}
@@ -338,9 +352,15 @@ const mapStateToProps = state => {
     }
 }
 
+const mapDispatchToProps = (dispatch, props) => {
+    return {
+        checkUserRights: rights => dispatch(checkUserRights(rights)),
+    }
+}
+
 export default connect(
     mapStateToProps,
-    null,
+    mapDispatchToProps,
     null,
     { forwardRef: true }
 )(FileProperties)

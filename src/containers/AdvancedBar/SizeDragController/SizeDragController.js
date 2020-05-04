@@ -6,17 +6,17 @@ import * as actions from '../../../store/actions'
 import { connect } from 'react-redux'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 
-import type { initialStateType } from '../../../store/reducer/reducer'
+// import type { initialStateType } from '../../../store/reducer/reducer'
 
-type Props = {
-    addClass: string,
-    changed: (value: number) => {},
-    vertical?: boolean,
-    startValue: number,
-    barSizes?: $PropertyType<initialStateType, 'barSizes'>,
-}
+// type Props = {
+//     addClass: string,
+//     changed: (value: number) => {},
+//     vertical?: boolean,
+//     startValue: number,
+//     barSizes?: $PropertyType<initialStateType, 'barSizes'>,
+// }
 
-export const SizeDragController = (props: Props) => {
+export const SizeDragController = props => {
     const [, drag, preview] = useDrag({
         item: {
             id: props.type,

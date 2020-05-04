@@ -8,18 +8,18 @@ import { Component } from 'react'
 import getListOfNeededResources from './methods/getListOfNeededResources'
 import getEssentialData from '../../utils/getEssentialData'
 
-type Props = {
-    loadedWebsite: string,
-}
+// type Props = {
+//     loadedWebsite: string,
+// }
 
-type State = {
-    requestedResources: Array<{}>,
-    taskId: number,
-}
+// type State = {
+//     requestedResources: Array<{}>,
+//     taskId: number,
+// }
 
 export let webSocket = false
 
-class ReserveWebsiteInn extends Component<Props, State> {
+class ReserveWebsiteInn extends Component {
     state = {
         requestedResources: [],
         taskId: 0,
@@ -28,7 +28,7 @@ class ReserveWebsiteInn extends Component<Props, State> {
     start = () => {
         let url
         if (process.env.NODE_ENV === 'development') {
-            url = 'ws://api.websiter.dev:5000'
+            url = 'ws://api.websiter.test:5000'
         } else {
             url = 'wss://api.websiter.dev'
         }

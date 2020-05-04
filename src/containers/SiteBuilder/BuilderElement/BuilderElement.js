@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import isEqual from 'lodash/isEqual'
 import omit from 'lodash/omit'
 import Menu from '../Menu/Menu'
+import Drawer from '../Drawer/Drawer'
 import 'slick-carousel/slick/slick.css'
 import 'slick-carousel/slick/slick-theme.css'
 import Slider from 'react-slick'
@@ -16,57 +17,55 @@ import { setBoxProperties } from './methods/useEffect'
 import refineProperties from './methods/refineProperties'
 import { hoverBox, unhoverBox, chooseBox } from './methods/boxMethods'
 import { emptyTags, headTags } from './methods/tagsLibrary'
-// import debounceRender from 'react-debounce-render'
 
 import parse from 'html-react-parser'
 import sanitize from 'sanitize-html'
 
 import { modulesPropertyNodes } from '../../../utils/modulesIndex'
-import type {
-    elementType,
-    resourceType,
-    initialStateType,
-} from '../../../store/reducer/reducer'
+// import type {
+//     elementType,
+//     resourceType,
+//     initialStateType,
+// } from '../../../store/reducer/reducer'
 
-export type Props = {
-    element: elementType,
-    saveHoveredElementRect: typeof actions.saveHoveredElementRect,
-    structure: $PropertyType<resourceType, 'structure'>,
-    document: {},
-    pluginsPathArray: Array<{
-        id: string,
-        plugin: string,
-    }>,
-    findMode: $PropertyType<initialStateType, 'findMode'>,
-    parentPluginProps: $PropertyType<elementType, 'properties'>,
-    sourcePlugin: string,
-    routePlugin: string,
-    hoverBox: typeof actions.hoverBox,
-    chooseResource: typeof actions.chooseResource,
-    unhoverBox: typeof actions.unhoverBox,
-    chooseBox: typeof actions.chooseBox,
-    toggleFindMode: typeof actions.toggleFindMode,
-    childrenForPlugin: Array<elementType>,
-    isHead?: boolean,
-}
+// export type Props = {
+//     element,
+//     saveHoveredElementRect: typeof actions.saveHoveredElementRect,
+//     structure: $PropertyType<resourceType, 'structure'>,
+//     document: {},
+//     pluginsPathArray: Array<{
+//         id: string,
+//         plugin: string,
+//     }>,
+//     findMode: $PropertyType<initialStateType, 'findMode'>,
+//     parentPluginProps: $PropertyType<elementType, 'properties'>,
+//     sourcePlugin: string,
+//     routePlugin: string,
+//     hoverBox: typeof actions.hoverBox,
+//     chooseResource: typeof actions.chooseResource,
+//     unhoverBox: typeof actions.unhoverBox,
+//     chooseBox: typeof actions.chooseBox,
+//     toggleFindMode: typeof actions.toggleFindMode,
+//     childrenForPlugin: Array<elementType>,
+//     isHead?: boolean,
+// }
 
-const _BuilderElement = (props: Props) => {
+const _BuilderElement = props => {
     const elementRef = useRef(null)
 
     useEffect(() => {
         const box = elementRef.current
         if (box && ownRefinedProperties) {
             if (Tag === 'script') {
-                //$FlowFixMe
                 const newScript = props.document.createElement(Tag)
                 newScript.textContent = box.textContent
-                setBoxProperties(newScript, ownRefinedProperties, props)
+                // setBoxProperties(newScript, ownRefinedProperties, props)
                 box.parentNode.appendChild(newScript)
 
                 // box.parentNode.removeChild(box)
             } else {
                 // saveHoveredElementRect(box, props)
-                setBoxProperties(box, ownRefinedProperties, props)
+                // setBoxProperties(box, ownRefinedProperties, props)
             }
         }
     })
@@ -76,7 +75,11 @@ const _BuilderElement = (props: Props) => {
     }
 
     const { refinedProperties, ownRefinedProperties } = refineProperties(props)
-
+    const attributes = setBoxProperties(
+        ownRefinedProperties,
+        props,
+        props.elementValues
+    )
     const currentPath = [...props.element.path, props.element.id]
 
     let Tag = props.element.tag || 'div'
@@ -177,7 +180,9 @@ const _BuilderElement = (props: Props) => {
             })
         )
     } else if (checkIfCapital(Tag.charAt(0))) {
-        const plugin = props.pluginsStructure.find(item => item.name === Tag)
+        const plugin = props.pluginsStructure.find(
+            item => item.name === Tag && !item.hidden
+        )
         if (plugin) {
             const childrenForPlugin = [
                 ...props.structure
@@ -219,8 +224,7 @@ const _BuilderElement = (props: Props) => {
         if (Tag === 'websiterMenu') {
             return (
                 <div
-                    //$FlowFixMe
-                    ref={elementRef}
+                    {...attributes}
                     onMouseEnter={e => hoverBox(e, props)}
                     onMouseMove={e => hoverBox(e, props)}
                     onMouseLeave={e => unhoverBox(e, props)}
@@ -229,6 +233,26 @@ const _BuilderElement = (props: Props) => {
                     <Menu
                         element={props.element}
                         elementValues={props.elementValues}
+                        refinedProperties={refinedProperties}
+                        document={props.document}
+                        parentPluginProps={props.parentPluginProps}
+                        childrenForPlugin={props.childrenForPlugin}
+                        {...getModulePropertiesNodes(Tag)}
+                    />
+                </div>
+            )
+        } else if (Tag === 'websiterDrawer') {
+            return (
+                <div
+                    {...attributes}
+                    onMouseEnter={e => hoverBox(e, props)}
+                    onMouseMove={e => hoverBox(e, props)}
+                    onMouseLeave={e => unhoverBox(e, props)}
+                    onMouseDown={e => chooseBox(e, props)}
+                >
+                    <Drawer
+                        element={props.element}
+                        refinedProperties={refinedProperties}
                         document={props.document}
                         parentPluginProps={props.parentPluginProps}
                         childrenForPlugin={props.childrenForPlugin}
@@ -253,8 +277,7 @@ const _BuilderElement = (props: Props) => {
             }
             return (
                 <div
-                    //$FlowFixMe
-                    ref={elementRef}
+                    {...attributes}
                     onMouseEnter={e => hoverBox(e, props)}
                     onMouseMove={e => hoverBox(e, props)}
                     onMouseLeave={e => unhoverBox(e, props)}
@@ -319,59 +342,70 @@ const _BuilderElement = (props: Props) => {
                 return props.isHead ? '' : null
             }
         } else {
-            Tag = Tag.replace(/[^a-z]/g, '')
+            // Tag = Tag.replace(/[^a-z]/g, '')
+            // Tag = Tag.trim()
             Tag = Tag.trim()
-            return emptyTags.includes(Tag) ? (
-                <Tag
-                    ref={elementRef}
-                    onMouseEnter={e => hoverBox(e, props)}
-                    onMouseMove={e => hoverBox(e, props)}
-                    onMouseLeave={e => unhoverBox(e, props)}
-                    onMouseDown={e => chooseBox(e, props)}
-                    {...omit(props.isHead ? ownRefinedProperties : {}, [
-                        'class',
-                        'for',
-                    ])}
-                />
-            ) : (
-                <Tag
-                    ref={elementRef}
-                    onMouseEnter={e => hoverBox(e, props)}
-                    onMouseMove={e => hoverBox(e, props)}
-                    onMouseLeave={e => unhoverBox(e, props)}
-                    onMouseDown={e => chooseBox(e, props)}
-                    {...omit(props.isHead ? ownRefinedProperties : {}, [
-                        'class',
-                        'for',
-                    ])}
-                >
-                    {Tag !== 'menu'
-                        ? props.structure
-                              .filter(item => isEqual(item.path, currentPath))
-                              .map(item => (
-                                  <BuilderElement
-                                      key={item.id}
-                                      structure={props.structure.filter(
-                                          itemInn =>
-                                              itemInn.path.includes(item.id)
-                                      )}
-                                      element={item}
-                                      document={props.document}
-                                      pluginsPathArray={props.pluginsPathArray}
-                                      sourcePlugin={props.sourcePlugin}
-                                      routePlugin={props.routePlugin}
-                                      parentPluginProps={
-                                          props.parentPluginProps
-                                      }
-                                      childrenForPlugin={
-                                          props.childrenForPlugin
-                                      }
-                                      currentResource={props.currentResource}
-                                  />
-                              ))
-                        : null}
-                </Tag>
-            )
+
+            if (/^([a-zA-Z][a-zA-Z0-9]*)$/.test(Tag)) {
+                return emptyTags.includes(Tag) ? (
+                    <Tag
+                        {...attributes}
+                        onMouseEnter={e => hoverBox(e, props)}
+                        onMouseMove={e => hoverBox(e, props)}
+                        onMouseLeave={e => unhoverBox(e, props)}
+                        onMouseDown={e => chooseBox(e, props)}
+                        {...omit(props.isHead ? ownRefinedProperties : {}, [
+                            'class',
+                            'for',
+                        ])}
+                    />
+                ) : (
+                    <Tag
+                        {...attributes}
+                        onMouseEnter={e => hoverBox(e, props)}
+                        onMouseMove={e => hoverBox(e, props)}
+                        onMouseLeave={e => unhoverBox(e, props)}
+                        onMouseDown={e => chooseBox(e, props)}
+                        {...omit(props.isHead ? ownRefinedProperties : {}, [
+                            'class',
+                            'for',
+                        ])}
+                    >
+                        {Tag !== 'menu'
+                            ? props.structure
+                                  .filter(item =>
+                                      isEqual(item.path, currentPath)
+                                  )
+                                  .map(item => (
+                                      <BuilderElement
+                                          key={item.id}
+                                          structure={props.structure.filter(
+                                              itemInn =>
+                                                  itemInn.path.includes(item.id)
+                                          )}
+                                          element={item}
+                                          document={props.document}
+                                          pluginsPathArray={
+                                              props.pluginsPathArray
+                                          }
+                                          sourcePlugin={props.sourcePlugin}
+                                          routePlugin={props.routePlugin}
+                                          parentPluginProps={
+                                              props.parentPluginProps
+                                          }
+                                          childrenForPlugin={
+                                              props.childrenForPlugin
+                                          }
+                                          currentResource={
+                                              props.currentResource
+                                          }
+                                      />
+                                  ))
+                            : null}
+                    </Tag>
+                )
+            }
+            return null
         }
     } else {
         return null
@@ -432,6 +466,7 @@ const BuilderElement = connect(
 export default BuilderElement
 
 const PluginElementRaw = props => {
+    console.log(props.parentPluginProps)
     if (!props.plugin.hidden && props.pluginStructure) {
         //Pass children to plugin
         if (props.plugin.propagating) {

@@ -416,6 +416,9 @@
     cursor: move;
     border-radius: 1px;
     z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .rst__moveHandle > i {
@@ -776,6 +779,7 @@
 .IconsContainer > div {
     display: inline-block;
     margin: 0px 1px;
+    padding-top: 5px;
 }
 
 .TreeContainer {

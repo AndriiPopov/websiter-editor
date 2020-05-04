@@ -6,14 +6,14 @@ import WebsitesTree from './WebsitesTree/WebsitesTree'
 import SizeDragController from '../SizeDragController/SizeDragController'
 import WebsitesProperties from './WebsitesProperties/WebsitesProperties'
 
-import type { initialStateType } from '../../../store/reducer/reducer'
+// import type { initialStateType } from '../../../store/reducer/reducer'
 
-type Props = {
-    barSizes: $PropertyType<initialStateType, 'barSizes'>,
-    notVirtual?: boolean,
-}
+// type Props = {
+//     barSizes: $PropertyType<initialStateType, 'barSizes'>,
+//     notVirtual?: boolean,
+// }
 
-const Websites = (props: Props) => (
+const Websites = props => (
     <div className={classes.Content}>
         <div
             className={classes.Container}

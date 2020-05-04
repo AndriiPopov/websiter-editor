@@ -14,6 +14,9 @@ export const emptyTags = [
     'source',
     'track',
     'wbr',
+    'menuitem',
+    'command',
+    'keygen',
 ]
 
 export const headTags = [

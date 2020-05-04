@@ -4,15 +4,19 @@ import { connect } from 'react-redux'
 import * as actions from '../../../../../store/actions/index'
 import * as classes from './SharingProperties.module.css'
 import SmallButton from '../../../../../components/UI/Buttons/SmallButton/SmallButton'
-import Checkbox from '../../../../../components/UI/Checkbox/Checkbox'
 import * as wsActions from '../../../../../websocketActions'
+import Divider from 'antd/es/divider'
+import ControlPanel from '../../../../../components/UI/ControlPanel'
+import DeleteOutlined from '@ant-design/icons/DeleteOutlined'
+import SendOutlined from '@ant-design/icons/SendOutlined'
+import ShareAltOutlined from '@ant-design/icons/ShareAltOutlined'
+import Switch from 'antd/es/switch'
+// type Props = {
+//     currentUserInWebsiteSharing: string,
+//     chooseUserInWebsiteSharing: typeof actions.chooseUserInWebsiteSharing,
+// }
 
-type Props = {
-    currentUserInWebsiteSharing: string,
-    chooseUserInWebsiteSharing: typeof actions.chooseUserInWebsiteSharing,
-}
-
-const SharingProperties = (props: Props) => {
+const SharingProperties = props => {
     let website = props.currentWebsiteObject
     if (!website) return null
     let isOwner
@@ -37,16 +41,18 @@ const SharingProperties = (props: Props) => {
     return props.currentWebsiteId && website ? (
         isOwner || sharingItem.rights.includes('admin') ? (
             <div style={{ width: '100%' }}>
-                <div>
+                <ControlPanel>
                     <SmallButton
-                        icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>'
+                        icon={<ShareAltOutlined />}
                         buttonClicked={() => props.addUserInWebsiteSharing()}
                         tooltip="Share the website with a new user. You need to know the user's id which can be found in the user's Account menu tab. The user will need to refresh page in browser to see the shared website."
-                        inline
                         requiredRights={['admin', 'user']}
+                        title="Share"
                     />
+                    <Divider type="vertical" />
+
                     <SmallButton
-                        icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>'
+                        icon={<DeleteOutlined />}
                         buttonClicked={() => {
                             if (
                                 props.currentUserInWebsiteSharing ===
@@ -58,19 +64,23 @@ const SharingProperties = (props: Props) => {
                             )
                         }}
                         tooltip="Stop sharing the website with this user."
-                        inline
                         requiredRights={['admin', 'user']}
+                        title="Delete"
                     />
-                    {website.user === props.userId ? (
-                        <SmallButton
-                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>'
-                            buttonClicked={() => props.transferWebsite()}
-                            tooltip="Transfer the website to another user."
-                            inline
-                            requiredRights={['owner']}
-                        />
-                    ) : null}
-                </div>
+                    {website.user === props.userId && (
+                        <>
+                            <Divider type="vertical" />
+
+                            <SmallButton
+                                icon={<SendOutlined />}
+                                buttonClicked={() => props.transferWebsite()}
+                                tooltip="Transfer the website to another user."
+                                requiredRights={['owner']}
+                                title="Transfer"
+                            />
+                        </>
+                    )}
+                </ControlPanel>
                 <div style={{ width: '100%' }}>
                     <table className={classes.SharingTable}>
                         <tbody>
@@ -133,7 +143,7 @@ const SharingProperties = (props: Props) => {
                                         )}
                                     </td>
                                     <td>
-                                        <Checkbox
+                                        <Switch
                                             checked={
                                                 website.user === account.userId
                                                     ? true
@@ -144,7 +154,7 @@ const SharingProperties = (props: Props) => {
                                     </td>
                                     {website.user === account.userId ? (
                                         <td>
-                                            <Checkbox
+                                            <Switch
                                                 checked={true}
                                                 onChange={() => {}}
                                             />
@@ -157,7 +167,7 @@ const SharingProperties = (props: Props) => {
                                         ...['developer', 'content'],
                                     ].map((right, index) => (
                                         <td key={index}>
-                                            <Checkbox
+                                            <Switch
                                                 checked={account.rights.includes(
                                                     right
                                                 )}

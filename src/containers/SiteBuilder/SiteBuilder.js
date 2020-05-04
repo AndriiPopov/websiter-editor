@@ -8,7 +8,7 @@ import * as actions from '../../store/actions/index'
 import Frame, { FrameContextConsumer } from './Frame/index'
 import BuilderElement from './BuilderElement/BuilderElement'
 import HoveredBoxHighlight from './HoveredBoxHighlight/HoveredBoxHighlight'
-import { systemClassMenu } from './systemClasses'
+// import { systemClassMenu, systemClassDrawer } from './systemClasses'
 // import saveRect from './methods/saveRect'
 import { Provider } from 'react-redux'
 import { renderToString } from 'react-dom/server'
@@ -19,31 +19,31 @@ import refineProperties, {
 import refreshPageStructure from './methods/refreshPageStructure'
 import Overlay from '../../components/UI/Overlay/Overlay'
 
-import type { initialStateType } from '../../store/reducer/reducer'
+// import type { initialStateType } from '../../store/reducer/reducer'
 
-export type Props = {
-    zoom: $PropertyType<initialStateType, 'pageZoom'>,
-    hoveredElementId: $PropertyType<initialStateType, 'hoveredElementId'>,
-    isRefreshing: $PropertyType<initialStateType, 'isRefreshing'>,
-    notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>,
-    barSizes: $PropertyType<initialStateType, 'barSizes'>,
-    markRefreshing: typeof actions.markRefreshing,
-    savePropertiesOnLeave: typeof actions.savePropertiesOnLeave,
-    saveHoveredElementRect: typeof actions.saveHoveredElementRect,
-    markShouldRefreshing: typeof actions.markShouldRefreshing,
-    shouldRefresh?: boolean,
-    saveElementsStructure: typeof actions.saveElementsStructure,
-    currentSiteBuilderMode: $PropertyType<
-        initialStateType,
-        'currentSiteBuilderMode'
-    >,
-}
+// export type Props = {
+//     zoom: $PropertyType<initialStateType, 'pageZoom'>,
+//     hoveredElementId: $PropertyType<initialStateType, 'hoveredElementId'>,
+//     isRefreshing: $PropertyType<initialStateType, 'isRefreshing'>,
+//     notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>,
+//     barSizes: $PropertyType<initialStateType, 'barSizes'>,
+//     markRefreshing: typeof actions.markRefreshing,
+//     savePropertiesOnLeave: typeof actions.savePropertiesOnLeave,
+//     saveHoveredElementRect: typeof actions.saveHoveredElementRect,
+//     markShouldRefreshing: typeof actions.markShouldRefreshing,
+//     shouldRefresh?: boolean,
+//     saveElementsStructure: typeof actions.saveElementsStructure,
+//     currentSiteBuilderMode: $PropertyType<
+//         initialStateType,
+//         'currentSiteBuilderMode'
+//     >,
+// }
 
-type State = {
-    headValue: string,
-}
+// type State = {
+//     headValue: string,
+// }
 
-class SiteBuilder extends Component<Props, State> {
+class SiteBuilder extends Component {
     state = {
         headValue: '',
     }
@@ -81,7 +81,7 @@ class SiteBuilder extends Component<Props, State> {
         return !this.props.sizeIsChanging && !nextProps.sizeIsChanging
     }
 
-    componentWillReceiveProps(newProps: Props) {
+    componentWillReceiveProps(newProps) {
         if (!newProps.isRefreshing) {
             const iframeElement = document.getElementById('builderFrame')
             if (iframeElement) {
@@ -203,13 +203,15 @@ class SiteBuilder extends Component<Props, State> {
                         htmlProps={htmlProps}
                         base={`  <base href="http${
                             this.prod ? 's' : ''
-                        }://live.websiter.dev${this.prod ? '' : ':5000'}/${
+                        }://live.websiter.${this.prod ? 'dev' : 'test:5000'}/${
                             this.props.currentWebsiteObject.domain
                         }/" />  `}
                         initialContent={
-                            systemClassMenu +
-                            ' ' +
-                            '<link rel="stylesheet" type="text/css" charset="UTF-8" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css" /><link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css" />' +
+                            // systemClassMenu +
+                            // ' ' +
+                            // systemClassDrawer +
+                            // ' ' +
+                            '<link rel="stylesheet" type="text/css" charset="UTF-8" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css" /><link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css" /><link rel="stylesheet" type="text/css" href="https://websiter.s3.us-east-2.amazonaws.com/systemClasses.css">' +
                             this.state.headValue
                             // +
                             // ' <script src="src/tinymce_5.1.5.zip"></script>'
@@ -312,7 +314,6 @@ const mapStateToProps = state => {
     const pageTemplateDraftStructure = state.mD.pageTemplateFSBDraft
         ? state.mD.pageTemplateFSBDraft.structure
         : null
-
     const refreshedPageStructure = refreshPageStructure(
         state.mD,
         state.mD.currentPageFSBDraft || null,

@@ -9,7 +9,6 @@ import {
     _extends,
     isDescendant,
     _objectSpread,
-    // $FlowFixMe
 } from '../../../utils/sortTreeMethods'
 import Svg from '../../Svg/Svg'
 import checkUserRights from '../../../utils/checkUserRights'
@@ -18,34 +17,35 @@ import bytes from 'bytes'
 import LazyLoad from 'react-lazy-load'
 import TimeAgo from 'react-timeago'
 import { getFileUrl } from '../../../utils/getFileUrl'
+import { structure } from '../../../utils/resourceTypeIndex'
 // import { bucket, CloudFrontUrl } from '../../../awsConfig'
 
-type Props = {
-    changeWebsiteProperty: typeof actions.changeWebsiteProperty,
-    chooseResource: typeof actions.chooseResource,
-    connectDragPreview: Function,
-    scaffoldBlockPxWidth: number,
-    toggleChildrenVisibility: Function,
-    connectDragPreview: Function,
-    connectDragSource: Function,
-    isDragging: boolean,
-    canDrop: boolean,
-    canDrag: boolean,
-    node: pageType & { children: Array<pageType>, expanded: boolean },
-    draggedNode: {},
-    path: Array<string>,
-    treeIndex: number,
-    isSearchMatch: boolean,
-    isSearchFocus: boolean,
-    className: string,
-    style: string,
-    didDrop: boolean,
-    saveResourcesStructure: typeof actions.saveResourcesStructure,
-    notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>,
-    userId: $PropertyType<initialStateType, 'userId'>,
-}
+// type Props = {
+//     changeWebsiteProperty: typeof actions.changeWebsiteProperty,
+//     chooseResource: typeof actions.chooseResource,
+//     connectDragPreview: Function,
+//     scaffoldBlockPxWidth: number,
+//     toggleChildrenVisibility: Function,
+//     connectDragPreview: Function,
+//     connectDragSource: Function,
+//     isDragging: boolean,
+//     canDrop: boolean,
+//     canDrag: boolean,
+//     node: pageType & { children: Array<pageType>, expanded: boolean },
+//     draggedNode: {},
+//     path: Array<string>,
+//     treeIndex: number,
+//     isSearchMatch: boolean,
+//     isSearchFocus: boolean,
+//     className: string,
+//     style: string,
+//     didDrop: boolean,
+//     saveResourcesStructure: typeof actions.saveResourcesStructure,
+//     notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>,
+//     userId: $PropertyType<initialStateType, 'userId'>,
+// }
 
-const ItemRenderer = (props: Props) => {
+const ItemRenderer = props => {
     // const mD = getEssentialData(props.userId, props.resourcesObjects)
     var _this$props = props,
         scaffoldBlockPxWidth = _this$props.scaffoldBlockPxWidth,
@@ -70,7 +70,7 @@ const ItemRenderer = (props: Props) => {
     if (canDrag) {
         handle = connectDragSource(
             <div className={classes.rst__moveHandle}>
-                <i className="material-icons">more_vert</i>
+                <Svg icon='<svg width="17" height="17" viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>' />
             </div>
         )
     }
@@ -98,9 +98,8 @@ const ItemRenderer = (props: Props) => {
         value = value.trim()
         const newStructure = cloneDeep(props.structure)
         const element = newStructure.find(item => item.id === id)
-        // $FlowFixMe
+
         if (element[key] !== value) {
-            // $FlowFixMe
             element[key] = value
             props.sendUpdate(
                 'website',

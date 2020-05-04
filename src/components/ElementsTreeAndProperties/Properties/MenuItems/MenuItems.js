@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import { SortableTreeWithoutDndContext as SortableTree } from 'react-sortable-tree'
 // import SortableTree from 'react-sortable-tree'
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
+import Tabs from 'antd/es/tabs'
+import DeleteOutlined from '@ant-design/icons/DeleteOutlined'
+
 import cloneDeep from 'lodash/cloneDeep'
 
 import * as classes from '../../../ResourcesTree/ResourcesTree.module.css'
@@ -12,14 +14,17 @@ import { buildItems } from '../../../../utils/pagesStructure'
 import ItemRenderer from './ItemRenderer'
 import { buildTree } from '../../../../utils/basic'
 import SizeDragController from '../../../../containers/AdvancedBar/SizeDragController/SizeDragController'
-import Editor from '../../../Editor/Editor'
 import SmallButton from '../../../UI/Buttons/SmallButton/SmallButton'
+import TextInput from '../../../UI/TextInput/TextInput'
 import OverlayOnSizeIsChanging from '../../../UI/OverlayOnSizeIsChanging/OverlayOnSizeIsChanging'
+import ControlPanel from '../../../UI/ControlPanel'
+import Switch from 'antd/es/switch'
 
 const MenuItems = props => {
     const [state, setState] = useState({
         treeDataSource: [],
     })
+    console.log(props.element)
 
     useEffect(() => {
         const pagesStructureWithAll = [
@@ -30,9 +35,7 @@ const MenuItems = props => {
                 generatedFrom: 'link',
                 sourceItem: true,
                 name: 'Link',
-                properties: {
-                    // url: 'http://www.logision.com/',
-                },
+                properties: {},
                 propertiesString: '',
             },
             {
@@ -42,6 +45,8 @@ const MenuItems = props => {
                 generatedFrom: 'all',
                 sourceItem: true,
                 name: 'All pages',
+                properties: {},
+                propertiesString: '',
             },
         ]
         if (props.mode !== 'page' && !props.element.isCMSVariable) {
@@ -53,6 +58,7 @@ const MenuItems = props => {
                 sourceItem: true,
                 name: 'Variable',
                 properties: {},
+                propertiesString: '',
             })
         }
         props.pagesStructure.forEach(element => {
@@ -63,6 +69,8 @@ const MenuItems = props => {
                 id: element.id,
                 generatedFrom: element.id,
                 path: ['all', ...element.path],
+                properties: {},
+                propertiesString: '',
             })
             pagesStructureWithAll.push({
                 path: ['all', ...element.path, element.id],
@@ -71,26 +79,11 @@ const MenuItems = props => {
                 generatedFrom: element.id,
                 sourceItem: true,
                 name: 'All in ' + element.name,
+                properties: {},
+                propertiesString: '',
             })
         })
-        // props.pagesStructure.forEach(element => {
-        //     pagesStructureWithAll.push({
-        //         ...element,
-        //         sourceItem: true,
-        //         all: false,
-        //         id: element.id,
-        //         generatedFrom: element.id,
-        //         path: ['all', ...element.path],
-        //     })
-        //     pagesStructureWithAll.push({
-        //         path: ['all', ...element.path, element.id],
-        //         all: true,
-        //         id: element.id + '_all',
-        //         generatedFrom: element.id,
-        //         sourceItem: true,
-        //         name: 'All in ' + element.name,
-        //     })
-        // })
+
         const treeDataSource = buildTree(pagesStructureWithAll)
             .filter(item => !item.generalSettings)
             .map(item => ({
@@ -114,26 +107,29 @@ const MenuItems = props => {
             for (let i = 0; i < children.length; i++) {
                 const child = children[i]
                 if (child.sourceItem) return child
-                else if (child.children.length > 0)
-                    return findNewItem(child.children)
+                else if (child.children.length > 0) {
+                    const newItem = findNewItem(child.children)
+                    if (newItem) return newItem
+                }
             }
         }
         const newItem = findNewItem(newItems)
 
-        let newCurrentMenuId = null
+        let newCurrentMenuId = props.elementValues.currentMenuId || 0
         if (newItem) {
             newItem.children = []
-            newItem.id = 'item_' + (props.elementValues.currentMenuId || 0)
+            newItem.id = 'item_' + (newCurrentMenuId || 0)
             newItem.sourceItem = false
-            newCurrentMenuId = props.elementValues.currentMenuId
-                ? props.elementValues.currentMenuId + 1
-                : 1
+            newCurrentMenuId = newCurrentMenuId + 1
         }
 
         const saveItems = []
         buildItems(newItems, [], saveItems)
-        const result = { [props.attrName]: saveItems, currentMenuId: -1 }
-        if (newCurrentMenuId) result.currentMenuId = newCurrentMenuId
+        const result = {
+            [props.attrName]: saveItems,
+            currentMenuId: newCurrentMenuId,
+        }
+        // if (newCurrentMenuId) result.currentMenuId = newCurrentMenuId
         props.changeProperty(result, '')
     }
 
@@ -144,6 +140,7 @@ const MenuItems = props => {
                   item => item.id === props.elementValues.currentMenuItem
               )
             : null
+
     const hanglePropertiesChange = (value, cursorPosition) => {
         if (value && props.elementValues.currentMenuItem) {
             let obj
@@ -170,6 +167,26 @@ const MenuItems = props => {
         }
     }
 
+    const handleOnePropertyChange = (key, value, id) => {
+        if (key) {
+            const newMenuItems = props.elementValues[props.attrName].map(
+                item => {
+                    if (item.id === id) {
+                        const newItem = cloneDeep(item)
+                        // newItem.propertiesString = value
+                        // if (obj) {
+                        newItem.properties[key] = value
+                        // }
+                        return newItem
+                    } else {
+                        return item
+                    }
+                }
+            )
+            props.changeProperty(props.attrName, newMenuItems)
+        }
+    }
+
     const handleDeleteItem = () => {
         if (props.elementValues.currentMenuItem) {
             const newMenuItems = props.elementValues[props.attrName].filter(
@@ -187,17 +204,17 @@ const MenuItems = props => {
                     flex: '0 0 ' + (props.barSizes.width3 || 50) + 'px',
                 }}
             >
-                <div>
+                <ControlPanel>
                     <SmallButton
-                        inline
+                        title="Delete"
                         buttonClicked={handleDeleteItem}
-                        icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>'
+                        icon={<DeleteOutlined />}
                         tooltip="Delete menu item"
                         requiredRights={
                             props.mode === 'page' ? ['content'] : ['developer']
                         }
                     />
-                </div>
+                </ControlPanel>
                 <div className={classes.TreeContainer}>
                     {treeData.length === 0 ? (
                         <div
@@ -249,6 +266,7 @@ const MenuItems = props => {
                             height: 'auto !important',
                             overflow: 'auto',
                         }}
+                        slideRegionSize={20}
                     />
                     <OverlayOnSizeIsChanging />
                 </div>
@@ -259,39 +277,8 @@ const MenuItems = props => {
                 />
             </div>
             <div className={classesAdvancedBar.LastContainer}>
-                <Tabs
-                    className={[
-                        'react-tabs',
-                        classesAdvancedBar.reactTabs,
-                        classes.MenuItemsTabs,
-                    ].join(' ')}
-                >
-                    <TabList>
-                        <Tab
-                            className={[
-                                'react-tabs__tab',
-                                classesAdvancedBar.reactTabsTab,
-                            ].join(' ')}
-                        >
-                            Source elements
-                        </Tab>
-                        {menuItem ? (
-                            <Tab
-                                className={[
-                                    'react-tabs__tab',
-                                    classesAdvancedBar.reactTabsTab,
-                                ].join(' ')}
-                            >
-                                Item properties
-                            </Tab>
-                        ) : null}
-                    </TabList>
-                    <TabPanel
-                        selectedClassName={[
-                            'react-tabs__tab-panel--selected',
-                            classesAdvancedBar.reactTabsTabPanelSelected,
-                        ].join(' ')}
-                    >
+                <Tabs defaultActiveKey="source" animated={false} size="small">
+                    <Tabs.TabPane tab="Source elements" key="source">
                         <SortableTree
                             treeData={state.treeDataSource}
                             nodeContentRenderer={ItemRenderer}
@@ -319,30 +306,78 @@ const MenuItems = props => {
                                 height: 'auto !important',
                                 overflow: 'auto',
                             }}
+                            slideRegionSize={20}
                         />
                         <OverlayOnSizeIsChanging />
-                    </TabPanel>
-                    {menuItem ? (
-                        <TabPanel
-                            selectedClassName={[
-                                'react-tabs__tab-panel--selected',
-                                classesAdvancedBar.reactTabsTabPanelSelected,
-                            ].join(' ')}
-                        >
-                            <Editor
-                                currentElement={
-                                    props.elementValues.currentMenuItem
-                                }
-                                elementValue={menuItem.propertiesString}
-                                elementCurrentCursor={
-                                    props.elementValues.cursorPosition
-                                }
-                                editorMode="json"
-                                handleChange={hanglePropertiesChange}
-                                name="editorMenuItems"
-                            />
-                        </TabPanel>
-                    ) : null}
+                    </Tabs.TabPane>
+
+                    {menuItem && (
+                        <Tabs.TabPane tab="Item properties" key="props">
+                            {/* {menuItem.type !== 'page' ? (
+                                <Editor
+                                    currentElement={
+                                        props.elementValues.currentMenuItem
+                                    }
+                                    elementValue={menuItem.propertiesString}
+                                    elementCurrentCursor={
+                                        props.elementValues.cursorPosition
+                                    }
+                                    editorMode="json"
+                                    handleChange={hanglePropertiesChange}
+                                    name="editorMenuItems"
+                                />
+                            ) : menuItem.generatedFrom === 'link' ? ( */}
+                            <table>
+                                <tbody>
+                                    {menuItem.generatedFrom === 'link' ? (
+                                        <tr>
+                                            <td>Url</td>
+                                            <td>
+                                                <TextInput
+                                                    changed={value =>
+                                                        handleOnePropertyChange(
+                                                            'url',
+                                                            value,
+                                                            props.elementValues
+                                                                .currentMenuItem
+                                                        )
+                                                    }
+                                                    value={
+                                                        menuItem.properties.url
+                                                    }
+                                                    unControlled
+                                                    uniqueId={
+                                                        props.elementValues
+                                                            .currentMenuItem +
+                                                        props.element.id +
+                                                        menuItem.type
+                                                    }
+                                                />
+                                            </td>
+                                        </tr>
+                                    ) : null}
+                                    <tr>
+                                        <td>Open in a new tab</td>
+                                        <td>
+                                            <Switch
+                                                onChange={value =>
+                                                    handleOnePropertyChange(
+                                                        'newTab',
+                                                        value,
+                                                        props.elementValues
+                                                            .currentMenuItem
+                                                    )
+                                                }
+                                                checked={
+                                                    menuItem.properties.newTab
+                                                }
+                                            />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </Tabs.TabPane>
+                    )}
                 </Tabs>
             </div>
         </div>

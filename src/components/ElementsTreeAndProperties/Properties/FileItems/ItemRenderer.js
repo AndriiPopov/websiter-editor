@@ -8,7 +8,6 @@ import {
     _extends,
     isDescendant,
     _objectSpread,
-    // $FlowFixMe
 } from '../../../../utils/sortTreeMethods'
 import Svg from '../../../Svg/Svg'
 import checkUserRights from '../../../../utils/checkUserRights'
@@ -18,32 +17,32 @@ import { getFileUrl } from '../../../../utils/getFileUrl'
 
 // import { bucket, CloudFrontUrl } from '../../../awsConfig'
 
-type Props = {
-    changeWebsiteProperty: typeof actions.changeWebsiteProperty,
-    chooseResource: typeof actions.chooseResource,
-    connectDragPreview: Function,
-    scaffoldBlockPxWidth: number,
-    toggleChildrenVisibility: Function,
-    connectDragPreview: Function,
-    connectDragSource: Function,
-    isDragging: boolean,
-    canDrop: boolean,
-    canDrag: boolean,
-    node: pageType & { children: Array<pageType>, expanded: boolean },
-    draggedNode: {},
-    path: Array<string>,
-    treeIndex: number,
-    isSearchMatch: boolean,
-    isSearchFocus: boolean,
-    className: string,
-    style: string,
-    didDrop: boolean,
-    saveResourcesStructure: typeof actions.saveResourcesStructure,
-    notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>,
-    userId: $PropertyType<initialStateType, 'userId'>,
-}
+// type Props = {
+//     changeWebsiteProperty: typeof actions.changeWebsiteProperty,
+//     chooseResource: typeof actions.chooseResource,
+//     connectDragPreview: Function,
+//     scaffoldBlockPxWidth: number,
+//     toggleChildrenVisibility: Function,
+//     connectDragPreview: Function,
+//     connectDragSource: Function,
+//     isDragging: boolean,
+//     canDrop: boolean,
+//     canDrag: boolean,
+//     node: pageType & { children: Array<pageType>, expanded: boolean },
+//     draggedNode: {},
+//     path: Array<string>,
+//     treeIndex: number,
+//     isSearchMatch: boolean,
+//     isSearchFocus: boolean,
+//     className: string,
+//     style: string,
+//     didDrop: boolean,
+//     saveResourcesStructure: typeof actions.saveResourcesStructure,
+//     notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>,
+//     userId: $PropertyType<initialStateType, 'userId'>,
+// }
 
-const ItemRenderer = (props: Props) => {
+const ItemRenderer = props => {
     // const mD = getEssentialData(props.userId, props.resourcesObjects)
     var _this$props = props,
         scaffoldBlockPxWidth = _this$props.scaffoldBlockPxWidth,

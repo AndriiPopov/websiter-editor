@@ -4,10 +4,7 @@ import isEqual from 'lodash/isEqual'
 import omit from 'lodash/omit'
 import * as actions from '../../../store/actions/index'
 import * as classes from './FilesTree.module.css'
-import * as buttonClasses from '../../UI/Buttons/SmallButton/SmallButton.module.css'
-import SmallButton, {
-    tooltipOverwritePositions,
-} from '../../UI/Buttons/SmallButton/SmallButton'
+import SmallButton from '../../UI/Buttons/SmallButton/SmallButton'
 import { buildItems } from '../../../utils/pagesStructure'
 import ItemRenderer from './ItemRenderer'
 import { TreeSearch } from '../../UI/TreeSearch/TreeSearch'
@@ -16,11 +13,20 @@ import checkUserRights from '../../../utils/checkUserRights'
 import * as wsActions from '../../../websocketActions'
 import { connect } from 'react-redux'
 
-import Svg from '../../../components/Svg/Svg'
 import copyToClipboard from '../../../utils/copyToClipboard'
 import OverlayOnSizeIsChanging from '../../UI/OverlayOnSizeIsChanging/OverlayOnSizeIsChanging'
-import ReactTooltip from 'react-tooltip'
 import { getFileUrl } from '../../../utils/getFileUrl'
+import buildRelUrls from '../../../utils/buildRelUrls'
+import ControlPanel from '../../UI/ControlPanel'
+
+import Dropdown from 'antd/es/dropdown'
+import Menu from 'antd/es/menu'
+import Button from 'antd/es/button'
+import Divider from 'antd/es/divider'
+import UploadOutlined from '@ant-design/icons/UploadOutlined'
+import SaveOutlined from '@ant-design/icons/SaveOutlined'
+import LinkOutlined from '@ant-design/icons/LinkOutlined'
+import DownOutlined from '@ant-design/icons/DownOutlined'
 
 const FilesTree = props => {
     const {
@@ -31,7 +37,7 @@ const FilesTree = props => {
     const treeData = buildTree(structure)
 
     const handleChange = items => {
-        const result = []
+        let result = []
         buildItems(items, [], result)
         if (!isEqual(result, structure)) {
             if (
@@ -47,7 +53,7 @@ const FilesTree = props => {
                 if (!props.checkUserRights(['content', 'developer'])) {
                     return
                 }
-
+            result = buildRelUrls(result)
             props.sendUpdate(
                 'website',
                 {
@@ -58,12 +64,13 @@ const FilesTree = props => {
         }
     }
 
-    const handleCopyPath = () => {
+    const handleCopyPath = thumbnail => {
         if (currentResourcesStructureElement) {
             const path = getFileUrl(
                 props.structure,
                 currentResourcesStructureElement.id,
-                true
+                true,
+                thumbnail
             )
             // currentResourcesStructureElement.path.reduce(
             //     (totalPath, item) => (totalPath = totalPath + '/' + item.name),
@@ -81,7 +88,7 @@ const FilesTree = props => {
         props.uploadFile([file])
     }
 
-    const [state: State, setState] = useState({
+    const [state, setState] = useState({
         searchString: '',
         searchFocusIndex: 0,
         searchFoundCount: null,
@@ -161,6 +168,51 @@ const FilesTree = props => {
     }
     const fileUploadRef = useRef(null)
 
+    const handleButtonMenuClick = e => {
+        if (!props.checkUserRights(['developer', 'content'])) {
+            return
+        }
+        switch (e.key) {
+            case 'create':
+                createFile()
+                break
+            case 'saveNew':
+                props.saveFile(currentResource)
+                break
+            case 'delete':
+                props.deleteFile(currentResource)
+                break
+
+            case 'search':
+                setState({
+                    ...state,
+                    searchOpen: !state.searchOpen,
+                })
+                break
+            case 'linkThumbnail':
+                handleCopyPath(true)
+                break
+            default:
+                break
+        }
+    }
+
+    const moreMenu = (
+        <Menu onClick={handleButtonMenuClick}>
+            {currentResourcesStructureElement && (
+                <Menu.Item key="create">
+                    Create new file (Ctrl + Shift + A)
+                </Menu.Item>
+            )}
+            {currentResourcesStructureElement && (
+                <Menu.Item key="saveNew">Save as new</Menu.Item>
+            )}
+            {currentResourcesStructureElement && (
+                <Menu.Item key="delete">Delete file (Delete)</Menu.Item>
+            )}
+            <Menu.Item key="search">Show or hide search (Ctrl + F)</Menu.Item>
+        </Menu>
+    )
     return (
         <div
             className={classes.Container}
@@ -181,86 +233,55 @@ const FilesTree = props => {
                 setActiveAndKeyDown('blur')
             }}
         >
-            <div>
-                <label
-                    data-tip="Upload file"
-                    className={[
-                        classes.ImageContainer,
-                        buttonClasses.Button,
-                        buttonClasses.Inline,
-                    ].join(' ')}
-                >
-                    <input
-                        ref={fileUploadRef}
-                        className={classes.ImageInput}
-                        type="file"
-                        onChange={e => {
-                            if (props.checkUserRights(['developer', 'content']))
-                                props.uploadFile(e.target.files)
-                        }}
-                    />
-                    <Svg
-                        className={buttonClasses.Svg}
-                        icon='<svg height="20" viewBox="0 0 24 24" width="20"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" ></path></svg>'
-                    />
-                </label>
-                {!props.tooltipsOff ? (
-                    <ReactTooltip
-                        effect="solid"
-                        multiline={true}
-                        place="top"
-                        className={buttonClasses.Tooltip}
-                        delayShow={250}
-                        overridePosition={tooltipOverwritePositions}
-                    />
-                ) : null}
-                <SmallButton
-                    inline
-                    icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>'
-                    buttonClicked={createFile}
-                    tooltip="Create new file"
-                    requiredRights={['developer', 'content']}
+            <ControlPanel>
+                <input
+                    ref={fileUploadRef}
+                    className={classes.ImageInput}
+                    type="file"
+                    onChange={e => {
+                        if (props.checkUserRights(['developer', 'content']))
+                            props.uploadFile(e.target.files)
+                    }}
                 />
                 <SmallButton
-                    inline
-                    icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"></path></svg>'
-                    buttonClicked={() => props.saveFile(currentResource, true)}
-                    tooltip="Save file"
-                    requiredRights={['developer', 'content']}
-                />
-                <SmallButton
-                    inline
-                    icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M10,14H8.5H5v-3.8C5,10.1,5.1,10,5.3,10h3.3H10V9H4.5C4.2,9,4,9.2,4,9.5V14H2V2h2v3.5C4,5.8,4.2,6,4.5,6h5   C9.8,6,10,5.8,10,5.5V2h0.8c0.3,0,0.5,0.1,0.7,0.3l1.9,2C13.8,4.7,14,5.2,14,5.7v2.8V10h1V5.4c0-0.5-0.2-1-0.6-1.4l-2.4-2.4   C11.7,1.2,11.2,1,10.7,1H1.5C1.2,1,1,1.2,1,1.5v13C1,14.8,1.2,15,1.5,15H10V14z M7,2.3C7,2.1,7.1,2,7.3,2h1.5C8.9,2,9,2.1,9,2.3   v2.5C9,4.9,8.9,5,8.8,5H7.3C7.1,5,7,4.9,7,4.8V2.3z"></path></svg>'
-                    buttonClicked={() => props.saveFile(currentResource)}
-                    tooltip="Save as a new file"
-                    requiredRights={['developer', 'content']}
-                />
-                <SmallButton
-                    inline
-                    icon='<svg height="20" viewBox="0 0 24 24" width="20"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" ></path></svg>'
-                    buttonClicked={() => props.deleteFile(currentResource)}
-                    tooltip="Delete file"
-                    requiredRights={['developer', 'content']}
-                />
-                <SmallButton
-                    inline
-                    icon='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>'
+                    icon={<UploadOutlined />}
+                    title="Upload"
                     buttonClicked={() =>
-                        setState({
-                            ...state,
-                            searchOpen: !state.searchOpen,
-                        })
+                        fileUploadRef.current && fileUploadRef.current.click()
                     }
-                    tooltip="Show or hide search (Ctrl + F)"
+                    tooltip="Upload a new file (Ctrl + A)"
                 />
+                <Divider type="vertical" />
                 <SmallButton
-                    inline
-                    icon='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg>'
-                    buttonClicked={handleCopyPath}
-                    tooltip="Copy path to the media file to clipboard.<br>You can paste it where needed."
+                    title="Save"
+                    icon={<SaveOutlined />}
+                    buttonClicked={() => props.saveFile(currentResource, true)}
+                    tooltip="Save file (Ctrl + S)"
                     requiredRights={['developer', 'content']}
                 />
-            </div>
+                <Divider type="vertical" />
+
+                <SmallButton
+                    title="Link"
+                    icon={<LinkOutlined />}
+                    buttonClicked={handleCopyPath}
+                    tooltip="Copy path to the path to clipboard. You can paste it where needed. (Ctrl + L)"
+                    requiredRights={['developer', 'content']}
+                    overlay={
+                        <Menu onClick={handleButtonMenuClick}>
+                            <Menu.Item key="linkThumbnail">
+                                Link to thumbnail (220px X 220px)
+                            </Menu.Item>
+                        </Menu>
+                    }
+                />
+                <Divider type="vertical" />
+                <Dropdown overlay={moreMenu}>
+                    <Button size="small">
+                        More <DownOutlined />
+                    </Button>
+                </Dropdown>
+            </ControlPanel>
             <div className={classes.TreeContainer}>
                 <SortableTree
                     treeData={treeData}
@@ -288,6 +309,7 @@ const FilesTree = props => {
                         overflow: 'auto',
                     }}
                     generateNodeProps={generateNodePropsHandle}
+                    slideRegionSize={20}
                 />
                 <OverlayOnSizeIsChanging />
             </div>
@@ -305,7 +327,6 @@ const mapStateToProps = (state, props) => {
         currentWebsiteId: state.mD.currentWebsiteId,
         currentResourcesStructureElement: state.mD.currentFileItem,
         isFocused: state.activeContainer === 'filesresources',
-        tooltipsOff: state.mD.tooltipsOff,
     }
 }
 

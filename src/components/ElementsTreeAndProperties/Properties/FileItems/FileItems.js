@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import { SortableTreeWithoutDndContext as SortableTree } from 'react-sortable-tree'
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
+import Tabs from 'antd/es/tabs'
 import * as actions from '../../../../store/actions/index'
 
 import * as classes from '../../../ResourcesTree/ResourcesTree.module.css'
@@ -14,8 +14,9 @@ import OverlayOnSizeIsChanging from '../../../UI/OverlayOnSizeIsChanging/Overlay
 import checkUserRights from '../../../../utils/checkUserRights'
 import bytes from 'bytes'
 import TimeAgo from 'react-timeago'
-import Checkbox from '../../../UI/Checkbox/Checkbox'
 import { getFileUrl } from '../../../../utils/getFileUrl'
+import Checkbox from 'antd/es/checkbox'
+import Divider from 'antd/es/divider'
 
 const FileItems = props => {
     const [state, setState] = useState({
@@ -144,6 +145,7 @@ const FileItems = props => {
                         onChange={items =>
                             setState({ ...state, treeDataSource: items })
                         }
+                        slideRegionSize={20}
                     />
                     <OverlayOnSizeIsChanging />
                 </div>
@@ -154,38 +156,9 @@ const FileItems = props => {
                 />
             </div>
             <div className={classesAdvancedBar.LastContainer}>
-                <Tabs
-                    className={[
-                        'react-tabs',
-                        classesAdvancedBar.reactTabs,
-                        classes.MenuItemsTabs,
-                    ].join(' ')}
-                >
-                    <TabList>
-                        <Tab
-                            className={[
-                                'react-tabs__tab',
-                                classesAdvancedBar.reactTabsTab,
-                            ].join(' ')}
-                        >
-                            Highlighted file
-                        </Tab>
-                        <Tab
-                            className={[
-                                'react-tabs__tab',
-                                classesAdvancedBar.reactTabsTab,
-                            ].join(' ')}
-                        >
-                            Chosen file
-                        </Tab>
-                    </TabList>
-                    <TabPanel
-                        selectedClassName={[
-                            'react-tabs__tab-panel--selected',
-                            classesAdvancedBar.reactTabsTabPanelSelected,
-                        ].join(' ')}
-                    >
-                        {currentFileItem ? (
+                <Tabs defaultActiveKey="high" animated={false} size="small">
+                    <Tabs.TabPane tab="Highlighted file" key="high">
+                        {currentFileItem && (
                             <div style={{ flex: 1 }}>
                                 {currentFileItem.type.indexOf('image') >= 0 ? (
                                     <>
@@ -213,9 +186,10 @@ const FileItems = props => {
                                                     [props.attrThumb]: false,
                                                 })
                                             }}
-                                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#666" d="M21 3H3C2 3 1 4 1 5v14c0 1.1.9 2 2 2h18c1 0 2-1 2-2V5c0-1-1-2-2-2zM5 17l3.5-4.5 2.5 3.01L14.5 11l4.5 6H5z"></path></svg>'
-                                            title="Select original size"
-                                        />
+                                        >
+                                            Select original size
+                                        </Checkbox>
+                                        <div />
                                         <Checkbox
                                             checked={
                                                 props.elementValues[
@@ -240,9 +214,10 @@ const FileItems = props => {
                                                     [props.attrThumb]: true,
                                                 })
                                             }}
-                                            icon='<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#666" d="M23 15h-2v2h2v-2zm0-4h-2v2h2v-2zm0 8h-2v2c1 0 2-1 2-2zM15 3h-2v2h2V3zm8 4h-2v2h2V7zm-2-4v2h2c0-1-1-2-2-2zM3 21h8v-6H1v4c0 1.1.9 2 2 2zM3 7H1v2h2V7zm12 12h-2v2h2v-2zm4-16h-2v2h2V3zm0 16h-2v2h2v-2zM3 3C2 3 1 4 1 5h2V3zm0 8H1v2h2v-2zm8-8H9v2h2V3zM7 3H5v2h2V3z"></path></svg>'
-                                            title="Select thumbnail size"
-                                        />
+                                        >
+                                            Select thumbnail size
+                                        </Checkbox>
+                                        <Divider />
 
                                         <img
                                             src={getFileUrl(
@@ -264,7 +239,6 @@ const FileItems = props => {
                                     </>
                                 ) : (
                                     <Checkbox
-                                        style={{}}
                                         checked={
                                             props.elementValues[
                                                 props.attrName
@@ -285,28 +259,34 @@ const FileItems = props => {
                                                 [props.attrThumb]: false,
                                             })
                                         }}
-                                        title="Select file"
-                                    />
+                                    >
+                                        Select file
+                                    </Checkbox>
                                 )}
                                 {fileDetailesTable(currentFileItem)}
                             </div>
-                        ) : null}
+                        )}
                         <OverlayOnSizeIsChanging />
-                    </TabPanel>
-                    <TabPanel
-                        selectedClassName={[
-                            'react-tabs__tab-panel--selected',
-                            classesAdvancedBar.reactTabsTabPanelSelected,
-                        ].join(' ')}
-                    >
-                        {props.elementValues[props.attrName] ? (
+                    </Tabs.TabPane>
+                    <Tabs.TabPane tab="Chosen file" key="chosen">
+                        {props.elementValues[props.attrName] && (
                             <>
                                 <div style={{ flex: 1 }}>
                                     <img
                                         src={
-                                            'http://live.websiter.dev:5000/' +
-                                            props.currentWebsiteObject.domain +
-                                            props.elementValues[props.attrName]
+                                            getFileUrl(
+                                                props.filesStructure,
+                                                props.elementValues[
+                                                    props.attrName
+                                                ],
+                                                false,
+                                                true,
+                                                props.currentWebsiteObject
+                                                    .domain
+                                            )
+                                            // 'http://live.websiter.dev:5000/' +
+                                            // props.currentWebsiteObject.domain +
+                                            // props.elementValues[props.attrName]
                                         }
                                         style={{
                                             maxWidth: '100%',
@@ -320,9 +300,9 @@ const FileItems = props => {
                                         : null}
                                 </div>
                             </>
-                        ) : null}
+                        )}
                         <OverlayOnSizeIsChanging />
-                    </TabPanel>
+                    </Tabs.TabPane>
                 </Tabs>
             </div>
         </div>

@@ -1,9 +1,7 @@
-import type Props from '../SiteBuilder'
+// import type Props from '../SiteBuilder'
 
-export default (props: Props) => {
-    const iframe = ((document.getElementById(
-        'builderFrame'
-    ): any): HTMLIFrameElement)
+export default props => {
+    const iframe = document.getElementById('builderFrame')
     if (iframe) {
         const innerDoc = iframe.contentDocument || iframe.contentWindow.document
         if (innerDoc.body) {

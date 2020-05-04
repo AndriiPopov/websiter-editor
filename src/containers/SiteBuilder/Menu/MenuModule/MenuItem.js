@@ -348,27 +348,32 @@ export var MenuItem =
                         ),
                         _classNames)
                     )
-
+                    var itemAttrs = _objectSpread(
+                        {},
+                        {
+                            className: [
+                                ...(props.isSub ||
+                                props.mode === 'vertical-left'
+                                    ? props.store.getState()
+                                          .popupMenuItemClasses
+                                    : props.store.getState()
+                                          .topMenuItemClasses),
+                                ...(props.store
+                                    .getState()
+                                    .activeKeys.includes(this.props.eventKey)
+                                    ? props.isSub ||
+                                      props.mode === 'vertical-left'
+                                        ? props.store.getState()
+                                              .popupMenuItemActiveClasses
+                                        : props.store.getState()
+                                              .topMenuItemActiveClasses
+                                    : []),
+                            ].join(' '),
+                        }
+                    )
                     var attrs = _objectSpread({}, props.attribute, {
                         title: props.title,
-                        // className: className,
-                        className: [
-                            className,
-                            ...(props.isSub ||
-                            props.mode.indexOf('vertical') > -1
-                                ? props.store.getState().popupMenuItemClasses
-                                : props.store.getState().topMenuItemClasses),
-                            ...(props.store
-                                .getState()
-                                .activeKeys.includes(this.props.eventKey)
-                                ? props.isSub ||
-                                  props.mode.indexOf('vertical') > -1
-                                    ? props.store.getState()
-                                          .popupMenuItemActiveClasses
-                                    : props.store.getState()
-                                          .topMenuItemActiveClasses
-                                : []),
-                        ].join(' '),
+                        className: className,
                         // set to menuitem by default
                         role: props.role || 'menuitem',
                         'aria-disabled': props.disabled,
@@ -419,7 +424,13 @@ export var MenuItem =
                             this.props
                         )
                     }
+                    var aAttrs = _objectSpread(
+                        {},
+                        { href: props.href, target: props.target }
+                    )
                     delete props.isSub
+                    delete props.href
+                    delete props.target
 
                     return React.createElement(
                         'li',
@@ -427,7 +438,16 @@ export var MenuItem =
                             style: style,
                             ref: this.saveNode,
                         }),
-                        props.children,
+                        React.createElement(
+                            'a',
+                            Object.assign({}, aAttrs),
+                            React.createElement(
+                                'div',
+                                Object.assign({}, itemAttrs),
+                                props.children
+                            )
+                        ),
+
                         icon
                     )
                 },

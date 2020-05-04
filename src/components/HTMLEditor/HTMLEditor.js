@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react'
-//$FlowFixMe
+
 import { Editor } from '@tinymce/tinymce-react'
 import { connect } from 'react-redux'
 import checkUserRights from '../../utils/checkUserRights'
 
-import type { elementType, initialStateType } from '../../store/reducer/reducer'
-type Props = {
-    elementValue: $PropertyType<elementType, 'propertiesString'>,
-    elementCurrentCursor: $PropertyType<elementType, 'cursorPosition'>,
-    editorMode: 'json' | 'css',
-    handleChange: (value: string, cursorPosition: {}) => {},
-    readOnly?: boolean,
-    sizeIsChanging: $PropertyType<initialStateType, 'sizeIsChanging'>,
-    requiredRights: Array<string>,
-    value: string,
-}
+// import type { elementType, initialStateType } from '../../store/reducer/reducer'
+// type Props = {
+//     elementValue: $PropertyType<elementType, 'propertiesString'>,
+//     elementCurrentCursor: $PropertyType<elementType, 'cursorPosition'>,
+//     editorMode: 'json' | 'css',
+//     handleChange: (value: string, cursorPosition: {}) => {},
+//     readOnly?: boolean,
+//     sizeIsChanging: $PropertyType<initialStateType, 'sizeIsChanging'>,
+//     requiredRights: Array<string>,
+//     value: string,
+// }
 
-const HTMLEditor = (props: Props) => {
+const HTMLEditor = props => {
     const [state, setState] = useState(false)
     const [value, setValue] = useState(props.value)
     const [box, setBox] = useState(props.currentBox)
@@ -25,7 +25,12 @@ const HTMLEditor = (props: Props) => {
         setValue(props.value)
         setBox(props.currentBox)
         setState(true)
-    }, [props.currentBox])
+    }, [
+        props.currentBox,
+        props.currentPageId,
+        props.currentTemplateId,
+        props.currentPluginId,
+    ])
 
     const handleChange = (e, editor) => {
         if (!props.checkUserRights(props.requiredRights)) {
@@ -139,6 +144,9 @@ const Refresh = props => {
 const mapStateToProps = state => {
     return {
         sizeIsChanging: state.sizeIsChanging,
+        currentPageId: state.mD.currentPageId,
+        currentTemplateId: state.mD.currentTemplateId,
+        currentPluginId: state.mD.currentPluginId,
     }
 }
 
