@@ -12,7 +12,6 @@ import {
 } from '../../utils/sortTreeMethods'
 import Svg from '../Svg/Svg'
 import { structure } from '../../utils/resourceTypeIndex'
-import checkUserRights from '../../utils/checkUserRights'
 import * as wsActions from '../../websocketActions'
 
 // import type { pageType, initialStateType } from '../../store/reducer/reducer'
@@ -104,13 +103,6 @@ const ItemRenderer = props => {
     if (!isLandingPadActive) rowClasses.push(className)
 
     const handlePropertyChange = (key, value, id) => {
-        if (
-            !props.checkUserRights(
-                props.type === 'page' ? ['content'] : ['developer']
-            )
-        ) {
-            return
-        }
         value = value.trim()
         if (key === 'url') {
             value = value.replace(/\s+/g, '-').toLowerCase()
@@ -204,12 +196,7 @@ const ItemRenderer = props => {
                             }
                         >
                             <div className={classes.rst__rowLabel}>
-                                {props.checkUserRights(
-                                    props.type === 'page'
-                                        ? ['content']
-                                        : ['developer'],
-                                    true
-                                ) && !isGeneralSettings ? (
+                                {!isGeneralSettings ? (
                                     <InspectorValue
                                         value={name}
                                         items={[]}
@@ -300,16 +287,11 @@ const ItemRenderer = props => {
                                     </div>
                                 ) : null}
                             </div>
-                            {props.type === 'page' && !isGeneralSettings ? (
-                                <div className={classes.rst__rowLabel}>
-                                    url:
-                                    {props.checkUserRights(
-                                        props.type === 'page'
-                                            ? ['content']
-                                            : ['developer'],
-
-                                        true
-                                    ) ? (
+                            {props.type === 'page' &&
+                                !isGeneralSettings &&
+                                url !== '__general__settings__' && (
+                                    <div className={classes.rst__rowLabel}>
+                                        url:
                                         <InspectorValue
                                             value={url}
                                             items={[]}
@@ -325,11 +307,8 @@ const ItemRenderer = props => {
                                             maxLength="30"
                                             maxWidth="220px"
                                         />
-                                    ) : (
-                                        url
-                                    )}
-                                </div>
-                            ) : null}
+                                    </div>
+                                )}
                         </div>
                     </div>
                 )}
@@ -358,7 +337,6 @@ const mapDispatchToProps = dispatch => {
     return {
         chooseResource: (id, type) =>
             dispatch(actions.chooseResource(id, type)),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
         sendUpdate: (type, newResource, id) =>
             dispatch(wsActions.sendUpdate(type, newResource, id)),
     }

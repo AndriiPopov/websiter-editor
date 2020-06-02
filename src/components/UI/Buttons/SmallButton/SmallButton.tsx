@@ -1,7 +1,4 @@
 import React from 'react'
-import { connect } from 'react-redux'
-
-import checkUserRights from '../../../../utils/checkUserRights'
 
 import Tooltip from 'antd/es/tooltip'
 import Button from 'antd/es/button'
@@ -13,21 +10,18 @@ type Props = {
     title?: string
     buttonClicked?: Function
     mouseDown?: Function
-    icon?: string
+    icon?: JSX.Element
     googleFontIcon?: string
     inline?: boolean
     tooltip?: string
     disabled?: boolean
     requiredRights?: Array<string>
+    overlay?: JSX.Element
 }
 
-export const SmallButton = props => {
+export const SmallButton = (props: Props) => {
     const handleButtonClick = () => {
         if (props.buttonClicked) {
-            if (props.requiredRights)
-                if (!props.checkUserRights(props.requiredRights || [])) {
-                    return
-                }
             if (props.buttonClicked) props.buttonClicked()
         }
     }
@@ -39,7 +33,7 @@ export const SmallButton = props => {
             // style={{ margin: '0px 4px' }}
             type={props.type}
             buttonsRender={([leftButton, rightButton]) => [
-                <Tooltip title={props.tooltip} mouseEnterDelay={0.2}>
+                <Tooltip title={props.tooltip} mouseEnterDelay={0.5}>
                     {leftButton}
                 </Tooltip>,
                 <Button icon={<DownOutlined />} />,
@@ -49,7 +43,7 @@ export const SmallButton = props => {
             {props.title}
         </Dropdown.Button>
     ) : (
-        <Tooltip title={props.tooltip} mouseEnterDelay={0.2}>
+        <Tooltip title={props.tooltip} mouseEnterDelay={0.5}>
             <Button
                 icon={props.icon}
                 onClick={handleButtonClick}
@@ -63,13 +57,4 @@ export const SmallButton = props => {
     )
 }
 
-const mapDispatchToProps = dispatch => {
-    return {
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
-    }
-}
-
-export default connect(
-    null,
-    mapDispatchToProps
-)(SmallButton)
+export default SmallButton

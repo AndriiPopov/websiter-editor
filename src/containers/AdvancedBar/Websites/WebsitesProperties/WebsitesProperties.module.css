@@ -2,6 +2,7 @@
     margin-left: 5px;
     min-width: 155px;
     display: inline-block;
+    text-align: right;
 }
 
 .Input {
@@ -25,6 +26,5 @@
     position: relative;
 }
 .Title > span {
-    bottom: 0px;
-    position: absolute;
+    margin-left: 5px;
 }

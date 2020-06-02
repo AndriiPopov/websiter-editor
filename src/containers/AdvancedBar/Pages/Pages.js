@@ -7,7 +7,6 @@ import SizeDragController from '../SizeDragController/SizeDragController'
 import ResourcesTree from '../../../components/ResourcesTree/ResourcesTree'
 import ElementsTree from '../../../components/ElementsTreeAndProperties/ElementsTree/ElementsTree'
 import PageProperties from '../../../components/ElementsTreeAndProperties/PageProperties/PageProperties'
-import checkUserRights from '../../../utils/checkUserRights'
 
 // import type { initialStateType } from '../../../store/reducer/reducer'
 
@@ -17,9 +16,8 @@ import checkUserRights from '../../../utils/checkUserRights'
 // }
 
 const Pages = props => {
-    const handleChangeBoxProperty = (key, value) => {
-        if (props.checkUserRights(['content']))
-            props.changeBoxPropertyInValues('page', key, value)
+    const handleChangeBoxProperty = (key, value, id) => {
+        props.changeBoxPropertyInValues('page', key, value, id)
     }
 
     return (
@@ -74,9 +72,10 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
-        changeBoxPropertyInValues: (type, key, value) =>
-            dispatch(actions.changeBoxPropertyInValues(type, key, value)),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
+        changeBoxPropertyInValues: (type, key, value, id) =>
+            dispatch(
+                actions.changeBoxPropertyInValues(type, key, value, false, id)
+            ),
     }
 }
 

@@ -689,7 +689,20 @@ export var SubMenu =
                             ? props.store.getState().popupMenuItemClasses
                             : props.store.getState().topMenuItemClasses,
                     ].join(' ')
-
+                    var className2 = [
+                        ...(props.isSub || props.mode === 'vertical-left'
+                            ? props.store.getState().popupMenuItemClasses
+                            : props.store.getState().topMenuItemClasses),
+                        ...(props.store
+                            .getState()
+                            .activeKeys.includes(this.props.eventKey)
+                            ? props.isSub || props.mode === 'vertical-left'
+                                ? props.store.getState()
+                                      .popupMenuItemActiveClasses
+                                : props.store.getState()
+                                      .topMenuItemActiveClasses
+                            : []),
+                    ].join(' ')
                     if (!this.internalMenuId) {
                         if (props.eventKey) {
                             this.internalMenuId = ''.concat(
@@ -779,7 +792,15 @@ export var SubMenu =
                                         : undefined,
                             }
                         ),
-                        props.title,
+                        React.createElement(
+                            'div',
+                            { style: { display: 'inline-block' } },
+                            React.createElement(
+                                'div',
+                                { className: className2 },
+                                props.title
+                            )
+                        ),
                         icon ||
                             React.createElement('i', {
                                 className: ''.concat(prefixCls, '-arrow'),
@@ -822,6 +843,7 @@ export var SubMenu =
                               )
                             : Object.assign({}, placements, builtinPlacements)
                     delete props.direction
+
                     return React.createElement(
                         'li',
                         Object.assign({}, props, mouseEvents, {

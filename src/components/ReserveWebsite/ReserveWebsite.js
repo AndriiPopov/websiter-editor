@@ -19,6 +19,23 @@ import getEssentialData from '../../utils/getEssentialData'
 
 export let webSocket = false
 
+let currentCallbackId = 0
+const callbacks = {}
+
+export const addWSCallback = callback => {
+    currentCallbackId++
+    const callbackId = 'cb_' + currentCallbackId
+    callbacks[callbackId] = callback
+    return callbackId
+}
+
+const fireCallback = id => {
+    if (callbacks[id]) {
+        callbacks[id]()
+        delete callbacks[id]
+    }
+}
+
 class ReserveWebsiteInn extends Component {
     state = {
         requestedResources: [],
@@ -120,6 +137,9 @@ class ReserveWebsiteInn extends Component {
                     break
                 case 'error':
                     alert(data.text)
+                    break
+                case 'fireCallback':
+                    fireCallback(data.callbackId)
                     break
                 default:
                     break

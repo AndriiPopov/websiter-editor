@@ -14,7 +14,7 @@ const Files = props => {
     const [editorMode, setEditorMode] = useState('css')
     const [loaded, setLoaded] = useState(false)
 
-    const handleSaveFile = async (fileId, replace) => {
+    const handleSaveFile = async (fileId, replace, fileType) => {
         if (fileId === props.currentFileItem.id) {
             let file
             if (loaded === 'resize') {
@@ -41,7 +41,7 @@ const Files = props => {
                 )
             }
             if (replace) replace = props.currentFileItem
-            props.uploadFile([file], replace, editorMode)
+            props.uploadFile([file], replace, editorMode, fileType)
         }
     }
 
@@ -54,7 +54,7 @@ const Files = props => {
                     flex: '0 0 ' + props.barSizes.width + 'px',
                 }}
             >
-                <FilesTree saveFile={handleSaveFile} />
+                <FilesTree />
                 <SizeDragController
                     addClass={classes.widthControll}
                     startValue={props.barSizes.width}
@@ -74,6 +74,7 @@ const Files = props => {
                         setEditorMode={setEditorMode}
                         loaded={loaded}
                         setLoaded={setLoaded}
+                        saveFile={handleSaveFile}
                     />
                 </div>
             ) : null}
@@ -90,8 +91,10 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = (dispatch, props) => {
     return {
-        uploadFile: (files, replace, editorMode) =>
-            dispatch(actions.uploadFile(files, replace, editorMode)),
+        uploadFile: (files, replace, editorMode, fileType) =>
+            dispatch(
+                actions.uploadFile(files, replace, editorMode, false, fileType)
+            ),
     }
 }
 

@@ -1,69 +1,112 @@
 // import type { Props } from '../ElementsTree'
 
-export default (props, currentBoxType) => {
-    if (currentBoxType === 'trash') return {}
-    const buttonRules = {}
-
-    if (
-        currentBoxType !== 'isCMSVariable' &&
-        currentBoxType !== 'isElementFromCMSVariable' &&
-        currentBoxType !== 'CMSRoute' &&
-        currentBoxType !== 'isFromPropagatingPlugin'
-    )
-        buttonRules.addText = true
-
-    if (
-        currentBoxType !== 'CMSRoute' &&
-        currentBoxType !== 'isFromPropagatingPlugin'
-    )
-        buttonRules.addFromCMSVariable = true
-
-    if (
-        ![
-            'childrenTo',
-            'isElementFromCMSVariable',
-            'isFromPropagatingPlugin',
-            'headBody',
-            'html',
-        ].includes(currentBoxType)
-    )
-        buttonRules.addNext = true
-
+export default (props: { mode: string }, currentBoxType: string) => {
+    let buttonRules = { addChildren: false }
     if (props.mode === 'plugin') buttonRules.addChildren = true
-
-    if (
-        currentBoxType !== 'plugin' &&
-        currentBoxType !== 'children' &&
-        currentBoxType !== 'isElementFromCMSVariable' &&
-        currentBoxType !== 'text'
-    )
-        buttonRules.addInside = true
-
-    if (
-        currentBoxType === 'element' ||
-        currentBoxType === 'text' ||
-        currentBoxType === 'plugin' ||
-        currentBoxType === 'children'
-    )
-        buttonRules.duplicate = true
-
-    if (currentBoxType === 'element' || currentBoxType === 'text')
-        buttonRules.mergeToPlugin = true
-
-    if (currentBoxType === 'element' || currentBoxType === 'headBody')
-        buttonRules.mergeToPluginChildren = true
-
-    if (currentBoxType === 'plugin') buttonRules.dissolve = true
-
-    if (
-        currentBoxType === 'element' ||
-        currentBoxType === 'plugin' ||
-        currentBoxType === 'children' ||
-        currentBoxType === 'isElementFromCMSVariable' ||
-        currentBoxType === 'isCMSVariable' ||
-        currentBoxType === 'text'
-    )
-        buttonRules.delete = true
-
-    return buttonRules
+    switch (currentBoxType) {
+        case 'trash':
+            return {
+                ...buttonRules,
+                deleteChildren: true,
+            }
+        case 'isCMSVariable':
+            return {
+                ...buttonRules,
+                addNext: true,
+                addInside: true,
+                duplicate: true,
+                delete: true,
+                deleteChildren: true,
+            }
+        case 'isElementFromCMSVariable':
+            return {
+                ...buttonRules,
+                addNext: true,
+                addFromCMSVariable: true,
+                duplicate: true,
+                delete: true,
+            }
+        case 'isFromPropagatingPlugin':
+            return {
+                ...buttonRules,
+            }
+        case 'CMSRoute':
+            return {
+                ...buttonRules,
+                addInside: true,
+                deleteChildren: true,
+            }
+        case 'html':
+            return {
+                ...buttonRules,
+                addText: true,
+                addFromCMSVariable: true,
+                addInside: true,
+            }
+        case 'headBody':
+            return {
+                ...buttonRules,
+                addText: true,
+                addFromCMSVariable: true,
+                addInside: true,
+                mergeToPluginChildren: true,
+                deleteChildren: true,
+            }
+        case 'plugin':
+            return {
+                ...buttonRules,
+                addNext: true,
+                delete: true,
+                duplicate: true,
+                addFromCMSVariable: true,
+                dissolve: true,
+            }
+        case 'text':
+            return {
+                ...buttonRules,
+                addNext: true,
+                delete: true,
+                duplicate: true,
+                addFromCMSVariable: true,
+                mergeToPlugin: true,
+            }
+        case 'element':
+            return {
+                ...buttonRules,
+                addNext: true,
+                addInside: true,
+                delete: true,
+                deleteChildren: true,
+                duplicate: true,
+                addFromCMSVariable: true,
+                mergeToPlugin: true,
+                mergeToPluginChildren: true,
+            }
+        case 'children':
+            return {
+                ...buttonRules,
+                addNext: true,
+                delete: true,
+                deleteChildren: true,
+                duplicate: true,
+                addFromCMSVariable: true,
+            }
+        case 'childrenTo':
+            return {
+                ...buttonRules,
+                addInside: true,
+                addFromCMSVariable: true,
+                addText: true,
+                mergeToPluginChildren: true,
+            }
+        case 'isFromPropagatingPlugin':
+            return {
+                ...buttonRules,
+                addInside: true,
+            }
+        default:
+            return {
+                ...buttonRules,
+            }
+    }
 }

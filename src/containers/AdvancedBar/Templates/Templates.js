@@ -7,7 +7,6 @@ import SizeDragController from '../SizeDragController/SizeDragController'
 import ResourcesTree from '../../../components/ResourcesTree/ResourcesTree'
 import ElementsTree from '../../../components/ElementsTreeAndProperties/ElementsTree/ElementsTree'
 import Properties from '../../../components/ElementsTreeAndProperties/Properties/Properties'
-import checkUserRights from '../../../utils/checkUserRights'
 
 // import type { initialStateType } from '../../../store/reducer/reducer'
 
@@ -18,8 +17,7 @@ import checkUserRights from '../../../utils/checkUserRights'
 
 const Templates = props => {
     const handleChangeBoxProperty = (key, value, id) => {
-        if (props.checkUserRights(['content']))
-            props.changeBoxPropertyInValues('template', key, value, id)
+        props.changeBoxPropertyInValues('template', key, value, id)
     }
 
     return (
@@ -79,7 +77,6 @@ const mapDispatchToProps = dispatch => {
             dispatch(
                 actions.changeBoxPropertyInValues(type, key, value, false, id)
             ),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }
 

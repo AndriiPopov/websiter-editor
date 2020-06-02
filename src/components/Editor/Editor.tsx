@@ -13,7 +13,6 @@ import 'ace-builds/src-noconflict/mode-xml'
 import 'ace-builds/src-noconflict/theme-github'
 import 'ace-builds/src-min-noconflict/ext-searchbox'
 import 'ace-builds/src-min-noconflict/ext-language_tools'
-import checkUserRights from '../../utils/checkUserRights'
 
 // import beautify from 'ace-builds/src-min-noconflict/ext-beautify'
 import beautify_js, { css as beautify_css } from 'js-beautify'
@@ -29,26 +28,23 @@ ace.config.set('workerPath', '/ace-builds/src-noconflict')
 
 // var editor = ace.edit('editor') // get reference to editor
 
-// type Props = {
-//     currentElement: $PropertyType<elementType, 'id'>,
-//     elementValue: $PropertyType<elementType, 'propertiesString'>,
-//     elementCurrentCursor: $PropertyType<elementType, 'cursorPosition'>,
-//     editorMode: 'json' | 'css',
-//     handleChange: (value: string, cursorPosition: {}) => {},
-//     readOnly?: boolean,
-// }
+type Props = {
+    // currentElement: $PropertyType<elementType, 'id'>,
+    // elementValue: $PropertyType<elementType, 'propertiesString'>,
+    // elementCurrentCursor: $PropertyType<elementType, 'cursorPosition'>,
+    // editorMode: 'json' | 'css',
+    // handleChange: (value: string, cursorPosition: {}) => {},
+    // readOnly?: boolean,
+}
 
-// type State = {
-//     value: string,
-//     updateValue: boolean,
-//     isBeatifying: boolean,
-// }
+type State = {
+    value: string
+    updateValue: boolean
+    isBeatifying: boolean
+}
 
-class Editor extends Component {
-    onChange = value => {
-        if (!this.props.checkUserRights(this.props.requiredRights)) {
-            return
-        }
+class Editor extends Component<Props, State> {
+    onChange = (value: string) => {
         this.setState({
             value,
             updateValue: false,
@@ -64,9 +60,8 @@ class Editor extends Component {
         )
     }
 
-    handleSelectProperty = (value, selectedOption) => {
-        console.log(selectedOption)
-        if (!selectedOption) return
+    handleSelectProperty = value => {
+        if (!value) return
         let obj
         try {
             obj = JSON.parse(this.state.value)
@@ -74,7 +69,10 @@ class Editor extends Component {
             obj = null
         }
         if (obj) {
-            obj[selectedOption.children] = selectedOption.value
+            const selectedOption = this.props.suggestOptions.find(
+                option => option.label === value
+            )
+            obj[selectedOption.label] = selectedOption.val
             const resultString = JSON.stringify(obj)
             this.onChange(resultString)
         }
@@ -180,8 +178,8 @@ class Editor extends Component {
                         >
                             {this.props.suggestOptions.map(option => (
                                 <Select.Option
-                                    key={'select' + option.value}
-                                    value={option.value}
+                                    key={'select_' + option.label}
+                                    value={option.label}
                                 >
                                     {option.label}
                                 </Select.Option>
@@ -245,17 +243,16 @@ class Editor extends Component {
     }
 }
 
-const mapDispatchToProps = (dispatch, props) => {
-    return {
-        // undoResourceVersion: () => dispatch(actions.undoResourceVersion()),
-        // redoResourceVersion: () => dispatch(actions.redoResourceVersion()),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
-    }
-}
+// const mapDispatchToProps = (dispatch, props) => {
+//     return {
+//         // undoResourceVersion: () => dispatch(actions.undoResourceVersion()),
+//         // redoResourceVersion: () => dispatch(actions.redoResourceVersion()),
+//     }
+// }
 
 export default connect(
     null,
-    mapDispatchToProps,
+    null,
     null,
     { forwardRef: true }
 )(Editor)

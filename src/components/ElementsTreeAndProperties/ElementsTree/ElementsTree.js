@@ -3,7 +3,7 @@ import { getCurrentResourceValue } from '../../../utils/basic'
 import { connect } from 'react-redux'
 import { SortableTreeWithoutDndContext as SortableTree } from 'react-sortable-tree'
 // import SortableTree from 'react-sortable-tree'
-import { checkIfCapital, buildTree } from '../../../utils/basic'
+import { buildTree } from '../../../utils/basic'
 import * as actions from '../../../store/actions/index'
 import * as classes from '../../ResourcesTree/ResourcesTree.module.css'
 import { buildItems } from '../../../utils/pagesStructure'
@@ -12,12 +12,9 @@ import { TreeSearch } from '../../UI/TreeSearch/TreeSearch'
 import populateStructureWithPluginChildrenAndPropagating from './methods/populateStructureWithPluginChildrenAndPropagating'
 import { searchOnHover, searchMethod, searchMethod2 } from './methods/search'
 import isEqual from 'lodash/isEqual'
-import omit from 'lodash/omit'
-import checkUserRights from '../../../utils/checkUserRights'
 import {
     current as currentIndex,
     resourceDraftIndex,
-    resourceItemIndex,
 } from '../../../utils/resourceTypeIndex'
 import Buttons from './Buttons'
 import OverlayOnSizeIsChanging from '../../UI/OverlayOnSizeIsChanging/OverlayOnSizeIsChanging'
@@ -28,8 +25,9 @@ import OverlayOnSizeIsChanging from '../../UI/OverlayOnSizeIsChanging/OverlayOnS
 // } from '../../../store/reducer/reducer'
 import getBoxType from '../../../utils/getBoxType'
 import generateButtonRules from './methods/generateButtonRules'
-import { allModules } from '../../../utils/modulesIndex'
+
 import ControlPanel from '../../UI/ControlPanel'
+import { canDragHandle, canDropHandle } from './methods'
 
 // export type State = {
 //     searchString: string,
@@ -90,91 +88,12 @@ const ElementsTree = props => {
         const result = []
         buildItems(items, [], result)
         if (!isEqual(result, resourceDraftStructure)) {
-            if (
-                !isEqual(
-                    result.map(item =>
-                        omit(item, ['expanded', 'children', 'itemPath'])
-                    ),
-                    resourceDraftStructure.map(item =>
-                        omit(item, ['expanded', 'children', 'itemPath'])
-                    )
-                )
-            ) {
-                if (
-                    !props.checkUserRights(
-                        props.mode === 'page' ? null : ['developer']
-                    )
-                ) {
-                    return
-                }
-            }
             props.saveElementsStructure(
                 props.mode,
                 result,
                 resourceDraftStructure
             )
         }
-    }
-
-    const canDropHandle = ({ node, nextParent, prevParent }) => {
-        if (!nextParent) return false
-        if (!nextParent.itemPath) return false
-        if (nextParent.mode === 'page')
-            return (
-                nextParent.CMSVariableType &&
-                (nextParent.CMSVariableType.indexOf('propagating_') >= 0 ||
-                    nextParent.CMSVariableType === 'array')
-            )
-        if (nextParent.text) return false
-        if (nextParent.isElementFromCMSVariable) return false
-        if (nextParent.isCMSVariable || nextParent.id === 'element_02')
-            return node.isCMSVariable
-
-        // if (nextParent.mode === 'template' && nextPath[0] !== prevPath[0])
-        //     return false
-        // || nextParent.id === 'element_02'
-
-        switch (nextParent.itemPath[0]) {
-            case 'trash':
-                if (nextParent.id === 'trash') return true
-                return false
-            case 'element_02':
-                return node.isCMSVariable
-            default:
-                if (node.isCMSVariable) return false
-                if (prevParent.itemPath[0] === 'element_02') return false
-                if (nextParent.isChildren) return false
-                if (allModules.includes(nextParent.tag)) return false
-                if (
-                    checkIfCapital(nextParent.tag.charAt(0)) &&
-                    nextParent.itemPath.length !== 0 &&
-                    !nextParent.forChildren
-                )
-                    return false
-                if (
-                    nextParent.mode === 'template' &&
-                    nextParent.itemPath.length === 0
-                )
-                    return false
-                return true
-        }
-    }
-
-    const canDragHandle = ({ node }) => {
-        if (node.mode === 'page') {
-            if (node.isPropagatingItem) return true
-            return false
-        }
-        if (node.itemPath[0] === 'trash' && node.itemPath.length > 1)
-            return false
-        return (
-            node.itemPath.length >
-                (node.mode === 'template' &&
-                node.itemPath[0] !== 'element_02' &&
-                node.itemPath[0] !== 'trash'
-                    ? 1
-                    : 0) && !node.childrenTo
-        )
     }
 
     const generateNodePropsHandle = ({ node }) => ({
@@ -195,14 +114,14 @@ const ElementsTree = props => {
 
     const searchFinishCallbackHandle = matches => {
         return
-        setState({
-            ...state,
-            searchFoundCount: matches.length,
-            searchFocusIndex:
-                matches.length > 0
-                    ? state.searchFocusIndex % matches.length
-                    : 0,
-        })
+        // setState({
+        //     ...state,
+        //     searchFoundCount: matches.length,
+        //     searchFocusIndex:
+        //         matches.length > 0
+        //             ? state.searchFocusIndex % matches.length
+        //             : 0,
+        // })
     }
 
     const [state, setState] = useState({
@@ -249,7 +168,6 @@ const ElementsTree = props => {
             if (e) {
                 const code = e.code
 
-                if (!props.checkUserRights(['developer'])) return
                 if (props.mode === 'page') {
                     switch (code) {
                         case 'KeyA':
@@ -394,10 +312,6 @@ const ElementsTree = props => {
     }
 
     const handleButtonMenuClick = e => {
-        if (!props.checkUserRights(['developer'])) {
-            return
-        }
-
         switch (e.key) {
             case 'addText':
                 props.addBox(props.mode, 'text')
@@ -419,6 +333,9 @@ const ElementsTree = props => {
                 break
             case 'deleteWith':
                 props.deleteBox(props.mode, true)
+                break
+            case 'deleteChildren':
+                props.deleteBox(props.mode, 'onlyChildren')
                 break
 
             default:
@@ -481,9 +398,10 @@ const ElementsTree = props => {
                     style={{
                         flex: '1 1',
                         height: 'auto !important',
-                        overflow: 'auto',
+                        // overflow: 'auto',
                     }}
                     slideRegionSize={20}
+                    innerStyle={{ paddingBottom: '150px' }}
                 />
             </div>
             {state.searchOpen ? (
@@ -495,11 +413,6 @@ const ElementsTree = props => {
 }
 
 const mapStateToProps = (state, props) => {
-    const pluginElementsStructures = {}
-    for (let item of state.mD.pluginsStructure) {
-        let draft = getCurrentResourceValue(item.id, state.resourcesObjects)
-        pluginElementsStructures[item.id] = draft ? draft.structure : []
-    }
     let resourceDraftStructure = null
     let resourceDraftValues = null
     if (state.mD[resourceDraftIndex[props.mode]]) {
@@ -510,14 +423,10 @@ const mapStateToProps = (state, props) => {
 
     const currentResource = state.mD[currentIndex[props.mode]]
     const pluginsStructure = state.mD.pluginsStructure
-    let structureWithPluginChildren = populateStructureWithPluginChildrenAndPropagating(
-        resourceDraftStructure,
-        currentResource,
+    const {
+        structureWithPluginChildren,
         pluginElementsStructures,
-        pluginsStructure,
-        props.mode,
-        state.mD[resourceItemIndex[props.mode]]
-    )
+    } = populateStructureWithPluginChildrenAndPropagating(state.mD, props.mode)
 
     return {
         hoveredElementId: -100,
@@ -544,7 +453,6 @@ const mapDispatchToProps = (dispatch, props) => {
                     resourceDraftStructure
                 )
             ),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
         setActiveContainer: container =>
             dispatch(actions.setActiveContainer(container)),
         unsetActiveContainer: container =>

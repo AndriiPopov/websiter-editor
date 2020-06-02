@@ -1,6 +1,9 @@
 // import type { requiredRightsType } from '../store/reducer/reducer'
 
-export default (requiredRights, noShowAlert) => (dispatch, getState) => {
+export default (requiredRights: Array<string>, noShowAlert?: boolean) => (
+    dispatch,
+    getState
+) => {
     if (sessionStorage.getItem('tryWebsiter')) return true
     const { mD } = getState()
 

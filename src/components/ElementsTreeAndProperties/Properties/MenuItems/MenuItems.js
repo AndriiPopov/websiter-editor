@@ -24,7 +24,6 @@ const MenuItems = props => {
     const [state, setState] = useState({
         treeDataSource: [],
     })
-    console.log(props.element)
 
     useEffect(() => {
         const pagesStructureWithAll = [
@@ -175,6 +174,7 @@ const MenuItems = props => {
                         const newItem = cloneDeep(item)
                         // newItem.propertiesString = value
                         // if (obj) {
+                        if (!newItem.properties) newItem.properties = {}
                         newItem.properties[key] = value
                         // }
                         return newItem
@@ -264,9 +264,10 @@ const MenuItems = props => {
                         style={{
                             flex: '1 1',
                             height: 'auto !important',
-                            overflow: 'auto',
+                            // overflow: 'auto',
                         }}
                         slideRegionSize={20}
+                        innerStyle={{ paddingBottom: '150px' }}
                     />
                     <OverlayOnSizeIsChanging />
                 </div>
@@ -304,9 +305,10 @@ const MenuItems = props => {
                             style={{
                                 flex: '1 1',
                                 height: 'auto !important',
-                                overflow: 'auto',
+                                // overflow: 'auto',
                             }}
                             slideRegionSize={20}
+                            innerStyle={{ paddingBottom: '150px' }}
                         />
                         <OverlayOnSizeIsChanging />
                     </Tabs.TabPane>
@@ -343,6 +345,7 @@ const MenuItems = props => {
                                                         )
                                                     }
                                                     value={
+                                                        menuItem.properties &&
                                                         menuItem.properties.url
                                                     }
                                                     unControlled
@@ -369,6 +372,7 @@ const MenuItems = props => {
                                                     )
                                                 }
                                                 checked={
+                                                    menuItem.properties &&
                                                     menuItem.properties.newTab
                                                 }
                                             />

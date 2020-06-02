@@ -7,7 +7,6 @@ import { buildItems } from '../../utils/pagesStructure'
 import ItemRenderer from './ItemRenderer'
 import { TreeSearch } from '../UI/TreeSearch/TreeSearch'
 import { buildTree, isEqualStructuresWithOmit } from '../../utils/basic'
-import checkUserRights from '../../utils/checkUserRights'
 import {
     current as currentIndex,
     structure as structureIndex,
@@ -47,10 +46,7 @@ const ResourcesTree = props => {
         buildItems(items, [], result)
         if (!isEqual(result, structure)) {
             if (!isEqualStructuresWithOmit(result, structure))
-                if (!props.checkUserRights(requiredRightsIndex.add)) {
-                    return
-                }
-            if (props.type === 'page') result = buildRelUrls(result, true)
+                if (props.type === 'page') result = buildRelUrls(result, true)
             props.sendUpdate(
                 'website',
                 {
@@ -143,10 +139,6 @@ const ResourcesTree = props => {
         } else {
             props.setActiveContainer(props.type + 'resources')
             if (e) {
-                if (!props.checkUserRights(requiredRightsIndex.add)) {
-                    return
-                }
-
                 switch (e.code) {
                     case 'KeyA':
                         if (e.ctrlKey) {
@@ -204,9 +196,6 @@ const ResourcesTree = props => {
     }
 
     const handleButtonMenuClick = e => {
-        if (!props.checkUserRights(requiredRightsIndex.add)) {
-            return
-        }
         switch (e.key) {
             case 'duplicate':
                 props.addResource(props.type, true)
@@ -303,7 +292,6 @@ const ResourcesTree = props => {
                         type={props.type}
                         currentWebsiteObject={props.currentWebsiteObject}
                         revertResource={props.revertResource}
-                        checkUserRights={props.checkUserRights}
                         sendUpdate={props.sendUpdate}
                         publishResource={props.publishResource}
                         addResource={props.addResource}
@@ -341,6 +329,7 @@ const ResourcesTree = props => {
                     canDrop={canDropHandle}
                     generateNodeProps={generateNodePropsHandle}
                     slideRegionSize={20}
+                    innerStyle={{ paddingBottom: '150px' }}
                 />
                 <OverlayOnSizeIsChanging />
             </div>
@@ -374,7 +363,6 @@ const mapDispatchToProps = dispatch => {
     return {
         revertResource: (mD, type, to) =>
             dispatch(wsActions.revertResource(mD, type, to)),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
         sendUpdate: (type, newResource, id) =>
             dispatch(wsActions.sendUpdate(type, newResource, id)),
         publishResource: type => dispatch(wsActions.publishResource(type)),

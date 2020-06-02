@@ -1,91 +1,91 @@
 export default {
     websiterMenu: [
         {
-            value: 'horizontal | vertical | inline',
+            val: 'horizontal | vertical | inline',
             label: 'mode',
         },
         {
-            value: ['class'],
+            val: ['class'],
             label: 'topMenuBlockClasses',
         },
         {
-            value: ['class'],
+            val: ['class'],
             label: 'topMenuItemClasses',
         },
         {
-            value: ['class'],
+            val: ['class'],
             label: 'topMenuItemActiveClasses',
         },
         {
-            value: ['class'],
+            val: ['class'],
             label: 'popupMenuBlockClasses',
         },
         {
-            value: ['class'],
+            val: ['class'],
             label: 'popupMenuItemClasses',
         },
         {
-            value: ['class'],
+            val: ['class'],
             label: 'popupMenuItemActiveClasses',
         },
         {
-            value: '.1',
+            val: '0',
             label: 'subMenuOpenDelay',
         },
         {
-            value: '.1',
+            val: '.1',
             label: 'subMenuCloseDelay',
         },
     ],
     websiterDrawer: [
         {
-            value: '.3s',
+            val: '.3s',
             label: 'duration',
         },
         {
-            value: 'cubic-bezier(0.78, 0.14, 0.15, 0.86)',
+            val: 'cubic-bezier(0.78, 0.14, 0.15, 0.86)',
             label: 'ease',
         },
         {
-            value: 'true | false',
+            val: 'true | false',
             label: 'showMask',
         },
         {
-            value: 'true | false',
+            val: 'true | false',
             label: 'maskClosable',
         },
         {
-            value: 'left | top | right | bottom',
+            val: 'left | top | right | bottom',
             label: 'placement',
         },
         {
-            value: 'true | false',
+            val: 'true | false',
             label: 'defaultOpen',
         },
         {
-            value: '100%',
+            val: '100%',
             label: 'height',
         },
         {
-            value: '200',
+            val: '200',
             label: 'width',
         },
         {
-            value: 'class',
+            val: 'class',
             label: 'wrapperClassName',
         },
         {
-            value: 'class',
+            val: 'class',
             label: 'class',
         },
     ],
     baseHtmlProps: [
         {
-            value: 'id',
+            val: 'id',
             label: 'id',
         },
         {
-            value: 'class',
+            val: 'class',
             label: 'class',
         },
     ],

@@ -72,9 +72,10 @@ const WebsitesTree = props => (
                 style={{
                     flex: '1 1',
                     height: 'auto !important',
-                    overflow: 'auto',
+                    // overflow: 'auto',
                 }}
                 slideRegionSize={20}
+                innerStyle={{ paddingBottom: '150px' }}
             />
             <OverlayOnSizeIsChanging />
         </div>

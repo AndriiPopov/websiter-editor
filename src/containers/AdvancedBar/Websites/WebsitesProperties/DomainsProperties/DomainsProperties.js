@@ -46,9 +46,7 @@ const DomainsProperties = props => {
                     <span>Local domain:</span>
                 </div>
                 <div className={classes.Input}>
-                    <span className={classes.Span}>
-                        https://live.websiter.dev/
-                    </span>
+                    <span className={classes.Span}>https://</span>
                     <TextInput
                         changed={value => setDomainValue(value)}
                         value={domainValue}
@@ -56,6 +54,7 @@ const DomainsProperties = props => {
                         right
                         minWidth={220}
                     />
+                    <span className={classes.Span}>.live.websiter.dev</span>
                 </div>
                 <Divider type="vertical" />
 
@@ -87,8 +86,9 @@ const DomainsProperties = props => {
                     buttonClicked={() => {
                         if (domainValue) {
                             window.open(
-                                // 'https://live.websiter.dev/' +
-                                website.domain,
+                                `http${props.prod ? 's' : ''}://${
+                                    website.domain
+                                }.live.websiter.dev/`,
                                 '_blank'
                             )
                         }
@@ -149,7 +149,8 @@ const DomainsProperties = props => {
                     buttonClicked={() => {
                         if (domainValue) {
                             window.open(
-                                'https://' + website.customDomain,
+                                `http${props.prod ? 's' : ''}://` +
+                                    website.customDomain,
                                 '_blank'
                             )
                         }
@@ -214,6 +215,7 @@ const mapStateToProps = state => {
     return {
         currentWebsiteObject: state.mD.currentWebsiteObject,
         currentWebsiteId: state.mD.currentWebsiteId,
+        prod: state.mD.prod,
     }
 }
 

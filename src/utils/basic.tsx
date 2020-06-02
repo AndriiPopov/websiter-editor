@@ -112,10 +112,13 @@ export function buildTree(items) {
 }
 
 export const getInheritedPropertyName = (value: string) => {
-    const length = value.length
-    if (length > 2) {
-        if (value.charAt(0) === '$' && value.charAt(length - 1) === '$') {
-            return value.substr(1, length - 2)
+    //this can be an object. check every value in object
+    if (typeof value === 'string') {
+        const length = value.length
+        if (length > 2) {
+            if (value.charAt(0) === '$' && value.charAt(length - 1) === '$') {
+                return value.substr(1, length - 2)
+            }
         }
     }
     return false

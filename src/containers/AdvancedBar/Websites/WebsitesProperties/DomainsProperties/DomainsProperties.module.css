@@ -1,7 +1,5 @@
 .Span {
     margin-left: 5px;
-    min-width: 155px;
-    display: inline-block;
 }
 
 .Input {
@@ -27,4 +25,8 @@
 .Title > span {
     bottom: 0px;
     position: absolute;
+}
+
+.DomainSettings {
+    padding: 20px;
 }

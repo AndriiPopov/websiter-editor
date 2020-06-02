@@ -9,7 +9,6 @@ import { buildItems } from '../../../utils/pagesStructure'
 import ItemRenderer from './ItemRenderer'
 import { TreeSearch } from '../../UI/TreeSearch/TreeSearch'
 import { buildTree } from '../../../utils/basic'
-import checkUserRights from '../../../utils/checkUserRights'
 import * as wsActions from '../../../websocketActions'
 import { connect } from 'react-redux'
 
@@ -24,7 +23,6 @@ import Menu from 'antd/es/menu'
 import Button from 'antd/es/button'
 import Divider from 'antd/es/divider'
 import UploadOutlined from '@ant-design/icons/UploadOutlined'
-import SaveOutlined from '@ant-design/icons/SaveOutlined'
 import LinkOutlined from '@ant-design/icons/LinkOutlined'
 import DownOutlined from '@ant-design/icons/DownOutlined'
 
@@ -50,10 +48,7 @@ const FilesTree = props => {
                     )
                 )
             )
-                if (!props.checkUserRights(['content', 'developer'])) {
-                    return
-                }
-            result = buildRelUrls(result)
+                result = buildRelUrls(result)
             props.sendUpdate(
                 'website',
                 {
@@ -85,7 +80,7 @@ const FilesTree = props => {
         const file = new File([''], 'New file.css', {
             type: 'text/css',
         })
-        props.uploadFile([file])
+        props.uploadFile([file], true)
     }
 
     const [state, setState] = useState({
@@ -118,10 +113,6 @@ const FilesTree = props => {
             props.setActiveContainer('filesresources')
             if (e) {
                 const code = e.code
-
-                if (!props.checkUserRights(['content', 'developer'])) {
-                    return
-                }
 
                 switch (code) {
                     case 'KeyA':
@@ -169,15 +160,9 @@ const FilesTree = props => {
     const fileUploadRef = useRef(null)
 
     const handleButtonMenuClick = e => {
-        if (!props.checkUserRights(['developer', 'content'])) {
-            return
-        }
         switch (e.key) {
             case 'create':
                 createFile()
-                break
-            case 'saveNew':
-                props.saveFile(currentResource)
                 break
             case 'delete':
                 props.deleteFile(currentResource)
@@ -199,14 +184,9 @@ const FilesTree = props => {
 
     const moreMenu = (
         <Menu onClick={handleButtonMenuClick}>
-            {currentResourcesStructureElement && (
-                <Menu.Item key="create">
-                    Create new file (Ctrl + Shift + A)
-                </Menu.Item>
-            )}
-            {currentResourcesStructureElement && (
-                <Menu.Item key="saveNew">Save as new</Menu.Item>
-            )}
+            <Menu.Item key="create">
+                Create new file (Ctrl + Shift + A)
+            </Menu.Item>
             {currentResourcesStructureElement && (
                 <Menu.Item key="delete">Delete file (Delete)</Menu.Item>
             )}
@@ -239,8 +219,7 @@ const FilesTree = props => {
                     className={classes.ImageInput}
                     type="file"
                     onChange={e => {
-                        if (props.checkUserRights(['developer', 'content']))
-                            props.uploadFile(e.target.files)
+                        props.uploadFile(e.target.files)
                     }}
                 />
                 <SmallButton
@@ -250,14 +229,6 @@ const FilesTree = props => {
                         fileUploadRef.current && fileUploadRef.current.click()
                     }
                     tooltip="Upload a new file (Ctrl + A)"
-                />
-                <Divider type="vertical" />
-                <SmallButton
-                    title="Save"
-                    icon={<SaveOutlined />}
-                    buttonClicked={() => props.saveFile(currentResource, true)}
-                    tooltip="Save file (Ctrl + S)"
-                    requiredRights={['developer', 'content']}
                 />
                 <Divider type="vertical" />
 
@@ -310,6 +281,7 @@ const FilesTree = props => {
                     }}
                     generateNodeProps={generateNodePropsHandle}
                     slideRegionSize={20}
+                    innerStyle={{ paddingBottom: '150px' }}
                 />
                 <OverlayOnSizeIsChanging />
             </div>
@@ -332,12 +304,14 @@ const mapStateToProps = (state, props) => {
 
 const mapDispatchToProps = (dispatch, props) => {
     return {
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
         setActiveContainer: container =>
             dispatch(actions.setActiveContainer(container)),
         unsetActiveContainer: container =>
             dispatch(actions.unsetActiveContainer(container)),
-        uploadFile: files => dispatch(actions.uploadFile(files)),
+        uploadFile: (files, isCreated) =>
+            dispatch(
+                actions.uploadFile(files, undefined, undefined, isCreated)
+            ),
         deleteFile: file => dispatch(actions.deleteFile(file)),
         sendUpdate: (type, newResource, id) =>
             dispatch(wsActions.sendUpdate(type, newResource, id)),

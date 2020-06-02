@@ -8,8 +8,6 @@ import MenuItems from '../MenuItems/MenuItems'
 import FileItems from '../FileItems/FileItems'
 import HTMLEditor from '../../../HTMLEditor/HTMLEditor'
 import { SketchPicker, CirclePicker } from 'react-color'
-import checkUserRights from '../../../../utils/checkUserRights'
-import { connect } from 'react-redux'
 import InputNumber from 'antd/es/input-number'
 import Slider from 'antd/es/slider'
 
@@ -76,7 +74,6 @@ const CMSPannel = props => {
             <Tabs.TabPane tab="Type" key="type">
                 <Select
                     onSelect={value => {
-                        if (!props.checkUserRights(['developer'])) return
                         changeProperty('CMSVariableType', value)
                     }}
                     dropdownMatchSelectWidth={false}
@@ -148,13 +145,15 @@ const CMSPannel = props => {
                 {elementValues.CMSVariableType === 'html' ? (
                     <HTMLEditor
                         value={elementValues.CMSVariableDefaultValue}
-                        handleChange={(e, editor) => {
+                        handleChange={(e, editor, box) => {
                             changeProperty(
                                 'CMSVariableDefaultValue',
-                                editor.getContent()
+                                editor.getContent(),
+                                box
                             )
                         }}
                         requiredRights={['developer']}
+                        currentBox={currentBox}
                     />
                 ) : elementValues.CMSVariableType === 'menuItems' ? (
                     <MenuItems
@@ -189,8 +188,7 @@ const CMSPannel = props => {
                                 value={rangeValue}
                                 onChange={value => {
                                     setRangeValue(value)
-                                    if (!props.checkUserRights(['developer']))
-                                        return
+
                                     changeProperty(
                                         'CMSVariableDefaultValue',
                                         value
@@ -216,8 +214,7 @@ const CMSPannel = props => {
                             value={rangeValue}
                             onChange={value => {
                                 setRangeValue(value)
-                                if (!props.checkUserRights(['developer']))
-                                    return
+
                                 changeProperty('CMSVariableDefaultValue', value)
                             }}
                             max={
@@ -237,7 +234,6 @@ const CMSPannel = props => {
                 ) : elementValues.CMSVariableType === 'select' ? (
                     <Select
                         onSelect={value => {
-                            if (!props.checkUserRights(['developer'])) return
                             changeProperty('CMSVariableDefaultValue', value)
                         }}
                         dropdownMatchSelectWidth={false}
@@ -270,8 +266,6 @@ const CMSPannel = props => {
                             }
                             color={elementValues.defaultColor}
                             onChangeComplete={value => {
-                                if (!props.checkUserRights(['developer']))
-                                    return
                                 changeProperty('defaultColor', value.rgb)
                             }}
                         />
@@ -293,7 +287,6 @@ const CMSPannel = props => {
                         }
                         color={elementValues.defaultColor}
                         onChangeComplete={value => {
-                            if (!props.checkUserRights(['developer'])) return
                             changeProperty('defaultColor', value.rgb)
                         }}
                         disableAlpha={
@@ -313,13 +306,4 @@ const CMSPannel = props => {
     )
 }
 
-const mapDispatchToProps = dispatch => {
-    return {
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
-    }
-}
-
-export default connect(
-    null,
-    mapDispatchToProps
-)(CMSPannel)
+export default CMSPannel

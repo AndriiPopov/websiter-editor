@@ -2,48 +2,54 @@ import React, { Component, useRef, useEffect } from 'react'
 import { connect } from 'react-redux'
 import isEqual from 'lodash/isEqual'
 import cloneDeep from 'lodash/cloneDeep'
+import { Provider } from 'react-redux'
+import { renderToString } from 'react-dom/server'
 
 import * as classes from './SiteBuilder.module.css'
 import * as actions from '../../store/actions/index'
 import Frame, { FrameContextConsumer } from './Frame/index'
 import BuilderElement from './BuilderElement/BuilderElement'
 import HoveredBoxHighlight from './HoveredBoxHighlight/HoveredBoxHighlight'
-// import { systemClassMenu, systemClassDrawer } from './systemClasses'
-// import saveRect from './methods/saveRect'
-import { Provider } from 'react-redux'
-import { renderToString } from 'react-dom/server'
 import { store } from '../../index'
 import refineProperties, {
     refinePropertiesFromCMS,
 } from './BuilderElement/methods/refineProperties'
-import refreshPageStructure from './methods/refreshPageStructure'
+import refreshPageStructure, {
+    refreshedPageStructureType,
+} from './methods/refreshPageStructure'
 import Overlay from '../../components/UI/Overlay/Overlay'
+import { mDType } from '../../Types/mD'
+import { storeType } from '../../Types/store'
+import { resourceType } from '../../Types/resource'
+import { elementValuesType } from '../../Types/elementValues'
+// import { systemClassMenu, systemClassDrawer } from './systemClasses'
+// import saveRect from './methods/saveRect'
 
-// import type { initialStateType } from '../../store/reducer/reducer'
+type Props = {
+    currentPageId: mDType['currentPageId']
+    zoom: storeType['pageZoom']
+    isRefreshing: storeType['isRefreshing']
+    shouldRefresh: storeType['shouldRefresh']
+    pagesStructure: mDType['pagesStructure']
+    currentPageDraftStructure: resourceType['structure']
+    pageTemplateDraftStructure: resourceType['structure']
+    currentPageDraftStructureGlobalSettings: resourceType['structure']
+    pageTemplateDraftStructureGlobalSettings: resourceType['structure']
+    refinedProperties: {}
+    bodyValues: elementValuesType
+    htmlValues: elementValuesType
+    pageTemplateId: mDType['pageTemplateFSBId']
+    sizeIsChanging: storeType['sizeIsChanging']
+    refreshedGlobalStructure: refreshedPageStructureType
+    refreshedPageStructure: refreshedPageStructureType
+    currentWebsiteObject: mDType['currentWebsiteObject']
+    prod: mDType['prod']
+    saveElementsStructureFromBuilder: typeof actions.saveElementsStructureFromBuilder
+    markRefreshing: typeof actions.markRefreshing
+    markShouldRefreshing: typeof actions.markShouldRefreshing
+}
 
-// export type Props = {
-//     zoom: $PropertyType<initialStateType, 'pageZoom'>,
-//     hoveredElementId: $PropertyType<initialStateType, 'hoveredElementId'>,
-//     isRefreshing: $PropertyType<initialStateType, 'isRefreshing'>,
-//     notSavedResources: $PropertyType<initialStateType, 'notSavedResources'>,
-//     barSizes: $PropertyType<initialStateType, 'barSizes'>,
-//     markRefreshing: typeof actions.markRefreshing,
-//     savePropertiesOnLeave: typeof actions.savePropertiesOnLeave,
-//     saveHoveredElementRect: typeof actions.saveHoveredElementRect,
-//     markShouldRefreshing: typeof actions.markShouldRefreshing,
-//     shouldRefresh?: boolean,
-//     saveElementsStructure: typeof actions.saveElementsStructure,
-//     currentSiteBuilderMode: $PropertyType<
-//         initialStateType,
-//         'currentSiteBuilderMode'
-//     >,
-// }
-
-// type State = {
-//     headValue: string,
-// }
-
-class SiteBuilder extends Component {
+class SiteBuilder extends Component<Props> {
     state = {
         headValue: '',
     }
@@ -54,7 +60,7 @@ class SiteBuilder extends Component {
     head = ''
     currentScroll = 0
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: Props) {
         if (prevProps.currentPageId !== this.props.currentPageId) {
             this.currentScroll = 0
         }
@@ -77,11 +83,11 @@ class SiteBuilder extends Component {
         }
     }
 
-    shouldComponentUpdate(nextProps) {
+    shouldComponentUpdate(nextProps: Props) {
         return !this.props.sizeIsChanging && !nextProps.sizeIsChanging
     }
 
-    componentWillReceiveProps(newProps) {
+    componentWillReceiveProps(newProps: Props) {
         if (!newProps.isRefreshing) {
             const iframeElement = document.getElementById('builderFrame')
             if (iframeElement) {
@@ -121,7 +127,7 @@ class SiteBuilder extends Component {
                                 key={itemInn.id}
                                 structure={newProps.pageTemplateDraftStructure}
                                 element={itemInn}
-                                hoveredElementId={newProps.hoveredElementId}
+                                // hoveredElementId={newProps.hoveredElementId}
                                 document={document}
                                 pluginsPathArray={[]}
                                 parentPluginProps={newProps.refinedProperties}
@@ -146,14 +152,14 @@ class SiteBuilder extends Component {
             }
         }
     }
-    prod = process.env.NODE_ENV !== 'development'
 
     render() {
         let frame = null
 
         if (
             this.props.pageTemplateDraftStructure &&
-            this.props.currentPageDraftStructure
+            this.props.currentPageDraftStructure &&
+            this.props.currentWebsiteObject
         ) {
             const { props } = this
             const zoom = props.zoom / 100
@@ -202,9 +208,11 @@ class SiteBuilder extends Component {
                         bodyProps={bodyProps}
                         htmlProps={htmlProps}
                         base={`  <base href="http${
-                            this.prod ? 's' : ''
-                        }://live.websiter.${this.prod ? 'dev' : 'test:5000'}/${
+                            this.props.prod ? 's' : ''
+                        }://${
                             this.props.currentWebsiteObject.domain
+                        }.live.websiter.${
+                            this.props.prod ? 'dev' : 'test:5000'
                         }/" />  `}
                         initialContent={
                             // systemClassMenu +
@@ -218,7 +226,10 @@ class SiteBuilder extends Component {
                         }
                     >
                         <FrameContextConsumer>
-                            {({ document, window }) => {
+                            {({ document, window }: any) => {
+                                window.onbeforeunload = function() {
+                                    return 'You have unsaved changes!'
+                                }
                                 return structure
                                     ? structure
                                           .filter(itemInn =>
@@ -232,9 +243,9 @@ class SiteBuilder extends Component {
                                                   key={itemInn.id}
                                                   structure={structure}
                                                   element={itemInn}
-                                                  hoveredElementId={
-                                                      props.hoveredElementId
-                                                  }
+                                                  //   hoveredElementId={
+                                                  //       props.hoveredElementId
+                                                  //   }
                                                   document={document}
                                                   pluginsPathArray={[]}
                                                   parentPluginProps={
@@ -347,6 +358,7 @@ const mapStateToProps = state => {
         refreshedGlobalStructure,
         refreshedPageStructure,
         currentWebsiteObject: state.mD.currentWebsiteObject,
+        prod: state.mD.prod,
     }
 }
 

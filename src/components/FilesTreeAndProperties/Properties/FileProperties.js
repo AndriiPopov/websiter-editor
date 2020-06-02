@@ -1,81 +1,43 @@
 import React, { useEffect, useState, forwardRef } from 'react'
 import { connect } from 'react-redux'
 import axios from 'axios'
-import * as classes from './FileProperties.module.css'
 import Editor from '../../Editor/Editor'
 import Select from 'antd/es/select'
 
-import Svg from '../../Svg/Svg'
 import 'tui-image-editor/dist/tui-image-editor.css'
 import 'tui-color-picker/dist/tui-color-picker.min.css'
 import ImageEditor from '@toast-ui/react-image-editor'
 import SmallButton from '../../UI/Buttons/SmallButton/SmallButton'
-import {
-    resizeImageFromSrcToSpecificSize,
-    urltoFile,
-} from '../../../store/actions/files'
+import { getFileUrl } from '../../../utils/getFileUrl'
+
 import bytes from 'bytes'
 import TimeAgo from 'react-timeago'
-import { getFileUrl } from '../../../utils/getFileUrl'
-import checkUserRights from '../../../utils/checkUserRights'
-import InputNumber from 'antd/es/input-number'
+import Resize from './resize'
+import ControlPanel from '../../UI/ControlPanel'
+import CompressOutlined from '@ant-design/icons/CompressOutlined'
+import SaveOutlined from '@ant-design/icons/SaveOutlined'
+import ArrowLeftOutlined from '@ant-design/icons/ArrowLeftOutlined'
+import Menu from 'antd/es/menu'
+
+import EditOutlined from '@ant-design/icons/EditOutlined'
+import Divider from 'antd/es/divider'
+import * as classes from './FileProperties.module.css'
 
 const FileProperties = forwardRef((props, ref) => {
     useEffect(() => {
         props.setLoaded(false)
     }, [props.currentFileId])
 
-    const [resolution, setResolution] = useState(
-        props.currentFileItem.resolution
-    )
     const [fileSize, setFileSize] = useState(props.currentFileItem.size)
     const [sourceDataUrl, setSourceDataUrl] = useState()
 
+    const type =
+        props.currentFileItem.type.indexOf('image') >= 0
+            ? 'image'
+            : props.currentFileItem.type.indexOf('text') >= 0
+            ? 'text'
+            : 'other'
     if (!props.currentFileItem) return null
-
-    const loadFile = () => {
-        axios.get(props.currentFileItem.url).then(response => {
-            props.setValue(response.data)
-            props.setEditorMode(props.currentFileItem.editorMode || 'css')
-            props.setLoaded(true)
-        })
-    }
-
-    const handleChangeResolution = (value, type) => {
-        if (type === 'width') {
-            setResolution({
-                width: value,
-                height:
-                    value *
-                    (props.currentFileItem.resolution.height /
-                        props.currentFileItem.resolution.width),
-            })
-        } else {
-            setResolution({
-                width:
-                    value *
-                    (props.currentFileItem.resolution.width /
-                        props.currentFileItem.resolution.height),
-                height: value,
-            })
-        }
-    }
-
-    const handleApplyResolutionChange = () => {
-        resizeImageFromSrcToSpecificSize(
-            sourceDataUrl,
-            resolution,
-            async data => {
-                props.setValue(data)
-                const file = await urltoFile(
-                    data,
-                    props.currentFileItem.name + ' (copy)'
-                )
-                setFileSize(file.size)
-            }
-        )
-        props.setValue()
-    }
 
     function toDataURL(url, callback) {
         var xhr = new XMLHttpRequest()
@@ -93,6 +55,14 @@ const FileProperties = forwardRef((props, ref) => {
 
         xhr.send()
     }
+
+    const loadFile = () => {
+        axios.get(props.currentFileItem.url).then(response => {
+            props.setValue(response.data)
+            props.setEditorMode(props.currentFileItem.editorMode || 'css')
+            props.setLoaded(true)
+        })
+    }
     const loadFileToDataUrl = () => {
         const reqUrl = getFileUrl(
             props.structure,
@@ -107,130 +77,24 @@ const FileProperties = forwardRef((props, ref) => {
         })
     }
 
-    if (props.currentFileItem.type.indexOf('image') >= 0) {
-        const myTheme = {
-            // Theme object to extends default dark theme.
-        }
+    const handleButtonMenuClick = e => {
+        switch (e.key) {
+            case 'saveNew':
+                props.saveFile(
+                    props.currentFileItem.id,
+                    undefined,
+                    props.currentFileItem.type
+                )
+                break
 
-        return props.loaded ? (
-            props.loaded === 'resize' ? (
-                <div>
-                    <div>
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <td>Current size</td>
-                                    <td>
-                                        {bytes(fileSize, {
-                                            decimalPlaces: 1,
-                                        })}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Current resolution</td>
-                                    <td>
-                                        {props.currentFileItem.resolution.width}{' '}
-                                        X{' '}
-                                        {
-                                            props.currentFileItem.resolution
-                                                .height
-                                        }
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Set new resolution</td>
-                                    <td>
-                                        <InputNumber
-                                            min={0}
-                                            onChange={value =>
-                                                handleChangeResolution(
-                                                    value,
-                                                    'width'
-                                                )
-                                            }
-                                            value={parseInt(resolution.width)}
-                                            inline={true}
-                                        />{' '}
-                                        X{' '}
-                                        <InputNumber
-                                            min={0}
-                                            onChange={value =>
-                                                handleChangeResolution(
-                                                    value,
-                                                    'height'
-                                                )
-                                            }
-                                            value={parseInt(resolution.height)}
-                                            inline={true}
-                                        />
-                                        <SmallButton
-                                            title="Apply"
-                                            inline={true}
-                                            buttonClicked={
-                                                handleApplyResolutionChange
-                                            }
-                                        />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <img alt="Is loading" src={props.value} />
-                </div>
-            ) : (
-                <ImageEditor
-                    ref={ref}
-                    includeUI={{
-                        loadImage: {
-                            //path: props.currentFileItem.url,
-                            path: getFileUrl(
-                                props.structure,
-                                props.currentFileItem.id,
-                                false,
-                                false,
-                                props.currentWebsiteObject.domain
-                            ),
-                            name: 'SampleImage',
-                        },
-                        theme: myTheme,
-                        menu: [
-                            'crop',
-                            'flip',
-                            'rotate',
-                            'draw',
-                            'shape',
-                            'icon',
-                            'text',
-                            'mask',
-                            'filter',
-                        ],
-                        initMenu: 'filter',
-                        uiSize: {
-                            width: '1000px',
-                            height: '700px',
-                        },
-                        menuBarPosition: 'right',
-                    }}
-                    cssMaxHeight={500}
-                    cssMaxWidth={700}
-                    selectionStyle={{
-                        cornerSize: 20,
-                        rotatingPointOffset: 70,
-                    }}
-                    usageStatistics={false}
-                />
-            )
-        ) : (
-            <div style={{ margin: '30px auto' }}>
-                <button onClick={() => props.setLoaded(true)}>Edit</button>
-                <button
-                    onClick={() => {
-                        props.setLoaded('resize')
-                        loadFileToDataUrl()
-                    }}
-                >
-                    Resize
-                </button>
+            default:
+                break
+        }
+    }
+
+    const fIleInfoScreen = (
+        <div className={classes.Container}>
+            {type === 'image' && (
                 <img
                     src={getFileUrl(
                         props.structure,
@@ -246,100 +110,221 @@ const FileProperties = forwardRef((props, ref) => {
                     }}
                     alt="websiter"
                 />
-                {props.currentFileItem ? (
-                    <table>
-                        <tbody>
+            )}
+            {props.currentFileItem && (
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>Name</td>
+                            <td>{props.currentFileItem.name}</td>
+                        </tr>
+                        <tr>
+                            <td>Size</td>
+                            <td>
+                                {bytes(props.currentFileItem.size, {
+                                    decimalPlaces: 1,
+                                })}
+                            </td>
+                        </tr>
+                        {type === 'image' && (
                             <tr>
-                                <td>Name</td>
-                                <td>{props.currentFileItem.name}</td>
-                            </tr>
-                            <tr>
-                                <td>Size</td>
+                                <td>Resolution</td>
                                 <td>
-                                    {bytes(props.currentFileItem.size, {
-                                        decimalPlaces: 1,
-                                    })}
+                                    {props.currentFileItem.resolution.width} X{' '}
+                                    {props.currentFileItem.resolution.height}
                                 </td>
                             </tr>
-                            <tr>
-                                <td>Type</td>
-                                <td>{props.currentFileItem.type}</td>
-                            </tr>
-                            <tr>
-                                <td>Date created</td>
-                                <td>
-                                    <TimeAgo
-                                        date={props.currentFileItem.createdDate}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Date modified</td>
-                                <td>
-                                    <TimeAgo
-                                        date={
-                                            props.currentFileItem.modifiedDate
-                                        }
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                ) : null}
-            </div>
-        )
-    } else if (props.currentFileItem.type.indexOf('text') >= 0) {
-        const editorModeOptions = [
-            { value: 'text', label: 'text' },
-            { value: 'css', label: 'css' },
-            { value: 'javascript', label: 'javascript' },
-            { value: 'json', label: 'json' },
-            { value: 'html', label: 'html' },
-            { value: 'xml', label: 'xml' },
-        ]
-        return props.loaded ? (
-            <>
-                <Select
-                    onSelect={value => {
-                        if (!props.checkUserRights(['developer', 'content']))
-                            return
-                        props.setEditorMode(value)
-                    }}
-                    dropdownMatchSelectWidth={false}
-                    size="small"
-                    style={{ border: '1px solid #ccc', margin: '10px' }}
-                    value={props.editorMode}
-                >
-                    {editorModeOptions.map(option => (
-                        <Select.Option
-                            key={'select' + option.value}
-                            value={option.value}
-                        >
-                            {option.label}
-                        </Select.Option>
-                    ))}
-                </Select>
-                <Editor
-                    currentElement={props.currentFileId}
-                    elementValue={props.value}
-                    editorMode={props.editorMode}
-                    handleChange={value => props.setValue(value)}
-                    name="editorProperties"
-                    requiredRights={['developer']}
-                    currentResource="0"
-                />
-            </>
-        ) : (
-            <div style={{ margin: '30px auto' }}>
-                <button onClick={loadFile}>Edit</button>
-                <Svg icon='<svg width="100" height="100" viewBox="0 0 24 24"><path fill="#555" d="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"></path></svg>' />
-            </div>
-        )
-    }
-    return (
-        <div style={{ margin: '30px auto' }}>
-            <Svg icon='<svg width="100" height="100" viewBox="0 0 24 24"><path fill="#555" d="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"></path></svg>' />
+                        )}
+                        <tr>
+                            <td>Type</td>
+                            <td>{props.currentFileItem.type}</td>
+                        </tr>
+                        <tr>
+                            <td>Date created</td>
+                            <td>
+                                <TimeAgo
+                                    date={props.currentFileItem.createdDate}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Date modified</td>
+                            <td>
+                                <TimeAgo
+                                    date={props.currentFileItem.modifiedDate}
+                                />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            )}
         </div>
+    )
+
+    const editImageScreen = (
+        <ImageEditor
+            ref={ref}
+            includeUI={{
+                loadImage: {
+                    //path: props.currentFileItem.url,
+                    path: getFileUrl(
+                        props.structure,
+                        props.currentFileItem.id,
+                        false,
+                        false,
+                        props.currentWebsiteObject.domain
+                    ),
+                    name: 'SampleImage',
+                },
+                theme: {},
+                menu: [
+                    'crop',
+                    'flip',
+                    'rotate',
+                    'draw',
+                    'shape',
+                    'icon',
+                    'text',
+                    'mask',
+                    'filter',
+                ],
+                initMenu: 'filter',
+                uiSize: {
+                    width: '1000px',
+                    height: '700px',
+                },
+                menuBarPosition: 'right',
+            }}
+            cssMaxHeight={500}
+            cssMaxWidth={700}
+            selectionStyle={{
+                cornerSize: 20,
+                rotatingPointOffset: 70,
+            }}
+            usageStatistics={false}
+        />
+    )
+
+    const resizeImageScreen = (
+        <Resize
+            fileSize={fileSize}
+            currentFileItem={props.currentFileItem}
+            setFileSize={setFileSize}
+            sourceDataUrl={sourceDataUrl}
+            value={props.value}
+            setValue={props.setValue}
+        />
+    )
+
+    const editorModeOptions = [
+        { value: 'text', label: 'text' },
+        { value: 'css', label: 'css' },
+        { value: 'javascript', label: 'javascript' },
+        { value: 'json', label: 'json' },
+        { value: 'html', label: 'html' },
+        { value: 'xml', label: 'xml' },
+    ]
+    const textScreen = (
+        <>
+            <Select
+                onSelect={value => {
+                    props.setEditorMode(value)
+                }}
+                dropdownMatchSelectWidth={false}
+                size="small"
+                style={{ border: '1px solid #ccc', margin: '10px' }}
+                value={props.editorMode}
+            >
+                {editorModeOptions.map(option => (
+                    <Select.Option
+                        key={'select' + option.value}
+                        value={option.value}
+                    >
+                        {option.label}
+                    </Select.Option>
+                ))}
+            </Select>
+            <Editor
+                currentElement={props.currentFileId}
+                elementValue={props.value}
+                editorMode={props.editorMode}
+                handleChange={value => props.setValue(value)}
+                name="editorProperties"
+                requiredRights={['developer']}
+                currentResource="0"
+            />
+        </>
+    )
+
+    return (
+        <>
+            <ControlPanel>
+                {props.loaded && (
+                    <>
+                        <SmallButton
+                            title="Save"
+                            icon={<SaveOutlined />}
+                            buttonClicked={() =>
+                                props.saveFile(props.currentFileItem.id, true)
+                            }
+                            tooltip="Save file (Ctrl + S)"
+                            requiredRights={['developer', 'content']}
+                            overlay={
+                                <Menu onClick={handleButtonMenuClick}>
+                                    {props.currentFileItem.id && (
+                                        <Menu.Item key="saveNew">
+                                            Save as new
+                                        </Menu.Item>
+                                    )}
+                                </Menu>
+                            }
+                        />
+                        <Divider type="vertical" />
+                    </>
+                )}
+                {!props.loaded && (type === 'image' || type === 'text') && (
+                    <>
+                        <SmallButton
+                            buttonClicked={() => {
+                                if (type === 'image') props.setLoaded(true)
+                                else loadFile()
+                            }}
+                            title="Edit"
+                            icon={<EditOutlined />}
+                        />
+                        <Divider type="vertical" />
+                    </>
+                )}
+                {!props.loaded && type === 'image' && (
+                    <SmallButton
+                        buttonClicked={() => {
+                            props.setLoaded('resize')
+                            loadFileToDataUrl()
+                        }}
+                        icon={<CompressOutlined />}
+                        title="Resize"
+                    />
+                )}
+                {props.loaded && (
+                    <SmallButton
+                        buttonClicked={() => {
+                            props.setLoaded()
+                        }}
+                        icon={<ArrowLeftOutlined />}
+                        title="Back"
+                    />
+                )}
+            </ControlPanel>
+            {!props.loaded
+                ? fIleInfoScreen
+                : type === 'image'
+                ? props.loaded === 'resize'
+                    ? resizeImageScreen
+                    : editImageScreen
+                : type === 'text'
+                ? textScreen
+                : fIleInfoScreen}
+        </>
     )
 })
 
@@ -352,15 +337,9 @@ const mapStateToProps = state => {
     }
 }
 
-const mapDispatchToProps = (dispatch, props) => {
-    return {
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
-    }
-}
-
 export default connect(
     mapStateToProps,
-    mapDispatchToProps,
+    null,
     null,
     { forwardRef: true }
 )(FileProperties)

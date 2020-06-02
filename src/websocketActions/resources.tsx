@@ -6,7 +6,8 @@ export const addResource = (
     type: 'page' | 'plugin' | 'template',
     duplicate?: boolean,
     newResourceName?: string,
-    resourceData?: {}
+    resourceData?: {},
+    callbackId?: string
 ) => (dispatch: Object, getState) => {
     if (sessionStorage.getItem('tryWebsiter'))
         return alert(
@@ -23,6 +24,7 @@ export const addResource = (
                 _id: mD[current[type]],
                 name: newResourceName,
                 resourceData,
+                callbackId,
             })
         )
     }

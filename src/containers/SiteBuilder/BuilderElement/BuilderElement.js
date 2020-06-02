@@ -6,7 +6,7 @@ import Menu from '../Menu/Menu'
 import Drawer from '../Drawer/Drawer'
 import 'slick-carousel/slick/slick.css'
 import 'slick-carousel/slick/slick-theme.css'
-import Slider from 'react-slick'
+// import Slider from 'react-slick'
 
 import { getCurrentResourceValue } from '../../../utils/basic'
 
@@ -22,11 +22,7 @@ import parse from 'html-react-parser'
 import sanitize from 'sanitize-html'
 
 import { modulesPropertyNodes } from '../../../utils/modulesIndex'
-// import type {
-//     elementType,
-//     resourceType,
-//     initialStateType,
-// } from '../../../store/reducer/reducer'
+import BasicForm from '../BasicForm/BasicForm'
 
 // export type Props = {
 //     element,
@@ -260,21 +256,7 @@ const _BuilderElement = props => {
                     />
                 </div>
             )
-        } else if (Tag === 'websiterGallery') {
-            let items = refinedProperties.items || []
-            if (refinedProperties.originalClass) {
-                items = items.map(item => ({
-                    ...item,
-                    originalClass: refinedProperties.originalClass,
-                }))
-            }
-            const settings = {
-                dots: true,
-                infinite: true,
-                speed: 500,
-                slidesToShow: 1,
-                slidesToScroll: 1,
-            }
+        } else if (Tag === 'websiterBasicForm') {
             return (
                 <div
                     {...attributes}
@@ -283,40 +265,75 @@ const _BuilderElement = props => {
                     onMouseLeave={e => unhoverBox(e, props)}
                     onMouseDown={e => chooseBox(e, props)}
                 >
-                    <Slider
-                        // element={props.element}
-                        // elementValues={props.elementValues}
-                        // document={props.document}
-                        // parentPluginProps={props.parentPluginProps}
-                        // childrenForPlugin={props.childrenForPlugin}
-                        {...settings}
-                        {...refinedProperties}
+                    <BasicForm
+                        element={props.element}
+                        refinedProperties={refinedProperties}
+                        document={props.document}
+                        parentPluginProps={props.parentPluginProps}
+                        childrenForPlugin={props.childrenForPlugin}
                         {...getModulePropertiesNodes(Tag)}
-                    >
-                        <div>
-                            <div
-                                style={{
-                                    width: '100px',
-                                    height: '100px',
-                                    background: 'red',
-                                }}
-                            >
-                                sdfsdf
-                            </div>
-                        </div>
-                        {props.currentWebsiteObject && props.filesStructure
-                            ? items.map(item => {
-                                  return (
-                                      <div>
-                                          <img src={item.original} />
-                                      </div>
-                                  )
-                              })
-                            : null}
-                    </Slider>
+                    />
                 </div>
             )
-        } else if (Tag === 'richEditor') {
+        }
+        //  else if (Tag === 'websiterGallery') {
+        //     let items = refinedProperties.items || []
+        //     if (refinedProperties.originalClass) {
+        //         items = items.map(item => ({
+        //             ...item,
+        //             originalClass: refinedProperties.originalClass,
+        //         }))
+        //     }
+        //     const settings = {
+        //         dots: true,
+        //         infinite: true,
+        //         speed: 500,
+        //         slidesToShow: 1,
+        //         slidesToScroll: 1,
+        //     }
+        //     return (
+        //         <div
+        //             {...attributes}
+        //             onMouseEnter={e => hoverBox(e, props)}
+        //             onMouseMove={e => hoverBox(e, props)}
+        //             onMouseLeave={e => unhoverBox(e, props)}
+        //             onMouseDown={e => chooseBox(e, props)}
+        //         >
+        //             <Slider
+        //                 // element={props.element}
+        //                 // elementValues={props.elementValues}
+        //                 // document={props.document}
+        //                 // parentPluginProps={props.parentPluginProps}
+        //                 // childrenForPlugin={props.childrenForPlugin}
+        //                 {...settings}
+        //                 {...refinedProperties}
+        //                 {...getModulePropertiesNodes(Tag)}
+        //             >
+        //                 <div>
+        //                     <div
+        //                         style={{
+        //                             width: '100px',
+        //                             height: '100px',
+        //                             background: 'red',
+        //                         }}
+        //                     >
+        //                         sdfsdf
+        //                     </div>
+        //                 </div>
+        //                 {props.currentWebsiteObject && props.filesStructure
+        //                     ? items.map(item => {
+        //                           return (
+        //                               <div>
+        //                                   <img src={item.original} />
+        //                               </div>
+        //                           )
+        //                       })
+        //                     : null}
+        //             </Slider>
+        //         </div>
+        //     )
+        // }
+        else if (Tag === 'richEditor') {
             return parse(
                 sanitize(props.elementValues.textContent, {
                     allowedTags: false,
@@ -466,7 +483,6 @@ const BuilderElement = connect(
 export default BuilderElement
 
 const PluginElementRaw = props => {
-    console.log(props.parentPluginProps)
     if (!props.plugin.hidden && props.pluginStructure) {
         //Pass children to plugin
         if (props.plugin.propagating) {

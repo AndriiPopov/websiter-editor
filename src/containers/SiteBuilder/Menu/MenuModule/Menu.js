@@ -451,7 +451,7 @@ Menu.defaultProps = {
     onDeselect: noop,
     defaultSelectedKeys: [],
     defaultOpenKeys: [],
-    subMenuOpenDelay: 0.1,
+    subMenuOpenDelay: 0,
     subMenuCloseDelay: 0.1,
     triggerSubMenuAction: 'hover',
     prefixCls: 'rc-menu',

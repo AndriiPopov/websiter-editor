@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken'
 
 import * as actions from './index'
 
-import cloneDeep from 'lodash/cloneDeep'
 import { webSocket } from '../../components/ReserveWebsite/ReserveWebsite'
 
 const cookies = new Cookies()
@@ -36,7 +35,7 @@ export const deleteFail = (error: string) => ({
     error,
 })
 
-export const deleteUser = () => (dispatch: Object) => {
+export const deleteUser = () => {
     if (sessionStorage.getItem('tryWebsiter'))
         return alert(
             'This function is not available in test mode. Please create your free account at https://my.websiter.dev/login'
@@ -122,7 +121,7 @@ export const authCheckState = () => (dispatch: Object) => {
         dispatch(authStart())
         return axios
             .get('/api/users')
-            .then(response => {
+            .then(() => {
                 sessionStorage.removeItem('tryWebsiter')
                 dispatch(
                     authSuccess({
@@ -159,7 +158,7 @@ export const savePropertiesOnLeave = () => (dispatch, getState) => {
     )
 }
 
-export const changeBarSize = (initiator?: { key: string, value: number }) => (
+export const changeBarSize = (initiator?: { key: string; value: number }) => (
     dispatch: Object,
     getState
 ) => {

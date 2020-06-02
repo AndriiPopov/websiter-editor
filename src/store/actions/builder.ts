@@ -6,6 +6,7 @@ import isObject from 'lodash/isObject'
 import { current, resourceDraftIndex } from '../../utils/resourceTypeIndex'
 
 import getBoxType from '../../utils/getBoxType'
+import { addWSCallback } from '../../components/ReserveWebsite/ReserveWebsite'
 // import type { resourceType } from '../../store/reducer/reducer'
 var htmlparser = require('htmlparser2')
 
@@ -354,7 +355,7 @@ export const addBox = (
 
 export const deleteBox = (
     type: 'page' | 'plugin' | 'template',
-    withChildren?: boolean
+    withChildren?: string
 ) => (dispatch: Object, getState) => {
     const { mD } = getState()
 
@@ -381,7 +382,9 @@ export const deleteBox = (
                 ...resourceDraft,
                 structure: resourceDraft.structure.filter(item => {
                     const notRemove =
-                        elementId !== item.id && !item.path.includes(elementId)
+                        (withChildren === 'onlyChildren' ||
+                            elementId !== item.id) &&
+                        !item.path.includes(elementId)
                     if (!notRemove) removedElements.push(item.id)
                     return notRemove
                 }),
@@ -412,7 +415,9 @@ export const deleteBox = (
             let structureElementsToLeave = resourceDraft.structure.filter(
                 item => {
                     const notRemove =
-                        elementId !== item.id && !item.path.includes(elementId)
+                        (withChildren === 'onlyChildren' ||
+                            elementId !== item.id) &&
+                        !item.path.includes(elementId)
                     if (!notRemove) removedElements.push(item.id)
                     return notRemove
                 }
@@ -593,9 +598,6 @@ export const splitText = (type, start: number, end: number) => (
     dispatch: Object,
     getState
 ) => {
-    console.log(type)
-    console.log(start)
-    console.log(end)
     const { mD } = getState()
     const resourceDraft = mD[resourceDraftIndex[type]]
     if (!resourceDraft) return
@@ -887,48 +889,57 @@ export const mergeBoxToPlugin = (
     const newPluginName =
         prompt('Name the new plugin', 'New plugin') || 'New plugin'
 
+    const callbackId = addWSCallback(() => {
+        const draft = {
+            ...resourceDraft,
+            structure: [
+                ...resourceDraft.structure.slice(
+                    0,
+                    elementIndex + (onlyChildren ? 1 : 0)
+                ),
+                {
+                    ...resourceDraft.structure[elementIndex],
+                    path: [
+                        ...resourceDraft.structure[elementIndex].path,
+                        ...(onlyChildren
+                            ? [resourceDraft.structure[elementIndex].id]
+                            : []),
+                    ],
+                    tag: newPluginName,
+                    text: false,
+                    id: oldResourcesIds[1],
+                },
+                ...resourceDraft.structure.slice(
+                    elementIndex +
+                        (onlyChildren ? 1 : 0) +
+                        resourceDataStructure.length
+                ),
+            ],
+            values: {
+                ...resourceDraft.values,
+                [oldResourcesIds[1]]: {
+                    textContent: '',
+                    propertiesString: '',
+                    properties: {},
+                },
+            },
+        }
+        for (let i = 2; i < oldResourcesIds.length; i++) {
+            delete draft.values[oldResourcesIds[i]]
+        }
+        dispatch(
+            actions.addResourceVersion(mD, type, draft, { throttle: 1000 })
+        )
+    })
     dispatch(
-        wsActions.addResource('plugin', false, newPluginName, resourceData)
+        wsActions.addResource(
+            'plugin',
+            false,
+            newPluginName,
+            resourceData,
+            callbackId
+        )
     )
-
-    const draft = {
-        ...resourceDraft,
-        structure: [
-            ...resourceDraft.structure.slice(
-                0,
-                elementIndex + (onlyChildren ? 1 : 0)
-            ),
-            {
-                ...resourceDraft.structure[elementIndex],
-                path: [
-                    ...resourceDraft.structure[elementIndex].path,
-                    ...(onlyChildren
-                        ? [resourceDraft.structure[elementIndex].id]
-                        : []),
-                ],
-                tag: newPluginName,
-                text: false,
-                id: oldResourcesIds[1],
-            },
-            ...resourceDraft.structure.slice(
-                elementIndex +
-                    (onlyChildren ? 1 : 0) +
-                    resourceDataStructure.length
-            ),
-        ],
-        values: {
-            ...resourceDraft.values,
-            [oldResourcesIds[1]]: {
-                textContent: '',
-                propertiesString: '',
-                properties: {},
-            },
-        },
-    }
-    for (let i = 2; i < oldResourcesIds.length; i++) {
-        delete draft.values[oldResourcesIds[i]]
-    }
-    dispatch(actions.addResourceVersion(mD, type, draft, { throttle: 1000 }))
 }
 
 export const dissolvePluginToBox = type => (dispatch: Object, getState) => {
@@ -956,7 +967,12 @@ export const dissolvePluginToBox = type => (dispatch: Object, getState) => {
     const pluginDataValues = {}
 
     const pluginDataStructure = pluginResource.structure
-        .filter(item => item.path.length > 0)
+        .filter(item => {
+            if (item.path.length === 0) return false
+            if (item.path[0] === 'element_02' || item.path[0] === 'trash')
+                return false
+            return true
+        })
         .map(item => {
             oldResourcesIds.push(item.id)
             const newItem = {
@@ -964,7 +980,7 @@ export const dissolvePluginToBox = type => (dispatch: Object, getState) => {
                 id: `element_${currentId}`,
                 path: [...item.path.slice(1)],
             }
-            pluginDataValues[newItem.id] = resourceDraft.values[item.id]
+            pluginDataValues[newItem.id] = pluginResource.values[item.id]
 
             newResourcesIds.push(newItem.id)
             currentId++

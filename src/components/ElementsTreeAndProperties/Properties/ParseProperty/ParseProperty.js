@@ -5,7 +5,6 @@ import * as actions from '../../../../store/actions/index'
 import * as classes from './ParseProperty.module.css'
 import SmallButton from '../../../UI/Buttons/SmallButton/SmallButton'
 import Editor from '../../../Editor/Editor'
-import checkUserRights from '../../../../utils/checkUserRights'
 import ControlPanel from '../../../UI/ControlPanel'
 
 // import type {
@@ -34,9 +33,6 @@ const ParseProperty = props => {
     const [value, setValue] = useState('')
 
     const handleTextChange = editorValue => {
-        if (!props.checkUserRights(props.requiredRights)) {
-            return
-        }
         setValue(editorValue)
     }
 
@@ -68,7 +64,6 @@ const ParseProperty = props => {
 const mapDispatchToProps = (dispatch, props) => {
     return {
         parseHTML: (type, value) => dispatch(actions.parseHTML(type, value)),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }
 

@@ -21,3 +21,9 @@
 .reactTabsTab {
     padding: 3px 12px;
 }
+
+.Container {
+    padding: 0px 20px;
+    flex: 1;
+    overflow: auto;
+}

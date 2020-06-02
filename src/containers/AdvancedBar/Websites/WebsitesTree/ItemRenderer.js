@@ -5,7 +5,6 @@ import * as actions from '../../../../store/actions/index'
 import * as classes from './WebsitesTree.module.css'
 import InspectorValue from '../../../../components/UI/InspectorValue/InspectorValue'
 import { _extends, _objectSpread } from '../../../../utils/sortTreeMethods'
-import checkUserRights from '../../../../utils/checkUserRights'
 import * as wsActions from '../../../../websocketActions'
 
 // import type { initialStateType } from '../../../../store/reducer/reducer'
@@ -58,9 +57,7 @@ const ItemRenderer = props => {
                                     value={name}
                                     items={[]}
                                     blur={value => {
-                                        if (!props.checkUserRights(['owner']))
-                                            return
-                                        else if (value !== name)
+                                        if (value !== name)
                                             wsActions.changeWebsiteProperty(
                                                 'name',
                                                 value,
@@ -90,7 +87,6 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
     return {
         chooseWebsite: id => dispatch(actions.chooseWebsite(id)),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }
 

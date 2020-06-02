@@ -32,6 +32,7 @@ export const setBoxProperties = (
                     : ''
             }
         )
+
         result.style = styleToCamelcase(style)
     }
 

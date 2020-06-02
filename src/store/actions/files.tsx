@@ -35,10 +35,8 @@ const getSignedRequest = (files, replace, editorMode) => (
 
     const { mD } = getState()
     if (!mD.currentWebsiteId) return
-    let name =
-        mD.currentWebsiteId +
-        '/' +
-        file.name.replace(/([^a-zA-Z0-9\\.\\-])/g, '_')
+    const cleanName = file.name.replace(/([^a-zA-Z0-9\\.\\-])/g, '_')
+    let name = mD.currentWebsiteId + '/' + cleanName
 
     let namePrefix = ''
     let k = 0
@@ -56,9 +54,9 @@ const getSignedRequest = (files, replace, editorMode) => (
 
     const fileDetails = {
         size: file.size,
-        name: replace ? replace.name : file.name,
+        name: replace ? replace.name : cleanName,
         serverName: replace ? replace.serverName : name + namePrefix,
-        type: files.type,
+        type: replace ? replace.type : files.type,
         editorMode,
         file,
         v: replace ? replace.v + 1 : 1,
@@ -183,7 +181,10 @@ const doUploadFile = (
                                     item => item.id === replace.id
                                 )
                             ),
-                            newFileItem,
+                            {
+                                ...newFileItem,
+                                createdDate: replace.createdDate,
+                            },
                             ...mD.filesStructure.slice(
                                 mD.filesStructure.findIndex(
                                     item => item.id === replace.id
@@ -191,7 +192,15 @@ const doUploadFile = (
                             ),
                         ]
                 } else {
-                    result = [...mD.filesStructure, newFileItem]
+                    result = [
+                        ...mD.filesStructure,
+                        {
+                            ...newFileItem,
+                            createdDate: replace
+                                ? replace.createdDate
+                                : Date.now(),
+                        },
+                    ]
                 }
 
                 result = buildRelUrls(result)
@@ -217,9 +226,11 @@ const doUploadFile = (
 }
 
 export const uploadFile = (
-    files: Array<{ type: string, size: number, name: string }>,
+    files: Array<{ type: string; size: number; name: string }>,
     replace: boolean,
-    editorMode: string
+    editorMode: string,
+    isCreated?: boolean,
+    fileType?: string
 ) => (dispatch: Object) => {
     const file = files[0]
 
@@ -230,7 +241,8 @@ export const uploadFile = (
     const reader = new FileReader()
     reader.onload = async event => {
         let type = await FileType.fromBuffer(event.target.result)
-        type = type ? type.mime : ''
+        type = type ? type.mime : isCreated ? 'text/css' : fileType || ''
+
         if (type && type.indexOf('image') >= 0) {
             resizeImageToSpecificSize(
                 file,

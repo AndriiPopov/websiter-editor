@@ -8,6 +8,7 @@ increase speed -- article in bookmarks
 Sign ups with different systems
 
 ----------------LATER------------------------
+Partial hydration!!!
 Wrong version - rerequest resources
 Create a path in elements tree
 Add suggested options in properties
@@ -21,6 +22,20 @@ after connection lost unsaved and new version
 ctrl c ctrl v ctrl x as buttons
 Add fonts and weights in html rich editor
 Hidden files as foldres
+Load to head from plugins (link to stylesheet)
+remove delays on expand trees
+zakladki v propah dla otkrytyh elementov
+Speed of ttfb
+improve docs for buil ins
+ctrl x on cms variables bug
+add type folder variable for just foldres
+add analytics
+drawer not working - redo drawer to have drawer and handler separately add 
+backups
+check custom domains
+remove cookiees if fail login
+collaboration
+remove ratelimiter
 
 
 //mobile view
@@ -43,3 +58,8 @@ Now go to chrome://settings/clearBrowserData, tick the box Cached images and fil
  sudo -H gedit /etc/environment
 
  heroku certs:auto:refresh --app websiter
+
+ sudo heroku  certs:update live/websiter.dev/privkey.pem live/websiter.dev/fullchain.pem -a websiter
+ sudo certbot certonly --manual
+
+

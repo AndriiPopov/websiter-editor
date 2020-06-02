@@ -18,6 +18,8 @@ import CloudDownloadOutlined from '@ant-design/icons/CloudDownloadOutlined'
 import SmallButton from '../UI/Buttons/SmallButton/SmallButton'
 
 const Buttons = props => {
+    const prod = process.env.NODE_ENV !== 'development'
+
     const [linkModalVisible, setLinkModalVisible] = useState(false)
     const {
         requiredRightsIndex,
@@ -29,6 +31,19 @@ const Buttons = props => {
         currentResource,
     } = props
 
+    let localLink = '',
+        customLink = ''
+    if (props.currentWebsiteObject && currentResourcesStructureElement) {
+        localLink = `http${prod ? 's' : ''}://${
+            props.currentWebsiteObject.domain
+        }.live.websiter.${prod ? 'dev' : 'test:5000'}${
+            currentResourcesStructureElement.relUrl
+        }`
+
+        customLink = `http${prod ? 's' : ''}://${
+            props.currentWebsiteObject.customDomain
+        }${prod ? '' : ':5000'}${currentResourcesStructureElement.relUrl}`
+    }
     const linkModal = currentResourcesStructureElement && (
         <Modal
             title={currentResourcesStructureElement.name + ' links'}
@@ -69,38 +84,21 @@ const Buttons = props => {
                                         userSelect: 'all',
                                     }}
                                 >
-                                    {'https://' +
-                                        props.currentWebsiteObject
-                                            .customDomain +
-                                        '/' +
-                                        currentResourcesStructureElement.relUrl}
+                                    {customLink}
                                 </span>
                             </td>
                             <td style={{ whiteSpace: 'nowrap' }}>
                                 <SmallButton
                                     icon={<CopyOutlined />}
                                     buttonClicked={() =>
-                                        copyToClipboard(
-                                            'https://' +
-                                                props.currentWebsiteObject
-                                                    .customDomain +
-                                                '/' +
-                                                currentResourcesStructureElement.relUrl
-                                        )
+                                        copyToClipboard(customLink)
                                     }
                                     tooltip="Copy."
                                 />
                                 <SmallButton
                                     icon={<DesktopOutlined />}
                                     buttonClicked={() => {
-                                        window.open(
-                                            'https://' +
-                                                props.currentWebsiteObject
-                                                    .customDomain +
-                                                '/' +
-                                                currentResourcesStructureElement.relUrl,
-                                            '_blank'
-                                        )
+                                        window.open(customLink, '_blank')
                                     }}
                                     tooltip="Open in a new tab"
                                 />
@@ -113,35 +111,19 @@ const Buttons = props => {
                         </td>
                         <td>
                             <span style={{ userSelect: 'all' }}>
-                                {'http://live.websiter.test:5000/' +
-                                    props.currentWebsiteObject.domain +
-                                    '/' +
-                                    currentResourcesStructureElement.relUrl}
+                                {localLink}
                             </span>
                         </td>
                         <td style={{ whiteSpace: 'nowrap' }}>
                             <SmallButton
                                 icon={<CopyOutlined />}
-                                buttonClicked={() =>
-                                    copyToClipboard(
-                                        'http://live.websiter.test:5000/' +
-                                            props.currentWebsiteObject.domain +
-                                            '/' +
-                                            currentResourcesStructureElement.relUrl
-                                    )
-                                }
+                                buttonClicked={() => copyToClipboard(localLink)}
                                 tooltip="Copy."
                             />
                             <SmallButton
                                 icon={<DesktopOutlined />}
                                 buttonClicked={() => {
-                                    window.open(
-                                        'http://live.websiter.test:5000/' +
-                                            props.currentWebsiteObject.domain +
-                                            '/' +
-                                            currentResourcesStructureElement.relUrl,
-                                        '_blank'
-                                    )
+                                    window.open(localLink, '_blank')
                                 }}
                                 tooltip="Open in a new tab"
                             />
@@ -207,7 +189,7 @@ const Buttons = props => {
             {props.type === 'page' && currentResourcesStructureElement ? (
                 !currentResourcesStructureElement.generalSettings ? (
                     <>
-                        <Tooltip title="Choose template" mouseEnterDelay={0.2}>
+                        <Tooltip title="Choose template" mouseEnterDelay={0.5}>
                             <Select
                                 showSearch
                                 onSelect={value => {

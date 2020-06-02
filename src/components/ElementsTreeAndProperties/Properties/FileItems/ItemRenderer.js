@@ -10,7 +10,6 @@ import {
     _objectSpread,
 } from '../../../../utils/sortTreeMethods'
 import Svg from '../../../Svg/Svg'
-import checkUserRights from '../../../../utils/checkUserRights'
 import LazyLoad from 'react-lazy-load'
 import TimeAgo from 'react-timeago'
 import { getFileUrl } from '../../../../utils/getFileUrl'
@@ -209,7 +208,6 @@ const mapStateToProps = (state, props) => {
 const mapDispatchToProps = dispatch => {
     return {
         chooseResource: id => dispatch(actions.chooseResource(id, 'file')),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }
 

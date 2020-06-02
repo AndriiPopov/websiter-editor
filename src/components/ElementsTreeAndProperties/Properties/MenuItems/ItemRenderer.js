@@ -118,7 +118,6 @@ const ItemRenderer = props => {
                                 />
                             )
                         })}
-                        )}
                     </div>
                 </div>
             )

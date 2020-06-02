@@ -136,6 +136,7 @@ export default [
     'var',
     'video',
     'wbr',
+    'websiterBasicForm',
     'websiterDrawer',
     'websiterMenu',
     'websiterGallery',

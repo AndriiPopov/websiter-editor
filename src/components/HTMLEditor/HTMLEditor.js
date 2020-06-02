@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 
 import { Editor } from '@tinymce/tinymce-react'
 import { connect } from 'react-redux'
-import checkUserRights from '../../utils/checkUserRights'
 
 // import type { elementType, initialStateType } from '../../store/reducer/reducer'
 // type Props = {
@@ -33,9 +32,6 @@ const HTMLEditor = props => {
     ])
 
     const handleChange = (e, editor) => {
-        if (!props.checkUserRights(props.requiredRights)) {
-            return
-        }
         props.handleChange(e, editor, box)
     }
 
@@ -55,6 +51,9 @@ const HTMLEditor = props => {
                     value={value}
                     init={{
                         // skin_url: `../../../skins/`,
+                        document_base_url: `http${props.prod ? 's' : ''}://${
+                            props.currentWebsiteObject.domain
+                        }.live.websiter.${props.prod ? 'dev' : 'test:5000'}/`,
                         readonly: props.readOnly ? 1 : 0,
                         // height: 500,
                         plugins: [
@@ -147,18 +146,14 @@ const mapStateToProps = state => {
         currentPageId: state.mD.currentPageId,
         currentTemplateId: state.mD.currentTemplateId,
         currentPluginId: state.mD.currentPluginId,
-    }
-}
-
-const mapDispatchToProps = (dispatch, props) => {
-    return {
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
+        currentWebsiteObject: state.mD.currentWebsiteObject,
+        prod: state.mD.prod,
     }
 }
 
 export default connect(
     mapStateToProps,
-    mapDispatchToProps
+    null
 )(HTMLEditor)
 
 // import React, { useEffect, useState } from 'react'

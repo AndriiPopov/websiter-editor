@@ -5,7 +5,6 @@ import * as classes from './TextProperty.module.css'
 import SmallButton from '../../../UI/Buttons/SmallButton/SmallButton'
 import Editor from '../../../Editor/Editor'
 import Select from 'antd/es/select'
-import checkUserRights from '../../../../utils/checkUserRights'
 import StarOutlined from '@ant-design/icons/StarOutlined'
 import SplitCellsOutlined from '@ant-design/icons/SplitCellsOutlined'
 import ForkOutlined from '@ant-design/icons/ForkOutlined'
@@ -42,17 +41,11 @@ const TextProperty = props => {
     }, [props.elementValues.textContent])
 
     const handleTextChangeCss = value => {
-        if (!props.checkUserRights(props.requiredRights)) {
-            return
-        }
         value = value.replace(/\r\n|\r|\n/g, ' ')
         props.changeProperty('textContent', value)
     }
 
     const handleTextChangeText = e => {
-        if (!props.checkUserRights(props.requiredRights)) {
-            return
-        }
         const value = e.target.value.replace(/\r\n|\r|\n/g, ' ')
         if (props.elementValues.textMode === 'text')
             setState({
@@ -76,7 +69,6 @@ const TextProperty = props => {
             <ControlPanel>
                 <Select
                     onSelect={value => {
-                        if (!props.checkUserRights(props.requiredRights)) return
                         props.changeProperty('textMode', value)
                     }}
                     dropdownMatchSelectWidth={false}
@@ -173,7 +165,6 @@ const mapDispatchToProps = (dispatch, props) => {
             dispatch(actions.splitText(type, start, end)),
         textToSpan: (type, start, end) =>
             dispatch(actions.textToSpan(type, start, end)),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
     }
 }
 

@@ -216,7 +216,7 @@ var Frame = (function(_Component) {
                     return textArea.value
                 }
                 doc.head.innerHTML =
-                    decodeEntities(this.props.initialContent) + this.props.base
+                    this.props.base + decodeEntities(this.props.initialContent)
 
                 // .replace(
                 //     /&(l|g|quo)t;/g,

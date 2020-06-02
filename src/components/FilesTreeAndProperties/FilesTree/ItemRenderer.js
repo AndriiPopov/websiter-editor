@@ -11,7 +11,6 @@ import {
     _objectSpread,
 } from '../../../utils/sortTreeMethods'
 import Svg from '../../Svg/Svg'
-import checkUserRights from '../../../utils/checkUserRights'
 import * as wsActions from '../../../websocketActions'
 import bytes from 'bytes'
 import LazyLoad from 'react-lazy-load'
@@ -92,9 +91,6 @@ const ItemRenderer = props => {
     if (!isLandingPadActive) rowClasses.push(className)
 
     const handlePropertyChange = (key, value, id) => {
-        if (!props.checkUserRights(['content', 'developer'])) {
-            return
-        }
         value = value.trim()
         const newStructure = cloneDeep(props.structure)
         const element = newStructure.find(item => item.id === id)
@@ -191,31 +187,18 @@ const ItemRenderer = props => {
                             }
                         >
                             <div className={classes.rst__rowLabel}>
-                                {props.checkUserRights(
-                                    ['content', 'developer'],
-                                    true
-                                ) ? (
-                                    <InspectorValue
-                                        value={name}
-                                        items={[]}
-                                        blur={value =>
-                                            handlePropertyChange(
-                                                'name',
-                                                value,
-                                                id
-                                            )
-                                        }
-                                        withState
-                                        requiredRights={[
-                                            'content',
-                                            'developer',
-                                        ]}
-                                        maxLength="38"
-                                        maxWidth="320px"
-                                    />
-                                ) : (
-                                    name
-                                )}
+                                <InspectorValue
+                                    value={name}
+                                    items={[]}
+                                    blur={value =>
+                                        handlePropertyChange('name', value, id)
+                                    }
+                                    withState
+                                    requiredRights={['content', 'developer']}
+                                    maxLength="38"
+                                    maxWidth="320px"
+                                />
+
                                 <div
                                     style={{
                                         display: 'inline-block',
@@ -291,7 +274,6 @@ const mapStateToProps = (state, props) => {
 const mapDispatchToProps = dispatch => {
     return {
         chooseResource: id => dispatch(actions.chooseResource(id, 'file')),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
         sendUpdate: (type, newResource, id) =>
             dispatch(wsActions.sendUpdate(type, newResource, id)),
     }

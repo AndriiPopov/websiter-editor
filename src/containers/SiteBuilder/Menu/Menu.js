@@ -33,8 +33,8 @@ const MenuElement = props => {
         const key = item.id + '_' + index
         if (item.children.length === 0) {
             if (
-                item.url === '/' + props.pageInStructure.relUrl ||
-                (item.url === '' && props.pageInStructure.homepage)
+                item.url === props.pageInStructure.relUrl ||
+                (item.url === '/' && props.pageInStructure.homepage)
             )
                 activeKeys.push(key)
             return (
@@ -60,33 +60,18 @@ const MenuElement = props => {
             )
         }
     })
-    console.log(props.pageInStructure.relUrl)
-    console.log(builtItems)
-    console.log(props.refinedProperties)
-    console.log(activeKeys)
+
     return (
         <Menu
             prefixCls={'systemclass_menu'}
             getPopupContainer={() =>
                 props.document.getElementById('__menu__popup__container__')
             }
-            topMenuBlockClasses={props.refinedProperties.topMenuBlockClasses}
-            topMenuItemClasses={props.refinedProperties.topMenuItemClasses}
-            topMenuItemActiveClasses={
-                props.refinedProperties.topMenuItemActiveClasses
-            }
-            popupMenuBlockClasses={
-                props.refinedProperties.popupMenuBlockClasses
-            }
-            popupMenuItemClasses={props.refinedProperties.popupMenuItemClasses}
-            popupMenuItemActiveClasses={
-                props.refinedProperties.popupMenuItemActiveClasses
-            }
-            mode={props.refinedProperties.mode}
             selectable={false}
             triggerSubMenuAction={props.refinedProperties.trigger}
             activeKeys={activeKeys}
             overflowedIndicator={props.overflowIcon}
+            {...props.refinedProperties}
         >
             {menuElements}
         </Menu>
@@ -101,8 +86,8 @@ const SubMenu1 = props => {
                 const key = props.key + '_' + index
                 if (item.children.length === 0) {
                     if (
-                        item.url === '/' + props.pageInStructure.relUrl ||
-                        (item.url === '' && props.pageInStructure.homepage)
+                        item.url === props.pageInStructure.relUrl ||
+                        (item.url === '/' && props.pageInStructure.homepage)
                     )
                         activeKeys.push(key)
                     return (

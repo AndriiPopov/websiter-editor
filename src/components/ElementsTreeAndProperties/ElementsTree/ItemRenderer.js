@@ -10,7 +10,6 @@ import {
     _objectSpread,
 } from '../../../utils/sortTreeMethods'
 import tagItems from '../../../utils/tagItems'
-import checkUserRights from '../../../utils/checkUserRights'
 import PlusOutlined from '@ant-design/icons/PlusOutlined'
 import DeleteOutlined from '@ant-design/icons/DeleteOutlined'
 
@@ -117,6 +116,8 @@ const ItemRenderer = props => {
         isElementFromCMSVariable,
         childrenTo,
         isPropagatingItem,
+        forModule,
+        forChildren,
     } = props.currentNode
 
     const rowClasses = [classes.rst__row]
@@ -137,13 +138,6 @@ const ItemRenderer = props => {
         )
 
     const handleRename = value => {
-        if (
-            !props.checkUserRights(
-                props.mode === 'page' ? ['content'] : ['developer']
-            )
-        ) {
-            return
-        }
         if (value !== tag) {
             if (mode === 'plugin') {
                 const currentPlugin = pluginsStructure.find(
@@ -239,37 +233,28 @@ const ItemRenderer = props => {
                                             : isElementFromCMSVariable
                                             ? 'From CMS variable - '
                                             : ''}
-                                        {(mode === 'plugin' &&
+                                        {((mode === 'plugin' &&
                                             itemPath.length > 0) ||
-                                        ((mode === 'template' &&
-                                            itemPath.length > 1) ||
-                                            itemPath[0] === 'element_02') ||
-                                        isPropagatingItem ? (
-                                            props.checkUserRights(
-                                                mode === 'page'
-                                                    ? ['content']
-                                                    : ['developer'],
-                                                true
-                                            ) ? (
-                                                <InspectorValue
-                                                    readonly={childrenTo}
-                                                    value={tag}
-                                                    items={tagItems.map(
-                                                        item => {
-                                                            return {
-                                                                abbr: item,
-                                                                name: item,
-                                                            }
-                                                        }
-                                                    )}
-                                                    blur={handleRename}
-                                                    withState
-                                                    maxLength="30"
-                                                    maxWidth="220px"
-                                                />
-                                            ) : (
-                                                tag
-                                            )
+                                            ((mode === 'template' &&
+                                                itemPath.length > 1) ||
+                                                itemPath[0] === 'element_02') ||
+                                            isPropagatingItem) &&
+                                        !forModule &&
+                                        !forChildren ? (
+                                            <InspectorValue
+                                                readonly={childrenTo}
+                                                value={tag}
+                                                items={tagItems.map(item => {
+                                                    return {
+                                                        abbr: item,
+                                                        name: item,
+                                                    }
+                                                })}
+                                                blur={handleRename}
+                                                withState
+                                                maxLength="30"
+                                                maxWidth="220px"
+                                            />
                                         ) : (
                                             tag
                                         )}
@@ -328,12 +313,6 @@ const ItemRenderer = props => {
                                         <SmallButton
                                             inline
                                             buttonClicked={() => {
-                                                if (
-                                                    !props.checkUserRights([
-                                                        'content',
-                                                    ])
-                                                )
-                                                    return
                                                 props.addBox(mode, 'inside')
                                             }}
                                             icon={<PlusOutlined />}
@@ -348,12 +327,6 @@ const ItemRenderer = props => {
                                                 <SmallButton
                                                     inline
                                                     buttonClicked={() => {
-                                                        if (
-                                                            !props.checkUserRights(
-                                                                ['content']
-                                                            )
-                                                        )
-                                                            return
                                                         props.addBox(mode)
                                                     }}
                                                     icon={<PlusOutlined />}
@@ -364,12 +337,6 @@ const ItemRenderer = props => {
                                             <SmallButton
                                                 inline
                                                 buttonClicked={() => {
-                                                    if (
-                                                        !props.checkUserRights([
-                                                            'content',
-                                                        ])
-                                                    )
-                                                        return
                                                     props.deleteBox(mode, true)
                                                 }}
                                                 icon={<DeleteOutlined />}
@@ -430,7 +397,6 @@ const mapDispatchToProps = (dispatch, props) => {
             ),
         hoverBox: (id, mode) => dispatch(actions.hoverBox(id, mode)),
         unhoverBox: () => dispatch(actions.unhoverBox()),
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
         addBox: (mode, type) => dispatch(actions.addBox(mode, type)),
         deleteBox: (mode, withChildren) =>
             dispatch(actions.deleteBox(mode, withChildren)),

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import Autocomplete from 'react-autocomplete'
+import Autosuggest from 'react-autosuggest'
 
 import classes from './InspectorValue.module.css'
 
@@ -8,7 +8,6 @@ import classes from './InspectorValue.module.css'
 //     changed: Function,
 //     datatestid?: string,
 //     blur?: Function,
-//     focus?: Function,
 //     allowEmpty?: boolean,
 //     withState?: boolean,
 //     maxLength?: number,
@@ -16,28 +15,75 @@ import classes from './InspectorValue.module.css'
 // }
 
 export const InspectorValue = props => {
-    const [state, setState] = useState({
-        active: false,
-        value: props.value,
-        startValue: props.value,
-    })
+    const [state, setState] = useState(props.value || '')
+    const [suggestions, setSuggestions] = useState(props.items || [])
+    const [active, setActive] = useState()
     useEffect(() => {
-        setState({ ...state, value: props.value, startValue: props.value })
+        setState(props.value)
+        setSuggestions(props.items)
     }, [props.value])
 
-    const matchStateToTerm = (items, value) => {
-        return (
-            items.name.toLowerCase().indexOf(value.toLowerCase()) !== -1 ||
-            items.abbr.toLowerCase().indexOf(value.toLowerCase()) !== -1
-        )
+    const onChange = (event, { newValue }) => {
+        setState(newValue)
     }
 
-    const parentPropsBlur = props.blur
-    const parentPropsFocus = props.focus
-    const parentPropsMaxLength = props.maxLength
-    const parentPropsMaxWidth = props.maxWidth
+    const onSuggestionsFetchRequested = ({ value }) => {
+        setSuggestions(getSuggestions(value))
+    }
 
-    const value = state.value
+    const onSuggestionsClearRequested = () => {
+        setSuggestions([])
+    }
+
+    const inputProps = {
+        placeholder: 'Type...',
+        value: active
+            ? state
+            : props.maxLength
+            ? state
+                ? state.substr(0, props.maxLength) +
+                  (state.length > props.maxLength ? '...' : '')
+                : ''
+            : state,
+        onChange,
+        onFocus: () => setActive(true),
+        onBlur: (e, { highlightedSuggestion }) => {
+            setActive()
+            if (props.blur) {
+                if (e.target) props.blur(e.target.value)
+                else if (highlightedSuggestion)
+                    props.blur(highlightedSuggestion.name)
+                else props.blur(state)
+            }
+        },
+        onKeyUp: e => {
+            if (e.which === 13 || e.keyCode === 13) {
+                e.currentTarget.blur()
+            } else if (e.which === 27 || e.keyCode === 27) {
+                e.currentTarget.blur()
+            }
+        },
+        className: active
+            ? classes.Input
+            : [classes.Input, classes.InputHidden].join(' '),
+        style: props.maxWidth ? { maxWidth: props.maxWidth } : {},
+    }
+
+    const getSuggestions = value => {
+        const inputValue = value.trim().toLowerCase()
+        const inputLength = inputValue.length
+
+        return inputLength === 0
+            ? []
+            : props.items.filter(
+                  item => item.name.toLowerCase().indexOf(inputValue) >= 0
+              )
+    }
+
+    const getSuggestionValue = suggestion => suggestion.name
+
+    const renderSuggestion = suggestion => <div>{suggestion.name}</div>
+
     return (
         <div
             className={classes.InspectorDiv}
@@ -52,113 +98,39 @@ export const InspectorValue = props => {
                     : {})}
             >
                 {props.maxLength
-                    ? value
-                        ? value.substr(0, props.maxLength) +
-                          (value.length > props.maxLength ? '...' : '')
+                    ? state
+                        ? state.substr(0, props.maxLength) +
+                          (state.length > props.maxLength ? '...' : '')
                         : ''
-                    : value}
+                    : state}
             </span>
-
-            <Autocomplete
-                items={props.items || []}
-                value={state.value}
-                onChange={(e, value) => {
-                    setState({ ...state, value: value })
-                    if (props.changed) {
-                        props.changed(value)
-                    }
-                }}
-                onSelect={value => {
-                    setState({ ...state, value: value, active: false })
-                }}
-                shouldItemRender={matchStateToTerm}
-                getItemValue={item => item.name}
-                renderItem={(item, isHighlighted) => (
-                    <div
-                        className={
-                            isHighlighted ? classes.ItemHighlighted : null
-                        }
-                        key={item.abbr}
-                        style={{ padding: '2px 5px' }}
-                    >
-                        {item.name}
-                    </div>
-                )}
-                renderMenu={(items, value, styles) => {
-                    return (
-                        <div
-                            style={{
-                                zIndex: 1000,
-                                position: 'absolute',
-                                left: '0px',
-                                top: '20px',
-                                background: 'white',
-                                border: '1px solid #ccc',
-                                color: '#333',
-                                maxHeight: '100px',
-                                overflow: 'auto',
-                                paddingBottom: '5px',
-                            }}
-                            children={items}
-                        />
-                    )
-                }}
-                renderInput={(props, inputEl) => {
-                    const maxLength = parentPropsMaxLength
-
-                    const maxWidth = parentPropsMaxWidth
-                    const value = state.value
-
-                    return (
-                        <input
-                            {...(value && maxLength
-                                ? value.length > maxLength
-                                    ? { title: value }
-                                    : {}
-                                : {})}
-                            {...props}
-                            onBlur={e => {
-                                props.onBlur(e)
-
-                                if (parentPropsBlur) {
-                                    parentPropsBlur(e.target.value)
-                                }
-                                setState({
-                                    ...state,
-                                    active: false,
-                                })
-                            }}
-                            onFocus={e => {
-                                props.onBlur(e)
-                                setState({ ...state, active: true })
-                                if (parentPropsFocus) parentPropsFocus()
-                            }}
-                            onMouseDown={e => {
-                                setState({ ...state, active: true })
-                                if (parentPropsFocus) parentPropsFocus()
-                            }}
-                            className={
-                                state.active
-                                    ? classes.Input
-                                    : [classes.Input, classes.InputHidden].join(
-                                          ' '
-                                      )
-                            }
-                            style={maxWidth ? { maxWidth } : {}}
-                            value={
-                                state.active
-                                    ? value
-                                    : maxLength
-                                    ? value
-                                        ? value.substr(0, maxLength) +
-                                          (value.length > maxLength
-                                              ? '...'
-                                              : '')
-                                        : ''
-                                    : value
-                            }
-                        />
-                    )
+            <Autosuggest
+                suggestions={suggestions || []}
+                onSuggestionsFetchRequested={onSuggestionsFetchRequested}
+                onSuggestionsClearRequested={onSuggestionsClearRequested}
+                getSuggestionValue={getSuggestionValue}
+                renderSuggestion={renderSuggestion}
+                inputProps={inputProps}
+                focusInputOnSuggestionClick={false}
+                theme={{
+                    container: classes.reactautosuggestcontainer,
+                    containerOpen: classes.reactautosuggestcontaineropen,
+                    input: classes.reactautosuggestinput,
+                    inputOpen: classes.reactautosuggestinputopen,
+                    inputFocused: classes.reactautosuggestinputfocused,
+                    suggestionsContainer:
+                        classes.reactautosuggestsuggestionscontainer,
+                    suggestionsContainerOpen:
+                        classes.reactautosuggestsuggestionscontaineropen,
+                    suggestionsList: classes.reactautosuggestsuggestionslist,
+                    suggestion: classes.reactautosuggestsuggestion,
+                    suggestionFirst: classes.reactautosuggestsuggestionfirst,
+                    suggestionHighlighted:
+                        classes.reactautosuggestsuggestionhighlighted,
+                    sectionContainer: classes.reactautosuggestsectioncontainer,
+                    sectionContainerFirst:
+                        classes.reactautosuggestsectioncontainerfirst,
+                    sectionTitle: classes.reactautosuggestsectiontitle,
                 }}
             />
         </div>

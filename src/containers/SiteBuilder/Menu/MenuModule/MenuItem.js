@@ -348,6 +348,7 @@ export var MenuItem =
                         ),
                         _classNames)
                     )
+
                     var itemAttrs = _objectSpread(
                         {},
                         {

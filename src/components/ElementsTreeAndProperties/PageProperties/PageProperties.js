@@ -11,7 +11,6 @@ import { resourceDraftIndex } from '../../../utils/resourceTypeIndex'
 import { SketchPicker, CirclePicker } from 'react-color'
 
 import { getCurrentResourceValue } from '../../../utils/basic'
-import checkUserRights from '../../../utils/checkUserRights'
 import Select from 'antd/es/select'
 import InputNumber from 'antd/es/input-number'
 import Slider from 'antd/es/slider'
@@ -36,10 +35,15 @@ const Properties = props => {
                 {props.templateCMSElementValues.CMSVariableType === 'html' ? (
                     <HTMLEditor
                         value={props.elementValues.value}
-                        handleChange={(e, editor) => {
-                            props.changeProperty('value', editor.getContent())
+                        handleChange={(e, editor, box) => {
+                            props.changeProperty(
+                                'value',
+                                editor.getContent(),
+                                box
+                            )
                         }}
                         requiredRights={['content']}
+                        currentBox={props.currentBox}
                     />
                 ) : props.templateCMSElementValues.CMSVariableType ===
                   'menuItems' ? (
@@ -78,8 +82,7 @@ const Properties = props => {
                                 value={rangeValue}
                                 onChange={value => {
                                     setRangeValue(value)
-                                    if (!props.checkUserRights(['content']))
-                                        return
+
                                     props.changeProperty('value', value)
                                 }}
                                 max={
@@ -108,7 +111,6 @@ const Properties = props => {
                             value={rangeValue}
                             onChange={value => {
                                 setRangeValue(value)
-                                if (!props.checkUserRights(['content'])) return
                                 props.changeProperty('value', value)
                             }}
                             max={
@@ -135,7 +137,6 @@ const Properties = props => {
                   'select' ? (
                     <Select
                         onSelect={value => {
-                            if (!props.checkUserRights(['developer'])) return
                             props.changeProperty('value', value)
                         }}
                         dropdownMatchSelectWidth={false}
@@ -170,7 +171,6 @@ const Properties = props => {
                             }
                             color={props.elementValues.color}
                             onChangeComplete={value => {
-                                if (!props.checkUserRights(['content'])) return
                                 props.changeProperty('color', value.rgb)
                             }}
                         />
@@ -186,7 +186,6 @@ const Properties = props => {
                         }
                         color={props.elementValues.color}
                         onChangeComplete={value => {
-                            if (!props.checkUserRights(['content'])) return
                             props.changeProperty('color', value.rgb)
                         }}
                         disableAlpha={
@@ -238,6 +237,7 @@ const Properties = props => {
                         }
                         handleChange={() => {}}
                         readOnly={true}
+                        currentBox={props.currentBox}
                     />
                 ) : props.templateCMSElementValues.CMSVariableType ===
                   'menuItems' ? (
@@ -392,12 +392,5 @@ const mapStateToProps = (state, props) => {
         currentResource: state.mD.currentPageId,
     }
 }
-const mapDispatchToProps = dispatch => {
-    return {
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
-    }
-}
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(Properties)
+
+export default connect(mapStateToProps)(Properties)

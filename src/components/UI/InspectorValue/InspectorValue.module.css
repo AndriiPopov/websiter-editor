@@ -34,13 +34,50 @@
     padding-right: 7px;
 }
 
-.ItemHighlighted {
-    background: lightskyblue;
+.reactautosuggestinput {
 }
 
-.DropDown {
-    z-index: 1000;
-    position: fixed;
-    background: white;
-    border: 1px solid #ccc;
+.reactautosuggestinputfocused {
+    outline: none;
+}
+
+.reactautosuggestinputopen {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.reactautosuggestsuggestionscontainer {
+    display: none;
+}
+
+.reactautosuggestsuggestionscontaineropen {
+    display: block;
+    position: absolute;
+    border: 1px solid #aaa;
+    background-color: #fff;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    z-index: 2000;
+    max-height: 100px;
+    overflow: auto;
+}
+
+.reactautosuggestsuggestionslist {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+.reactautosuggestsuggestion {
+    cursor: pointer;
+    padding: 2px 10px;
+    font-size: 13px;
+}
+
+.reactautosuggestsuggestionhighlighted {
+    background-color: #ddd;
+}
+
+.container {
+    display: flex;
 }

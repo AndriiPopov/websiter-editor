@@ -1,7 +1,7 @@
 import React, { memo } from 'react'
 import SmallButton from '../../UI/Buttons/SmallButton/SmallButton'
 import Menu from 'antd/es/menu'
-
+import * as actions from '../../../store/actions'
 // import type {
 //     resourceType,
 //     initialStateType,
@@ -59,7 +59,30 @@ import RedoOutlined from '@ant-design/icons/RedoOutlined'
 
 import Divider from 'antd/es/divider'
 
-const Buttons = props => {
+type Props = {
+    buttonRules: {
+        addText: boolean
+        addNext: boolean
+        addInside: boolean
+        addFromCMSVariable: boolean
+        addChildren: boolean
+        duplicate: boolean
+        mergeToPlugin: boolean
+        mergeToPluginChildren: boolean
+        dissolve: boolean
+        delete: boolean
+        deleteChildren: boolean
+    }
+    mode: 'page' | 'plugin' | 'template'
+    mergeBoxToPlugin: typeof actions.mergeBoxToPlugin
+    addBox: typeof actions.addBox
+    handleButtonMenuClick: () => {}
+    dissolvePluginToBox: typeof actions.dissolvePluginToBox
+    deleteBox: typeof actions.deleteBox
+    markShouldRefreshing: (mark: boolean) => {}
+}
+
+const Buttons = (props: Props) => {
     const { handleButtonMenuClick, buttonRules } = props
 
     const addMenu = (
@@ -72,7 +95,7 @@ const Buttons = props => {
                     Add inside (Ctrl + Shift + A)
                 </Menu.Item>
             )}
-            {buttonRules.addNext && buttonRules.addFromCMSVariable && (
+            {buttonRules.addFromCMSVariable && (
                 <Menu.Item key="addFromCMS">Add from CMS variable</Menu.Item>
             )}
             {buttonRules.addChildren && (
@@ -114,7 +137,7 @@ const Buttons = props => {
                         buttonClicked={() =>
                             props.addBox(
                                 props.mode,
-                                buttonRules.addNext ? null : 'inside'
+                                buttonRules.addNext ? undefined : 'inside'
                             )
                         }
                         overlay={addMenu}
@@ -130,21 +153,21 @@ const Buttons = props => {
                                     props.mergeBoxToPlugin(props.mode)
                                 }
                                 overlay={
-                                    props.buttonRules.mergeToPluginChildren &&
-                                    props.mode !== 'page' ? (
+                                    (props.buttonRules
+                                        .mergeToPluginChildren && (
                                         <Menu onClick={handleButtonMenuClick}>
                                             <Menu.Item key="mergeChildren">
                                                 Merge children into plugin
                                             </Menu.Item>
                                         </Menu>
-                                    ) : null
+                                    )) ||
+                                    undefined
                                 }
                             />
                             <Divider type="vertical" />
                         </>
                     ) : (
-                        props.buttonRules.mergeToPluginChildren &&
-                        props.mode !== 'page' && (
+                        props.buttonRules.mergeToPluginChildren && (
                             <>
                                 <SmallButton
                                     tooltip="Merge children elements into a new plugin"
@@ -188,6 +211,11 @@ const Buttons = props => {
                                             Delete with children (Shift +
                                             Delete)
                                         </Menu.Item>
+                                        {props.buttonRules.deleteChildren && (
+                                            <Menu.Item key="deleteChildren">
+                                                Delete only children
+                                            </Menu.Item>
+                                        )}
                                     </Menu>
                                 }
                             />

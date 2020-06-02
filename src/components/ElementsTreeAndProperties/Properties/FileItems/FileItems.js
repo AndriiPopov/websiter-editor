@@ -11,7 +11,6 @@ import ItemRenderer from './ItemRenderer'
 import { buildTree } from '../../../../utils/basic'
 import SizeDragController from '../../../../containers/AdvancedBar/SizeDragController/SizeDragController'
 import OverlayOnSizeIsChanging from '../../../UI/OverlayOnSizeIsChanging/OverlayOnSizeIsChanging'
-import checkUserRights from '../../../../utils/checkUserRights'
 import bytes from 'bytes'
 import TimeAgo from 'react-timeago'
 import { getFileUrl } from '../../../../utils/getFileUrl'
@@ -146,6 +145,7 @@ const FileItems = props => {
                             setState({ ...state, treeDataSource: items })
                         }
                         slideRegionSize={20}
+                        innerStyle={{ paddingBottom: '150px' }}
                     />
                     <OverlayOnSizeIsChanging />
                 </div>
@@ -273,21 +273,13 @@ const FileItems = props => {
                             <>
                                 <div style={{ flex: 1 }}>
                                     <img
-                                        src={
-                                            getFileUrl(
-                                                props.filesStructure,
-                                                props.elementValues[
-                                                    props.attrName
-                                                ],
-                                                false,
-                                                true,
-                                                props.currentWebsiteObject
-                                                    .domain
-                                            )
-                                            // 'http://live.websiter.dev:5000/' +
-                                            // props.currentWebsiteObject.domain +
-                                            // props.elementValues[props.attrName]
-                                        }
+                                        src={getFileUrl(
+                                            props.filesStructure,
+                                            props.elementValues[props.attrName],
+                                            false,
+                                            true,
+                                            props.currentWebsiteObject.domain
+                                        )}
                                         style={{
                                             maxWidth: '100%',
                                             maxHeight: '100%',
@@ -319,7 +311,6 @@ const mapStateToProps = state => {
 }
 const mapDispatchToProps = (dispatch, props) => {
     return {
-        checkUserRights: rights => dispatch(checkUserRights(rights)),
         setActiveContainer: container =>
             dispatch(actions.setActiveContainer(container)),
         unsetActiveContainer: container =>
