@@ -79,6 +79,57 @@ export default {
             label: 'class',
         },
     ],
+    websiterGallery: [
+        {
+            val: 5,
+            label: 'autoplaySpeed',
+        },
+        {
+            val: 100,
+            label: 'width',
+        },
+        {
+            val: '200px',
+            label: 'height',
+        },
+        {
+            val: 'content',
+            label: 'backgroundSize',
+        },
+        {
+            val: 'transform .5s',
+            label: 'transition',
+        },
+        {
+            val: 'class',
+            label: 'wrapperClassName',
+        },
+        {
+            val: 'class',
+            label: 'dotsClassName',
+        },
+        {
+            val: 'class',
+            label: 'dotClassName',
+        },
+        {
+            val: 'class',
+            label: 'arrowClassName',
+        },
+        {
+            val: 'class',
+            label: 'slideClassName',
+        },
+        {
+            val: 'class',
+            label: 'slidesTextClassName',
+        },
+        {
+            val: 'items',
+            label: 'items',
+        }
+
+    ],
     baseHtmlProps: [
         {
             val: 'id',
