@@ -15,6 +15,7 @@ import Websites from './Websites/Websites'
 import { useBeforeunload } from 'react-beforeunload'
 import ReactResizeDetector from 'react-resize-detector'
 import { initialStateType, initialState } from '../../store/reducer/reducer'
+import { storeType } from '../../Types/store'
 
 type Props = {
     changeBarSize: typeof actions.changeBarSize
@@ -22,6 +23,7 @@ type Props = {
     savePropertiesOnLeave: typeof actions.savePropertiesOnLeave
     barSizes: typeof initialState.barSizes
     notSavedResources: typeof initialState.notSavedResources
+    activeTab: storeType['activeTab']
 }
 
 const AdvancedBar = (props: Props) => {
@@ -45,9 +47,10 @@ const AdvancedBar = (props: Props) => {
         >
             <div>
                 <Tabs
-                    defaultActiveKey="pages"
+                    defaultActiveKey="page"
                     animated={false}
                     size="small"
+                    activeKey={props.activeTab}
                     tabBarExtraContent={
                         <SizeDragController
                             addClass={classes.heightControll}
@@ -56,20 +59,21 @@ const AdvancedBar = (props: Props) => {
                             type="height"
                         />
                     }
+                    onChange={activeKey => props.setActiveTab(activeKey)}
                 >
-                    <TabPane tab="Pages" key="pages" forceRender={true}>
+                    <TabPane tab="Pages" key="page" forceRender={true}>
                         <Pages />
                     </TabPane>
-                    <TabPane tab="Templates" key="templates" forceRender={true}>
+                    <TabPane tab="Templates" key="template" forceRender={true}>
                         <Templates />
                     </TabPane>
-                    <TabPane tab="Plugins" key="plugins" forceRender={true}>
+                    <TabPane tab="Plugins" key="plugin" forceRender={true}>
                         <Plugins />
                     </TabPane>
-                    <TabPane tab="Files" key="files" forceRender={true}>
+                    <TabPane tab="Files" key="file" forceRender={true}>
                         <Files />
                     </TabPane>
-                    <TabPane tab="Websites" key="websites" forceRender={true}>
+                    <TabPane tab="Websites" key="website" forceRender={true}>
                         <Websites />
                     </TabPane>
                     <TabPane tab="Account" key="account" forceRender={true}>
@@ -92,6 +96,7 @@ const mapStateToProps = (state: initialStateType) => {
         barSizes: state.barSizes,
         loading: state.loading,
         notSavedResources: state.notSavedResources,
+        activeTab: state.activeTab,
     }
 }
 
@@ -100,6 +105,7 @@ const mapDispatchToProps = dispatch => {
         changeBarSize: initiator => dispatch(actions.changeBarSize(initiator)),
         toggleFindMode: value => dispatch(actions.toggleFindMode(value)),
         savePropertiesOnLeave: () => dispatch(actions.savePropertiesOnLeave()),
+        setActiveTab: activeKey => dispatch(actions.setActiveTab(activeKey)),
     }
 }
 

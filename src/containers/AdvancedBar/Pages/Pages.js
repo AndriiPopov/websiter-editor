@@ -7,6 +7,7 @@ import SizeDragController from '../SizeDragController/SizeDragController'
 import ResourcesTree from '../../../components/ResourcesTree/ResourcesTree'
 import ElementsTree from '../../../components/ElementsTreeAndProperties/ElementsTree/ElementsTree'
 import PageProperties from '../../../components/ElementsTreeAndProperties/PageProperties/PageProperties'
+import PinnedElementsBar from '../../../components/PinnedElementsBar/PinnedElementsBar'
 
 // import type { initialStateType } from '../../../store/reducer/reducer'
 
@@ -35,30 +36,29 @@ const Pages = props => {
                     type={'width'}
                 />
             </div>
-            {props.currentPageDraftExists ? (
-                <>
-                    <div
-                        className={classes.Container}
-                        style={{
-                            flex: '0 0 ' + props.barSizes.width2 + 'px',
-                        }}
-                    >
-                        <ElementsTree mode="page" />
+            <div
+                className={classes.Container}
+                style={{
+                    flex: '0 0 ' + props.barSizes.width2 + 'px',
+                }}
+            >
+                {props.currentPageDraftExists && <ElementsTree mode="page" />}
 
-                        <SizeDragController
-                            addClass={classes.widthControll}
-                            startValue={props.barSizes.width2}
-                            type={'width2'}
-                        />
-                    </div>
-                    <div className={classes.LastContainer}>
-                        <PageProperties
-                            mode="page"
-                            changeProperty={handleChangeBoxProperty}
-                        />
-                    </div>
-                </>
-            ) : null}
+                <SizeDragController
+                    addClass={classes.widthControll}
+                    startValue={props.barSizes.width2}
+                    type={'width2'}
+                />
+            </div>
+            <div className={classes.LastContainer}>
+                <PinnedElementsBar />
+                {props.currentPageDraftExists && (
+                    <PageProperties
+                        mode="page"
+                        changeProperty={handleChangeBoxProperty}
+                    />
+                )}
+            </div>
         </div>
     )
 }

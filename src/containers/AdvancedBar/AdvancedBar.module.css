@@ -88,6 +88,7 @@
     left: 0px;
     cursor: ns-resize;
     z-index: 100;
+    top: 0px;
 }
 
 .widthControll {

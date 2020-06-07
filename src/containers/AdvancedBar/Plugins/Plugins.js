@@ -7,6 +7,7 @@ import SizeDragController from '../SizeDragController/SizeDragController'
 import ResourcesTree from '../../../components/ResourcesTree/ResourcesTree'
 import ElementsTree from '../../../components/ElementsTreeAndProperties/ElementsTree/ElementsTree'
 import Properties from '../../../components/ElementsTreeAndProperties/Properties/Properties'
+import PinnedElementsBar from '../../../components/PinnedElementsBar/PinnedElementsBar'
 
 // import type { initialStateType } from '../../../store/reducer/reducer'
 
@@ -35,30 +36,30 @@ const Plugins = props => {
                     type="width"
                 />
             </div>
-            {props.currentPluginDraftExists ? (
-                <>
-                    <div
-                        className={classes.Container}
-                        style={{
-                            flex: '0 0 ' + props.barSizes.width2 + 'px',
-                        }}
-                    >
-                        <ElementsTree mode="plugin" />
-
-                        <SizeDragController
-                            addClass={classes.widthControll}
-                            startValue={props.barSizes.width2}
-                            type="width2"
-                        />
-                    </div>
-                    <div className={classes.LastContainer}>
-                        <Properties
-                            mode="plugin"
-                            changeProperty={handleChangeBoxProperty}
-                        />
-                    </div>
-                </>
-            ) : null}
+            <div
+                className={classes.Container}
+                style={{
+                    flex: '0 0 ' + props.barSizes.width2 + 'px',
+                }}
+            >
+                {props.currentPluginDraftExists && (
+                    <ElementsTree mode="plugin" />
+                )}
+                <SizeDragController
+                    addClass={classes.widthControll}
+                    startValue={props.barSizes.width2}
+                    type="width2"
+                />
+            </div>
+            <div className={classes.LastContainer}>
+                <PinnedElementsBar />
+                {props.currentPluginDraftExists && (
+                    <Properties
+                        mode="plugin"
+                        changeProperty={handleChangeBoxProperty}
+                    />
+                )}
+            </div>
         </div>
     )
 }

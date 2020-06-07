@@ -80,6 +80,7 @@ const logoutDo = () => ({
 export const authCheckState = () => (dispatch: Object) => {
     sessionStorage.setItem('systemRefresh', '0')
     const tryWebsiter = cookies.get('try_websiter')
+    sessionStorage.removeItem('tryWebsiter')
     if (tryWebsiter) {
         cookies.remove('try_websiter', {
             path: '/',
@@ -256,3 +257,8 @@ export const changeBarSize = (initiator?: { key: string; value: number }) => (
         }
     }
 }
+
+export const setActiveTab = activeKey => ({
+    type: 'SET_ACTIVE_TAB',
+    activeKey,
+})

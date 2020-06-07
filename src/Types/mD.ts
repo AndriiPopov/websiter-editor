@@ -6,6 +6,7 @@ import { imageType } from './image'
 import { resourceType } from './resource'
 import { resourceObjectType } from './resourceObject'
 import { storeType } from './store'
+import { pinnedElementType } from './pinnedElement'
 
 export type mDType = {
     userObject: userType | null
@@ -55,4 +56,5 @@ export type mDType = {
     tryWebsiter: boolean
     nextFileId?: number
     prod: boolean
+    pinnedElementsWithTitles: Array<pinnedElementType>
 }
