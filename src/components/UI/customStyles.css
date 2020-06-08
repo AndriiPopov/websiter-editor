@@ -29,11 +29,11 @@
     padding-left: 0px;
 }
 
-.ant-tabs-nav-scroll {
+.ant-tabs-nav-wrap {
     background: #eee;
     padding-left: 10px;
 }
-.ant-tabs-bar {
+.ant-tabs > .ant-tabs-nav {
     margin: 0;
 }
 .ant-tabs {
@@ -43,23 +43,28 @@
     overflow: hidden;
 }
 
-.ant-tabs-top-content {
+.ant-tabs-content-holder {
     flex: 1;
     display: flex;
     overflow: hidden;
 }
 
-.ant-tabs .ant-tabs-top-content > .ant-tabs-tabpane {
+.ant-tabs-tabpane {
     display: flex;
     flex-direction: column;
 }
 
-.ant-tabs-nav-container {
+.ant-tabs-nav {
     border-top: 1px #ccc solid;
     border-bottom: 1px #ccc solid;
 }
-.ant-tabs .ant-tabs-small-bar .ant-tabs-tab {
-    padding: 5px 20px 5px;
+.ant-tabs-small > .ant-tabs-nav .ant-tabs-tab,
+.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {
+    padding: 5px 20px;
+}
+
+.ant-tabs > .ant-tabs-nav .ant-tabs-nav-more {
+    background: #eee;
 }
 
 .ant-tabs-nav .ant-tabs-tab-active {
@@ -90,10 +95,20 @@
     background: #ccc;
 }
 
-.ant-tabs-bar {
+.ant-tabs-nav {
     display: inline-block;
+    background: #eee;
 }
 
-.ant-tabs-nav {
+.ant-tabs > .ant-tabs-nav .ant-tabs-nav-wrap {
     z-index: 200;
+    flex: none;
+}
+
+.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+    background: transparent;
+}
+
+.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab-active {
+    background: #fff;
 }

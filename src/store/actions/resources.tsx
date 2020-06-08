@@ -69,3 +69,25 @@ export const removeResourceFromNewVersions = data => ({
     type: 'REMOVE_RESOURCE_FROM_NEW_VERSIONS',
     _id: data._id,
 })
+
+export const setActivePinnedElement = pinnedElement => ({
+    type: 'SET_ACTIVE_PINNED_ELEMENT',
+    pinnedElement,
+})
+
+export const removePinnedElement = pinnedElement => ({
+    type: 'REMOVE_PINNED_ELEMENT',
+    pinnedElement,
+})
+
+export const addPinnedElement = (resourceType, resource, element) => ({
+    type: 'ADD_PINNED_ELEMENT',
+    resourceType,
+    resource,
+    element,
+})
+
+export const pinPinnedElement = pinnedElement => ({
+    type: 'PIN_PINNED_ELEMENT',
+    pinnedElement,
+})

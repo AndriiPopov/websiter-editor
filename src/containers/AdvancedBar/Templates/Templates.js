@@ -7,6 +7,7 @@ import SizeDragController from '../SizeDragController/SizeDragController'
 import ResourcesTree from '../../../components/ResourcesTree/ResourcesTree'
 import ElementsTree from '../../../components/ElementsTreeAndProperties/ElementsTree/ElementsTree'
 import Properties from '../../../components/ElementsTreeAndProperties/Properties/Properties'
+import PinnedElementsBar from '../../../components/PinnedElementsBar/PinnedElementsBar'
 
 // import type { initialStateType } from '../../../store/reducer/reducer'
 
@@ -35,30 +36,30 @@ const Templates = props => {
                     type="width"
                 />
             </div>
-            {props.currentTemplateDraftExists ? (
-                <>
-                    <div
-                        className={classes.Container}
-                        style={{
-                            flex: '0 0 ' + props.barSizes.width2 + 'px',
-                        }}
-                    >
-                        <ElementsTree mode="template" />
-
-                        <SizeDragController
-                            addClass={classes.widthControll}
-                            startValue={props.barSizes.width2}
-                            type="width2"
-                        />
-                    </div>
-                    <div className={classes.LastContainer}>
-                        <Properties
-                            mode="template"
-                            changeProperty={handleChangeBoxProperty}
-                        />
-                    </div>
-                </>
-            ) : null}
+            <div
+                className={classes.Container}
+                style={{
+                    flex: '0 0 ' + props.barSizes.width2 + 'px',
+                }}
+            >
+                {props.currentTemplateDraftExists && (
+                    <ElementsTree mode="template" />
+                )}
+                <SizeDragController
+                    addClass={classes.widthControll}
+                    startValue={props.barSizes.width2}
+                    type="width2"
+                />
+            </div>
+            <div className={classes.LastContainer}>
+                <PinnedElementsBar />
+                {props.currentTemplateDraftExists && (
+                    <Properties
+                        mode="template"
+                        changeProperty={handleChangeBoxProperty}
+                    />
+                )}
+            </div>
         </div>
     )
 }

@@ -8,7 +8,6 @@ increase speed -- article in bookmarks
 Sign ups with different systems
 
 ----------------LATER------------------------
-Partial hydration!!!
 Wrong version - rerequest resources
 Create a path in elements tree
 Add suggested options in properties
@@ -20,22 +19,20 @@ active menu item set
 after connection lost unsaved and new version
 404 error page for each website
 ctrl c ctrl v ctrl x as buttons
+ctrl x on cms variables bug
 Add fonts and weights in html rich editor
-Hidden files as foldres
+remove lazy loader images
 Load to head from plugins (link to stylesheet)
 remove delays on expand trees
-zakladki v propah dla otkrytyh elementov
 Speed of ttfb
 improve docs for buil ins
-ctrl x on cms variables bug
-add type folder variable for just foldres
 add analytics
 drawer not working - redo drawer to have drawer and handler separately add 
 backups
 check custom domains
-remove cookiees if fail login
 collaboration
-remove ratelimiter
+rst row hieght as function
+
 
 
 //mobile view

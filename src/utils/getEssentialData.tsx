@@ -3,10 +3,12 @@ import { storeType } from '../Types/store'
 import { userType } from '../Types/user'
 import { websiteType } from '../Types/website'
 import { resourceObjectType } from '../Types/resourceObject'
+import { getCurrentResourceValue } from './basic'
 
 export default (
     userId: storeType['userId'],
     resourcesObjects: storeType['resourcesObjects'],
+    pinnedElements: storeType['pinnedElements'],
     tryWebsiter: storeType['tryWebsiter']
 ): mDType => {
     let userObject: userType | null = null,
@@ -52,7 +54,8 @@ export default (
         pageTemplateFSBObject,
         pageTemplateFSBDraft,
         nextFileId = 0,
-        prod
+        prod,
+        pinnedElementsWithTitles
     if (userId) {
         userObject = resourcesObjects[userId] as userType
 
@@ -244,6 +247,23 @@ export default (
     }
     prod = process.env.NODE_ENV !== 'development'
 
+    pinnedElementsWithTitles = pinnedElements
+        .map(item => {
+            const resourceDraft =
+                item.resource &&
+                getCurrentResourceValue(item.resource, resourcesObjects)
+            if (resourceDraft) {
+                const elementItem = resourceDraft.structure.find(
+                    element => element.id === item.element
+                )
+                if (elementItem) {
+                    return { ...item, title: elementItem.tag }
+                }
+            }
+            return null
+        })
+        .filter(item => item !== null)
+
     return {
         userObject: userObject || null,
         websites,
@@ -292,5 +312,6 @@ export default (
         tryWebsiter,
         nextFileId,
         prod,
+        pinnedElementsWithTitles,
     }
 }

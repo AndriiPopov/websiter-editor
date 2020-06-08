@@ -17,6 +17,7 @@ type Props = {
     disabled?: boolean
     requiredRights?: Array<string>
     overlay?: JSX.Element
+    style?: {}
 }
 
 export const SmallButton = (props: Props) => {
@@ -38,6 +39,7 @@ export const SmallButton = (props: Props) => {
                 </Tooltip>,
                 <Button icon={<DownOutlined />} />,
             ]}
+            style={props.style}
         >
             {props.icon}
             {props.title}
@@ -50,6 +52,7 @@ export const SmallButton = (props: Props) => {
                 size="middle"
                 // style={{ margin: '0px 4px' }}
                 type={props.type}
+                style={props.style}
             >
                 {props.title}
             </Button>

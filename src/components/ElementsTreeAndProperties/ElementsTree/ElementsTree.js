@@ -387,7 +387,9 @@ const ElementsTree = props => {
                     canDrag={canDragHandle}
                     canDrop={canDropHandle}
                     scaffoldBlockPxWidth={22}
-                    rowHeight={20}
+                    rowHeight={({ node }) => {
+                        return 20
+                    }}
                     generateNodeProps={generateNodePropsHandle}
                     isVirtualized={true}
                     onMoveNode={onMoveNodeHandle}

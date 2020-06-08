@@ -268,6 +268,7 @@ const ReserveWebsite = props => {
     const mainData = getEssentialData(
         props.userId,
         props.resourcesObjects,
+        props.pinnedElements,
         props.tryWebsiter
     )
 
@@ -279,6 +280,7 @@ const mapStateToProps = state => {
     return {
         userId: state.userId,
         resourcesObjects: state.resourcesObjects,
+        pinnedElements: state.pinnedElements,
         tryWebsiter: state.tryWebsiter,
     }
 }

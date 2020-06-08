@@ -3,6 +3,7 @@ import { templateType } from './template'
 import { resourceObjectType } from './resourceObject'
 import { userType } from './user'
 import { mDType } from './mD'
+import { pinnedElementType } from './pinnedElement'
 
 export type storeType = {
     websites: Array<websiteType>
@@ -56,4 +57,8 @@ export type storeType = {
     }
     mD: mDType
     shouldRefresh?: boolean
+    pinnedElements: Array<pinnedElementType>
+    activePinnedElement: string
+    currentPinnedElementId: number
+    activeTab: 'page' | 'template' | 'plugin' | 'file' | 'website' | 'account'
 }

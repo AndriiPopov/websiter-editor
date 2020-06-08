@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import Tabs from 'antd/es/tabs'
 
 import { connect } from 'react-redux'
@@ -17,6 +17,7 @@ import {
 } from '../../../utils/resourceTypeIndex'
 import { getCurrentResourceValue } from '../../../utils/basic'
 import CMSPannels from './Property pannels/CMSPannels'
+import * as actions from '../.././../store/actions'
 // import type { resourceType, elementType } from '../../../store/reducer/reducer'
 
 // type Props = {
@@ -26,6 +27,15 @@ import CMSPannels from './Property pannels/CMSPannels'
 // }
 
 const Properties = props => {
+    useEffect(() => {
+        if (props.element) {
+            props.addPinnedElement(
+                props.mode,
+                props.currentResource,
+                props.element.id
+            )
+        }
+    }, [props.mode, props.currentResource, props.element && props.element.id])
     const { element, elementValues, currentBox, currentResource } = props
 
     const tabClass = ['react-tabs__tab', classes.reactTabsTab].join(' ')
@@ -241,7 +251,18 @@ const mapStateToProps = (state, props) => {
         currentBox: resourceDraft.currentBox,
         currentResource: state.mD[currentIndex[props.mode]],
         propagatingPlugins,
+        pinnedElements: state.pinnedElements,
     }
 }
 
-export default connect(mapStateToProps)(Properties)
+const mapDispatchToProps = dispatch => {
+    return {
+        addPinnedElement: (resourceType, resource, element) =>
+            dispatch(actions.addPinnedElement(resourceType, resource, element)),
+    }
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(Properties)

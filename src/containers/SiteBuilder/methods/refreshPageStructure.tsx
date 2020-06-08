@@ -33,11 +33,13 @@ export default (
                     !item.path.find(el => {
                         // const innerEl = pageStructure.find(inner => inner.id === el)
                         if (
-                            resourceDraft.values[el] &&
-                            resourceDraft.values[el].CMSVariableType &&
-                            (resourceDraft.values[el].CMSVariableType.indexOf(
-                                'propagating_'
-                            ) === 0 ||
+                            (resourceDraft.values[el] &&
+                                resourceDraft.values[el].CMSVariableType &&
+                                resourceDraft.values[
+                                    el
+                                ].CMSVariableType.indexOf('propagating_') ===
+                                    0) ||
+                            (resourceDraft.values[el] &&
                                 resourceDraft.values[el].CMSVariableType ===
                                     'array')
                         )
@@ -237,11 +239,15 @@ export default (
                             innerChildPath
                         )
                     )
+                    const valuesOfChildren: resourceType['values'] = {}
+                    for (let el of childrenOfItem) {
+                        valuesOfChildren[el.id] = pageDraft.values[el.id]
+                    }
                     let { structure, values } = refreshPageStructure(
                         {
                             ...resourceDraft,
                             structure: childrenOfItem,
-                            values: pageDraft.values,
+                            values: valuesOfChildren,
                         },
                         childTemplateDraft,
                         templateId,

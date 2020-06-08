@@ -110,6 +110,9 @@ export const refinePropertiesFromCMS = mD => {
             : item.id
 
         const itemValues = pageTemplateDraft.values[templateItemId]
+
+        if (itemValues.CMSVariableType === 'folder') return
+
         if (itemValues.CMSVariableSystemName)
             if (itemValues.CMSVariableType === 'menuItems') {
                 return {

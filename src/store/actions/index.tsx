@@ -31,6 +31,7 @@ export {
     changeBarSize,
     changeBarSizeDo,
     savePropertiesOnLeave,
+    setActiveTab,
 } from './auth'
 
 export {
@@ -53,6 +54,10 @@ export {
     removeResourceFromNewVersions,
     setActiveContainer,
     unsetActiveContainer,
+    setActivePinnedElement,
+    removePinnedElement,
+    addPinnedElement,
+    pinPinnedElement,
 } from './resources'
 
 export {

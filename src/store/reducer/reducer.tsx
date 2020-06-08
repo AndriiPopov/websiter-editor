@@ -3,6 +3,8 @@ import * as images from './images'
 import * as resources from './resources'
 import { createReducer } from '@reduxjs/toolkit'
 import resourcesAreEqual from '../../utils/resourcesAreEqual'
+import { storeType } from '../../Types/store'
+import { current } from '../../utils/resourceTypeIndex'
 
 export const initialState = {
     resourcesObjects: {},
@@ -36,10 +38,13 @@ export const initialState = {
     shouldRefresh: false,
     tryWebsiter: false,
     currentUserInWebsiteSharing: '',
-    // currentSiteBuilderMode: '',
     mD: {},
     activeContainer: '',
     clipboard: {},
+    pinnedElements: [],
+    activePinnedElement: '',
+    currentPinnedElementId: 0,
+    activeTab: 'page',
 }
 
 const saveHoveredElementRect = (state, action) => {
@@ -261,6 +266,85 @@ const reducer = createReducer(initialState, {
     },
     SAVE_TO_CLIPBOARD: (state: Object, action: Object) => {
         state.clipboard = action.data
+    },
+    SET_ACTIVE_PINNED_ELEMENT: (state: storeType, action: Object) => {
+        state.activePinnedElement = action.pinnedElement
+        const activePinnedItem = state.pinnedElements.find(
+            item => item.id.toString() === action.pinnedElement.toString()
+        )
+        if (activePinnedItem) {
+            state.activeTab = activePinnedItem.resourceType
+            if (state.mD.currentWebsiteId) {
+                state.resourcesObjects[state.userId].settings.websites[
+                    state.mD.currentWebsiteId
+                ][current[activePinnedItem.resourceType]] =
+                    activePinnedItem.resource
+            }
+            const resource = state.resourcesObjects[activePinnedItem.resource]
+            if (resource) {
+                if (!resource.present.structure) {
+                    state.resourcesObjects[activePinnedItem.resource].draft = {
+                        ...resource.draft,
+                        currentBox: activePinnedItem.element,
+                    }
+                } else {
+                    state.resourcesObjects[
+                        activePinnedItem.resource
+                    ].present = {
+                        ...resource.present,
+                        currentBox: activePinnedItem.element,
+                    }
+                }
+            }
+        }
+    },
+    REMOVE_PINNED_ELEMENT: (state: storeType, action: Object) => {
+        state.pinnedElements = state.pinnedElements.filter(
+            item => item.id.toString() !== action.pinnedElement.toString()
+        )
+    },
+    SET_ACTIVE_TAB: (state: storeType, action: Object) => {
+        state.activeTab = action.activeKey
+    },
+    ADD_PINNED_ELEMENT: (state: storeType, action: Object) => {
+        let pinnedElement = state.pinnedElements.find(
+            item =>
+                item.resourceType === action.resourceType &&
+                item.resource === action.resource &&
+                item.element === action.element
+        )
+        if (!pinnedElement) {
+            let unpinned = state.pinnedElements.findIndex(item => !item.pinned)
+            if (unpinned > -1) {
+                const pinnedElements = [...state.pinnedElements]
+
+                pinnedElements[unpinned] = {
+                    ...pinnedElements[unpinned],
+                    ...action,
+                }
+                state.pinnedElements = pinnedElements
+                state.activePinnedElement = pinnedElements[unpinned].id
+            } else {
+                state.currentPinnedElementId
+                unpinned = {
+                    ...action,
+                    id: 'pinned_' + state.currentPinnedElementId,
+                }
+                state.currentPinnedElementId++
+                state.pinnedElements = [unpinned, ...state.pinnedElements]
+                state.activePinnedElement = unpinned.id
+            }
+        } else state.activePinnedElement = pinnedElement.id
+    },
+    PIN_PINNED_ELEMENT: (state: storeType, action: Object) => {
+        state.pinnedElements = state.pinnedElements.map(item => {
+            if (item.id === action.pinnedElement)
+                return {
+                    ...item,
+                    pinned: true,
+                }
+            else return item
+        })
     },
 })
 
