@@ -124,7 +124,8 @@ const Slider = props => {
                     !!settings.slidesTextClassName
                         ? `websiterDevSlider__slidesText ${settings.slidesTextClassName}`
                         : 'websiterDevSlider__slidesText'
-                }>
+                }
+                >
                     {
                         !!props.slides[activeIndex]
                         && props.slides[activeIndex].text
