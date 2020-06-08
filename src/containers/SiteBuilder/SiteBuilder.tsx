@@ -220,11 +220,10 @@ class SiteBuilder extends Component<Props> {
                             // systemClassDrawer +
                             // ' ' +
                             '<link rel="stylesheet" type="text/css" charset="UTF-8" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css" /><link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css" /><link rel="stylesheet" type="text/css" href="https://websiter.s3.us-east-2.amazonaws.com/systemClasses.css">' +
-                            this.state.headValue
+                            this.state.headValue + '<style>.websiterDevSlider__slider__wrapper { position: relative; height: 100vh; width: 600px; overflow: hidden; white-space: nowrap; } .websiterDevSlider__arrow { width: 48px; height: 48px; margin-top: -31px; cursor: pointer; transition: transform ease-in-out .2s; } .websiterDevSlider__left { border-bottom: 6px solid; border-left: 6px solid; transform: rotate(45deg); left: 10px } .websiterDevSlider__right { border-bottom: 6px solid; border-left: 6px solid; transform: rotate(-135deg) } .websiterDevSlider__left:hover { transform: rotate(45deg) scale(1.1); } .websiterDevSlider__right:hover { transform: rotate(-135deg) scale(1.1); } .websiterDevSlider__dot { padding: 10px; margin-right: 5px; cursor: pointer; border-radius: 50%; } .websiterDevSlider__active { background: black; } .websiterDevSlider__non_active { background: white; } .websiterDevSlider__dots { position: absolute; bottom: 25px; width: 100%; display: flex; align-items: center; justify-content: center; } .websiterDevSlider__slidesText {margin: 0 auto; font-size: 1.5rem; width: 100%; position: relative; white-space: normal; background-color: rgba(255, 255, 255, 0.6); text-align: center;} .websiterDevSlider__slidesText p {margin: 0; padding: 5px 0} </style>'
                             // +
                             // ' <script src="src/tinymce_5.1.5.zip"></script>'
-                        }
-                    >
+                        }>
                         <FrameContextConsumer>
                             {({ document, window }: any) => {
                                 window.onbeforeunload = function() {
