@@ -23,6 +23,8 @@ import sanitize from 'sanitize-html'
 
 import { modulesPropertyNodes } from '../../../utils/modulesIndex'
 import BasicForm from '../BasicForm/BasicForm'
+import Slider from '../Slider/Slider'
+import ImageGallery from '../ImageGallery/ImageGallery'
 
 // export type Props = {
 //     element,
@@ -272,6 +274,57 @@ const _BuilderElement = props => {
                         parentPluginProps={props.parentPluginProps}
                         childrenForPlugin={props.childrenForPlugin}
                         {...getModulePropertiesNodes(Tag)}
+                    />
+                </div>
+            )
+        } else if (Tag === 'websiterGallery') {
+            let items = refinedProperties || []
+            if (refinedProperties.originalClass) {
+                items = items.map(item => ({
+                    ...item,
+                    originalClass: refineProperties.originalClass,
+                }))
+            }
+
+
+            return (
+                <div
+                    {...attributes}
+                    onMouseEnter={e => hoverBox(e, props)}
+                    onMouseMove={e => hoverBox(e, props)}
+                    onMouseLeave={e => unhoverBox(e, props)}
+                    onMouseDown={e => chooseBox(e, props)}
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <Slider
+                        slides={refinedProperties.items}
+                        refinedProperties={refinedProperties}
+                    />
+                </div>
+            )
+        } else if (Tag === 'websiterImagesGallery') {
+            let items = refinedProperties || []
+            if (refinedProperties.originalClass) {
+                items = items.map(item => ({
+                    ...item,
+                    originalClass: refineProperties.originalClass,
+                }))
+            }
+            return (
+                <div
+                    {...attributes}
+                    onMouseEnter={e => hoverBox(e, props)}
+                    onMouseMove={e => hoverBox(e, props)}
+                    onMouseLeave={e => unhoverBox(e, props)}
+                    onMouseDown={e => chooseBox(e, props)}
+                >
+                    <ImageGallery
+                        images={refinedProperties.images}
+                        refinedProperties={refinedProperties}
                     />
                 </div>
             )

@@ -47,6 +47,7 @@
         "react-dom": "^16.10.2",
         "react-final-form": "^6.4.0",
         "react-frame-component": "^4.1.1",
+        "react-grid-gallery": "^0.5.5",
         "react-helmet": "^6.0.0",
         "react-image-lightbox": "^5.1.1",
         "react-lazy-load": "^3.0.13",
@@ -70,7 +71,7 @@
         "universal-cookie": "^4.0.2"
     },
     "scripts": {
-        "start": "PORT=3000 react-scripts start",
+        "start": "set PORT=3000 && react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
         "testone": "react-scripts test --coverage",

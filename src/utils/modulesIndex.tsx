@@ -2,6 +2,7 @@ export const allModules = [
     'websiterMenu',
     'parseHTML',
     'websiterGallery',
+    'websiterImagesGallery',
     'websiterDrawer',
     'websiterBasicForm',
 ]
@@ -15,5 +16,6 @@ export const modulesPropertyNodes = {
         { tag: 'Handler', id: 'handler' },
     ],
     websiterGallery: [],
+    websiterImagesGallery: [],
     websiterBasicForm: [],
 }

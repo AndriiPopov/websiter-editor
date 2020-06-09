@@ -130,6 +130,29 @@ export default {
         }
 
     ],
+    websiterImagesGallery: [
+        {
+            val: '$images$',
+            label: 'images',
+        },
+        {
+            val: 3,
+            label: 'margin',
+        },
+        {
+            val: 'true | false',
+            label: 'backdropClosesModal',
+        },
+        {
+            val: 'true | false',
+            label: 'showLightboxThumbnails',
+        },
+        {
+            val: 180,
+            label: 'rowHeight',
+        },
+
+    ],
     baseHtmlProps: [
         {
             val: 'id',
