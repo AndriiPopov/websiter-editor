@@ -93,7 +93,7 @@ export default {
             label: 'height',
         },
         {
-            val: 'content',
+            val: 'cover',
             label: 'backgroundSize',
         },
         {
@@ -148,8 +148,16 @@ export default {
             label: 'showLightboxThumbnails',
         },
         {
-            val: 180,
+            val: '220px',
             label: 'rowHeight',
+        },
+        {
+            val: '220px',
+            label: 'thumbnailWidth',
+        },
+        {
+            val: 'cover',
+            label: 'backgroundSize',
         },
 
     ],

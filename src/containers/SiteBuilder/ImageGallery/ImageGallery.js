@@ -1,7 +1,9 @@
 import React from 'react'
 import Gallery from 'react-grid-gallery'
+import { Thumbnail } from './ThumbNail'
 
 const ImageGallery = props => {
+
     if (!Array.isArray(props.images)) {
         return null
     }
@@ -11,32 +13,24 @@ const ImageGallery = props => {
         showLightboxThumbnails,
         backdropClosesModal,
         rowHeight,
+        thumbnailWidth,
+        backgroundSize,
     } = props.refinedProperties
 
-    rowHeight = rowHeight ? rowHeight : 180
+    rowHeight = rowHeight ? rowHeight : '220px'
+    thumbnailWidth = thumbnailWidth? thumbnailWidth : '220px'
     showLightboxThumbnails = showLightboxThumbnails === 'true'
     backdropClosesModal = backdropClosesModal === 'true'
 
-console.log('showLightboxThumbnails: ' + showLightboxThumbnails)
-
-    console.log('backdropClosesModal: ' + backdropClosesModal)
 
     const finishedImages = props.images.map(image => {
-        let ratio = image.ratio
-        let proportions = ratio && ratio.split(':')
-        let width = +proportions[0]
-        let height = +proportions[1]
-        let thumbnailWidth = !isNaN(width && height)
-            ? rowHeight * (width / height)
-            : 320
 
         return {
             ...image,
-            thumbnailWidth: thumbnailWidth,
-            thumbnailHeight: rowHeight,
             enableImageSelection: false,
         }
     })
+
 
     return (
         <Gallery
@@ -46,8 +40,20 @@ console.log('showLightboxThumbnails: ' + showLightboxThumbnails)
             enableImageSelection={false}
             margin={margin}
             rowHeight={rowHeight}
+            tileViewportStyle={() => {
+                return {
+                    backgroundColor: 'white',
+                    height: rowHeight,
+                    width: thumbnailWidth
+                }
+            }}
+            thumbnailImageComponent={imagesProps => {
+                return <Thumbnail imagesProps={imagesProps}
+                                  backgroundSize={backgroundSize ? backgroundSize : 'cover'}/>
+            }}
         />
     )
 }
+
 
 export default ImageGallery

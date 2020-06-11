@@ -140,5 +140,6 @@ export default [
     'websiterDrawer',
     'websiterMenu',
     'websiterGallery',
+    'websiterImagesGallery',
     'xmp',
 ]
